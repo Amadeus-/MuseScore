@@ -24,6 +24,8 @@ set "D=%BR%\_deps"
 if not exist "%BR%\MuseScoreStudio5.exe" (
   echo *** Not built: %BR%\MuseScoreStudio5.exe
   echo *** Run "+Build (release)+.bat" first.
+  echo.
+  pause
   exit /b 1
 )
 
@@ -47,3 +49,5 @@ copy /y "%QT_KIT%\bin\Qt6*.dll" "%BR%\" >nul
 
 echo.
 echo === Done. %BR%\MuseScoreStudio5.exe is now standalone (double-click it). ===
+echo.
+pause

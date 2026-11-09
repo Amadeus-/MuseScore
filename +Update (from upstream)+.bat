@@ -35,10 +35,14 @@ echo.
 echo === Update complete. Both submodules synced to pinned commits. ===
 echo Rebuild with:     "+Build (release)+.bat"
 echo Push fork (opt.): git push origin main
+echo.
+pause
 goto :eof
 
 :error
 echo.
 echo *** UPDATE FAILED - resolve the error above before building. ***
 echo *** A merge conflict? run: git status, resolve files, git commit ***
+echo.
+pause
 exit /b 1

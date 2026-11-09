@@ -13,9 +13,16 @@ set "D=C:\Dev\+MuseScore+\build.release\_deps"
 if not exist "%EXE%" (
   echo *** Not built yet: %EXE%
   echo *** Build it first with:  "+Build (release)+.bat"
+  echo.
+  pause
   exit /b 1
 )
 
 set "PATH=%QT_KIT%\bin;%D%\ogg\bin;%D%\opus\bin;%D%\vorbis\bin;%D%\zlib\bin;%D%\flac\bin;%D%\libpng\bin;%D%\libsndfile\bin;%D%\freetype\bin;%D%\harfbuzz\bin;%D%\fdk-aac\bin;%PATH%"
 
 start "" "%EXE%" %*
+
+echo.
+echo Launched MuseScore (it runs in its own window). You can close this console.
+echo.
+pause

@@ -15,6 +15,8 @@ if not exist "%QT_KIT%\lib\cmake\Qt6\qt.toolchain.cmake" (
   echo *** Qt 6.11.2 kit not found at %QT_KIT%
   echo *** Install it with:
   echo ***   aqt install-qt windows desktop 6.11.2 win64_msvc2022_64 -m qt5compat qtnetworkauth qtshadertools qtwebsockets -O C:\Dev\Qt
+  echo.
+  pause
   exit /b 1
 )
 set "QT_DIR=%QT_KIT%"
@@ -30,9 +32,11 @@ set "PATH=%VS_CMAKE%;%VS_NINJA%;%VS_INSTALLER%;%QT_KIT%\bin;%PATH%"
 
 cd /d "C:\Dev\+MuseScore+"
 
-if "%~1"=="" goto :defaultbuild
-call "C:\Dev\+MuseScore+\ninja_build.bat" %*
-goto :eof
+if "%~1"=="" (
+  call "C:\Dev\+MuseScore+\ninja_build.bat" -t release
+) else (
+  call "C:\Dev\+MuseScore+\ninja_build.bat" %*
+)
 
-:defaultbuild
-call "C:\Dev\+MuseScore+\ninja_build.bat" -t release
+echo.
+pause
