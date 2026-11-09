@@ -1,7 +1,7 @@
 @echo off
 REM ============================================================
 REM  Make the Release build double-click runnable (standalone).
-REM  Run this AFTER build-release.bat. It does the FULL deploy:
+REM  Run this AFTER "+Build (release)+.bat". It does the FULL deploy:
 REM    1. copies the 6 C-lib DLLs the exe imports next to the exe
 REM       (opus, FLAC, FLAC++, fdk-aac, zlib1, ogg),
 REM    2. runs windeployqt (Qt platform/style/imageformat plugins,
@@ -23,7 +23,7 @@ set "D=%BR%\_deps"
 
 if not exist "%BR%\MuseScoreStudio5.exe" (
   echo *** Not built: %BR%\MuseScoreStudio5.exe
-  echo *** Run build-release.bat first.
+  echo *** Run "+Build (release)+.bat" first.
   exit /b 1
 )
 

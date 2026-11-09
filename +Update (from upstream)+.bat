@@ -13,7 +13,7 @@ REM           working trees, so this re-syncs BOTH to the pinned
 REM           commits. Skipping it = building against stale framework/deps.
 REM
 REM  Does NOT build or push. After it finishes clean:
-REM    - rebuild:            build-release.bat
+REM    - rebuild:            "+Build (release)+.bat"
 REM    - push fork (opt.):   git push origin main
 REM ============================================================
 setlocal
@@ -33,7 +33,7 @@ if errorlevel 1 goto :error
 
 echo.
 echo === Update complete. Both submodules synced to pinned commits. ===
-echo Rebuild with:     build-release.bat
+echo Rebuild with:     "+Build (release)+.bat"
 echo Push fork (opt.): git push origin main
 goto :eof
 

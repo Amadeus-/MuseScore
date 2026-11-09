@@ -12,7 +12,7 @@ set "D=C:\Dev\+MuseScore+\build.release\_deps"
 
 if not exist "%EXE%" (
   echo *** Not built yet: %EXE%
-  echo *** Build it first with:  build-release.bat
+  echo *** Build it first with:  "+Build (release)+.bat"
   exit /b 1
 )
 

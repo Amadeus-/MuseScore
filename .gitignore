@@ -95,3 +95,9 @@ compile_commands.json
 
 # QML language server
 **/.qmlls.ini
+
+# Fork-local dev helper scripts (keep tracked)
+!/+Update (from upstream)+.bat
+!/+Build (release)+.bat
+!/+Deploy (standalone)+.bat
+!/+Run (dev)+.bat

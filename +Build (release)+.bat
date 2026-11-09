@@ -5,9 +5,9 @@ REM  Points CMake at the aqt-installed Qt 6.11.2 kit, then runs
 REM  the stock ninja_build.bat (which sets up MSVC via vcvars64).
 REM
 REM  Usage:
-REM    build-release.bat              Release build (default)
-REM    build-release.bat -t debug     pass any ninja_build target through
-REM    build-release.bat -t relwithdebinfo
+REM    "+Build (release)+.bat"            Release build (default)
+REM    "+Build (release)+.bat" -t debug   pass any target through
+REM    "+Build (release)+.bat" -t relwithdebinfo
 REM ============================================================
 setlocal
 set "QT_KIT=C:\Dev\Qt\6.11.2\msvc2022_64"
@@ -23,14 +23,16 @@ REM Prefer the MSVC-compatible cmake/ninja bundled with Visual Studio over any
 REM MSYS2 clang64 cmake/ninja on PATH (those mis-invoke rc.exe -> fatal RC1107).
 set "VS_CMAKE=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
 set "VS_NINJA=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja"
-set "PATH=%VS_CMAKE%;%VS_NINJA%;%QT_KIT%\bin;%PATH%"
+REM Include the VS Installer dir so the vcvars setup can find vswhere.exe
+REM (otherwise it prints a harmless "'vswhere.exe' is not recognized" line).
+set "VS_INSTALLER=C:\Program Files (x86)\Microsoft Visual Studio\Installer"
+set "PATH=%VS_CMAKE%;%VS_NINJA%;%VS_INSTALLER%;%QT_KIT%\bin;%PATH%"
 
 cd /d "C:\Dev\+MuseScore+"
-echo [build-release] building in "%CD%"
-bash -c "echo [build-release] cmake=$(command -v cmake) ninja=$(command -v ninja)"
 
-if "%~1"=="" (
-  call "C:\Dev\+MuseScore+\ninja_build.bat" -t release
-) else (
-  call "C:\Dev\+MuseScore+\ninja_build.bat" %*
-)
+if "%~1"=="" goto :defaultbuild
+call "C:\Dev\+MuseScore+\ninja_build.bat" %*
+goto :eof
+
+:defaultbuild
+call "C:\Dev\+MuseScore+\ninja_build.bat" -t release
