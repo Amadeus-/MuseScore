@@ -24,7 +24,7 @@
 | Linux: `QT_QPA_PLATFORMTHEME=gtk3`, `QT_QPA_PLATFORM=xcb` | `:102-111` | forced X11 ("with Wayland there are a number of problems"); override via `MU_QT_QPA_PLATFORM` |
 | Windows: `QT_OPENGL_BUGLIST=:/resources/win_opengl_buglist.json` | `:113-119` | issue #8270 |
 | `setMousePressAndHoldInterval(250)` | `:121` | |
-| `applicationName` = `MUSE_APP_NAME_MACHINE_READABLE + MUSE_APP_VERSION_MAJOR` (+`"Development"` if `MUSE_APP_UNSTABLE`) = `Reprise5` in the Reprise fork; org `MuseScore`, domain `musescore.org` (org/domain left as upstream — identifies QSettings path only, no network use) | `:123-130` | the app name keys QSettings/user-data paths, so dev builds get a separate profile |
+| `applicationName` = `MUSE_APP_NAME_MACHINE_READABLE` (+`"Development"` if `MUSE_APP_UNSTABLE`) = `Reprise` in the Reprise fork (version-major suffix dropped so the product name is bare "Reprise"); org `MuseScore`, domain `musescore.org` (org/domain left as upstream — identifies QSettings path only, no network use) | `:123-130` | the app name keys QSettings/user-data paths, so dev builds get a separate profile |
 | Freedesktop desktop-file name `org.musescore.MuseScore` + `MUSE_APP_INSTALL_SUFFIX` | `:132-138` | non-Win/mac/wasm only |
 | `fixSslBackend` lambda → `QSslSocket::setActiveBackend("schannel")` | `:143-150` | Windows only; issue #33401 (OpenSSL ABI mismatch crash) |
 

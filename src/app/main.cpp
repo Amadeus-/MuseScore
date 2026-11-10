@@ -121,9 +121,9 @@ int main(int argc, char** argv)
     QGuiApplication::styleHints()->setMousePressAndHoldInterval(250);
 
 #ifdef MUSE_APP_UNSTABLE
-    QCoreApplication::setApplicationName(MUSE_APP_NAME_MACHINE_READABLE MUSE_APP_VERSION_MAJOR "Development");
+    QCoreApplication::setApplicationName(MUSE_APP_NAME_MACHINE_READABLE "Development");
 #else
-    QCoreApplication::setApplicationName(MUSE_APP_NAME_MACHINE_READABLE MUSE_APP_VERSION_MAJOR);
+    QCoreApplication::setApplicationName(MUSE_APP_NAME_MACHINE_READABLE);
 #endif
     QCoreApplication::setOrganizationName("MuseScore");
     QCoreApplication::setOrganizationDomain("musescore.org");
