@@ -35,6 +35,14 @@ REM shadow the MSVC linker.
 set "GIT_BIN=C:\Program Files\Git\bin"
 set "PATH=%VS_CMAKE%;%VS_NINJA%;%VS_INSTALLER%;%QT_KIT%\bin;%GIT_BIN%;%PATH%"
 
+REM Strip MSYS2 (clang64/mingw/usr) from PATH -- a clean CMake reconfigure
+REM otherwise lets find_package grab msys64's Vulkan/fmt and bakes
+REM -IC:\msys64\clang64\include into the MSVC compile, poisoning vcruntime.h
+REM (see Guide ci-and-release.md 4.1). PowerShell by full path (no PATH
+REM dependency); for /f avoids set /p's ~1KB length cap.
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -Command "($env:PATH -split ';' | Where-Object { $_ -and ($_ -notmatch 'msys64') }) -join ';'" > "%TEMP%\reprise_clean_path.txt"
+for /f "usebackq delims=" %%p in ("%TEMP%\reprise_clean_path.txt") do set "PATH=%%p"
+
 cd /d "C:\Dev\+MuseScore+"
 
 if "%~1"=="" (
