@@ -13,7 +13,7 @@ REM  MAIN exe imports -- it misses QML modules that are embedded in the
 REM  app's resources (e.g. Qt5Compat.GraphicalEffects) and the Qt DLLs
 REM  that only the QML plugins need (e.g. Qt6ShaderTools.dll).
 REM
-REM  After this, build.release\Reprise5.exe runs by double-click.
+REM  After this, build.release\Reprise.exe runs by double-click.
 REM  (Re-run after any clean rebuild of build.release.)
 REM ============================================================
 setlocal
@@ -21,8 +21,8 @@ set "QT_KIT=C:\Dev\Qt\6.11.2\msvc2022_64"
 set "BR=C:\Dev\+MuseScore+\build.release"
 set "D=%BR%\_deps"
 
-if not exist "%BR%\Reprise5.exe" (
-  echo *** Not built: %BR%\Reprise5.exe
+if not exist "%BR%\Reprise.exe" (
+  echo *** Not built: %BR%\Reprise.exe
   echo *** Run "+Build (release)+.bat" first.
   echo.
   pause
@@ -39,7 +39,7 @@ copy /y "%D%\ogg\bin\ogg.dll"         "%BR%\" >nul
 
 echo === 2/4 Deploying Qt plugins (windeployqt) ===
 set "PATH=%QT_KIT%\bin;%PATH%"
-"%QT_KIT%\bin\windeployqt.exe" --release "%BR%\Reprise5.exe"
+"%QT_KIT%\bin\windeployqt.exe" --release "%BR%\Reprise.exe"
 
 echo === 3/4 Copying the full Qt qml module tree ===
 xcopy /e /i /y /q "%QT_KIT%\qml" "%BR%\qml" >nul
@@ -48,6 +48,6 @@ echo === 4/4 Copying all Qt6 DLLs ===
 copy /y "%QT_KIT%\bin\Qt6*.dll" "%BR%\" >nul
 
 echo.
-echo === Done. %BR%\Reprise5.exe is now standalone (double-click it). ===
+echo === Done. %BR%\Reprise.exe is now standalone (double-click it). ===
 echo.
 pause

@@ -7,7 +7,7 @@ REM  Any extra args are passed through to MuseScore.
 REM ============================================================
 setlocal
 set "QT_KIT=C:\Dev\Qt\6.11.2\msvc2022_64"
-set "EXE=C:\Dev\+MuseScore+\build.release\Reprise5.exe"
+set "EXE=C:\Dev\+MuseScore+\build.release\Reprise.exe"
 set "D=C:\Dev\+MuseScore+\build.release\_deps"
 
 if not exist "%EXE%" (
