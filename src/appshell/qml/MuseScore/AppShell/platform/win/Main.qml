@@ -59,6 +59,7 @@ AppWindow {
         title: root.title
 
         windowVisibility: root.visibility
+        isFullScreen: root.requestedFullScreen
 
         appWindow: root
 

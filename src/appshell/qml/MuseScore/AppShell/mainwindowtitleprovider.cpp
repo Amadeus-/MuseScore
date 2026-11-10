@@ -53,6 +53,10 @@ void MainWindowTitleProvider::load()
     context()->currentNotationChanged().onNotify(this, [this]() {
         update();
     });
+
+    commandsController()->isRequestedFullScreenChanged().onNotify(this, [this]() {
+        emit requestedFullScreenChanged();
+    });
 }
 
 QString MainWindowTitleProvider::title() const
@@ -68,6 +72,11 @@ QString MainWindowTitleProvider::filePath() const
 bool MainWindowTitleProvider::fileModified() const
 {
     return m_fileModified;
+}
+
+bool MainWindowTitleProvider::requestedFullScreen() const
+{
+    return commandsController()->isRequestedFullScreen();
 }
 
 void MainWindowTitleProvider::setTitle(const QString& title)

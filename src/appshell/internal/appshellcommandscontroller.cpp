@@ -93,6 +93,16 @@ void AppshellCommandsController::init()
             return muse::make_ok();
         });
     }
+
+    //! NOTE: Whenever the window leaves the full screen window-state by any means, the user is no
+    //! longer in requested full screen. We only ever CLEAR the flag here; it is set true solely by
+    //! toggleFullScreen() below, so a maximized window that Qt misreports as full screen keeps the
+    //! flag false (and therefore keeps the Windows title bar + caption buttons visible).
+    mainWindow()->isFullScreenChanged().onNotify(this, [this]() {
+        if (!mainWindow()->isFullScreen()) {
+            setRequestedFullScreen(false);
+        }
+    });
 }
 
 bool AppshellCommandsController::eventFilter(QObject* watched, QEvent* event)
@@ -361,6 +371,30 @@ void AppshellCommandsController::restart()
 void AppshellCommandsController::toggleFullScreen()
 {
     mainWindow()->toggleFullScreen();
+
+    //! NOTE: Record the resulting state as user-requested. toggleFullScreen() is the only path into
+    //! real full screen, so this is the authoritative "the user asked for full screen" signal.
+    setRequestedFullScreen(mainWindow()->isFullScreen());
+}
+
+bool AppshellCommandsController::isRequestedFullScreen() const
+{
+    return m_requestedFullScreen;
+}
+
+muse::async::Notification AppshellCommandsController::isRequestedFullScreenChanged() const
+{
+    return m_requestedFullScreenChanged;
+}
+
+void AppshellCommandsController::setRequestedFullScreen(bool requested)
+{
+    if (requested == m_requestedFullScreen) {
+        return;
+    }
+
+    m_requestedFullScreen = requested;
+    m_requestedFullScreenChanged.notify();
 }
 
 void AppshellCommandsController::openAboutDialog()

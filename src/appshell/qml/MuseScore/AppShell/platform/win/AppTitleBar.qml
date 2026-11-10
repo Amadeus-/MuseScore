@@ -39,6 +39,16 @@ Rectangle {
 
     property int windowVisibility: Window.Windowed
 
+    //! NOTE: Real (user-requested) full screen. The title text and caption buttons are hidden only
+    //! in this case. We must not use windowVisibility === Window.FullScreen for that, because Qt
+    //! misreports a maximized frameless window covering the whole screen as FullScreen, which would
+    //! wrongly strip the title bar after e.g. opening a score on a maximized window.
+    property bool isFullScreen: false
+
+    //! NOTE: True when the window is effectively maximized, including the misreported-FullScreen case.
+    readonly property bool windowIsEffectivelyMaximized: windowVisibility === Window.Maximized
+                                                         || (windowVisibility === Window.FullScreen && !isFullScreen)
+
     property alias appWindow: menu.appWindow
 
     signal showWindowMinimizedRequested()
@@ -87,7 +97,7 @@ Rectangle {
             textFormat: Text.RichText
             font: ui.theme.bodyFont
 
-            visible: root.windowVisibility !== Window.FullScreen
+            visible: !root.isFullScreen
 
             TextMetrics {
                 id: titleTextmetrics
@@ -107,9 +117,9 @@ Rectangle {
             Layout.preferredHeight: height
             Layout.minimumWidth: width
 
-            windowIsMiximized: root.windowVisibility === Window.Maximized
+            windowIsMiximized: root.windowIsEffectivelyMaximized
 
-            visible: root.windowVisibility !== Window.FullScreen
+            visible: !root.isFullScreen
 
             onShowWindowMinimizedRequested: {
                 root.showWindowMinimizedRequested()

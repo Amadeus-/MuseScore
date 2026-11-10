@@ -25,6 +25,7 @@
 #include "global/modularity/imoduleinterface.h"
 
 #include "global/async/channel.h"
+#include "global/async/notification.h"
 #include "rcommand/commandtypes.h"
 
 #include "../appshelltypes.h"
@@ -39,5 +40,11 @@ public:
     virtual muse::rcommand::Command dockToggleCommand(const DockName& dockName) const = 0;
     virtual DockName commandDockName(const muse::rcommand::Command& command) const = 0;
     virtual muse::async::Channel<DockName> dockToggleRequested() const = 0;
+
+    //! NOTE: True only when the user explicitly entered full screen (via the Full screen command).
+    //! Distinct from IMainWindow::isFullScreen(), which is tripped by Qt misreporting a maximized
+    //! frameless window (covering the whole screen) as full screen.
+    virtual bool isRequestedFullScreen() const = 0;
+    virtual muse::async::Notification isRequestedFullScreenChanged() const = 0;
 };
 }

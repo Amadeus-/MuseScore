@@ -28,6 +28,8 @@
 #include "project/iprojectsession.h"
 #include "modularity/ioc.h"
 
+#include "internal/iappshellcommandscontroller.h"
+
 namespace mu::appshell {
 class MainWindowTitleProvider : public QObject, public muse::Contextable, public muse::async::Asyncable
 {
@@ -37,9 +39,15 @@ class MainWindowTitleProvider : public QObject, public muse::Contextable, public
     Q_PROPERTY(QString filePath READ filePath NOTIFY filePathChanged)
     Q_PROPERTY(bool fileModified READ fileModified NOTIFY fileModifiedChanged)
 
+    //! NOTE: True only when the user explicitly entered full screen. Used by the Windows title bar to
+    //! decide whether to hide the title text + caption buttons, instead of Window.visibility (which Qt
+    //! misreports as FullScreen for a maximized frameless window that covers the whole screen).
+    Q_PROPERTY(bool requestedFullScreen READ requestedFullScreen NOTIFY requestedFullScreenChanged)
+
     QML_ELEMENT
 
     muse::ContextInject<project::IProjectSession> context = { this };
+    muse::ContextInject<IAppshellCommandsController> commandsController = { this };
 
 public:
     explicit MainWindowTitleProvider(QObject* parent = nullptr);
@@ -49,11 +57,13 @@ public:
     QString title() const;
     QString filePath() const;
     bool fileModified() const;
+    bool requestedFullScreen() const;
 
 signals:
     void titleChanged(QString title);
     void filePathChanged(QString filePath);
     void fileModifiedChanged(bool fileModified);
+    void requestedFullScreenChanged();
 
 private:
     void update();

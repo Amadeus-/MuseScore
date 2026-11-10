@@ -37,6 +37,10 @@ ApplicationWindow {
 
     objectName: "ApplicationWindow"
 
+    //! NOTE: True only when the user explicitly entered full screen. Unlike Window.visibility,
+    //! this is not tripped by Qt misreporting a maximized frameless window as FullScreen.
+    readonly property bool requestedFullScreen: titleProvider.requestedFullScreen
+
     title: titleProvider.title
 
     width: 1150

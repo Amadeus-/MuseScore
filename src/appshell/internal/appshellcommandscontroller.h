@@ -88,6 +88,9 @@ public:
     muse::rcommand::Command dockToggleCommand(const DockName& dockName) const override;
     DockName commandDockName(const muse::rcommand::Command& command) const override;
     muse::async::Channel<DockName> dockToggleRequested() const override;
+
+    bool isRequestedFullScreen() const override;
+    muse::async::Notification isRequestedFullScreenChanged() const override;
     // ------------------------------
 
     muse::ValCh<bool> isFullScreen() const;
@@ -121,6 +124,7 @@ private:
     void restart();
 
     void toggleFullScreen();
+    void setRequestedFullScreen(bool requested);
     void openAboutDialog();
     void openAboutQtDialog();
     void openAboutMusicXMLDialog();
@@ -135,6 +139,9 @@ private:
     void revertToFactorySettings();
 
     bool m_quiting = false;
+
+    bool m_requestedFullScreen = false;
+    muse::async::Notification m_requestedFullScreenChanged;
 
     muse::async::Channel<DockName> m_dockToggleRequested;
 };
