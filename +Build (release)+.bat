@@ -43,5 +43,31 @@ if "%~1"=="" (
   call "C:\Dev\+MuseScore+\ninja_build.bat" %*
 )
 
+if errorlevel 1 (
+  echo.
+  echo *** Build FAILED - see the errors above. ***
+  echo.
+  pause
+  goto :eof
+)
+
+echo.
+echo === Build OK. ===
+echo.
+set /p "DODEPLOY=Deploy now (make the exe double-clickable)? [Y/N]: "
+if /i not "%DODEPLOY%"=="Y" goto :nodeploy
+echo.
+call "C:\Dev\+MuseScore+\+Deploy (standalone)+.bat"
+:nodeploy
+
+echo.
+set /p "DORUN=Launch MuseScore now? [Y/N]: "
+if /i not "%DORUN%"=="Y" goto :norun
+echo.
+call "C:\Dev\+MuseScore+\+Run (dev)+.bat"
+goto :eof
+:norun
+
 echo.
 pause
+goto :eof
