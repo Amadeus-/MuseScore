@@ -40,7 +40,7 @@ BaseSection {
 
         width: parent.width
 
-        text: qsTrc("preferences", "Show welcome screen when MuseScore Studio launches")
+        text: qsTrc("preferences", "Show welcome screen when Reprise launches")
         checked: root.model.showWelcomeDialog
 
         navigation.name: checkbox.text

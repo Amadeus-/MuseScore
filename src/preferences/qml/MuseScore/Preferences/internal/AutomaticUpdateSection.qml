@@ -41,7 +41,7 @@ BaseSection {
         id: needCheckEnable
         width: parent.width
 
-        text: qsTrc("preferences", "Check automatically for updates to MuseScore Studio")
+        text: qsTrc("preferences", "Check automatically for updates to Reprise")
 
         visible: root.isAppUpdatable
 
@@ -76,7 +76,7 @@ BaseSection {
     StyledTextLabel {
         width: parent.width
 
-        text: qsTrc("preferences", "Checking for updates requires network access. In order to protect your privacy, MuseScore Studio does not store any personal information. See our <a href=\"%1\">privacy policy</a> for more info.").arg(root.museScorePrivacyPolicyUrl).replace("\n", "<br>")
+        text: qsTrc("preferences", "Checking for updates requires network access. In order to protect your privacy, Reprise does not store any personal information. See our <a href=\"%1\">privacy policy</a> for more info.").arg(root.museScorePrivacyPolicyUrl).replace("\n", "<br>")
 
         horizontalAlignment: Qt.AlignLeft
         wrapMode: Text.WordWrap

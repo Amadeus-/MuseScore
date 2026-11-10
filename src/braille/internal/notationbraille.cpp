@@ -64,7 +64,7 @@ void NotationBraille::init()
     setTablesDir(tablesdir.toStdString().c_str());
     initTables(tablesdir.toStdString());
 
-    std::string welcome = braille_translate(table_for_literature.c_str(), "Welcome to MuseScore Studio!");
+    std::string welcome = braille_translate(table_for_literature.c_str(), "Welcome to Reprise!");
     setBrailleInfo(QString(welcome.c_str()));
 
     brailleConfiguration()->braillePanelEnabledChanged().onNotify(this, [this]() {

@@ -2861,7 +2861,7 @@ void NotationActionController::checkForScoreCorruptions()
     } else {
         std::string title = muse::mtrc("project", "File “%1” is corrupted").arg(fileName).toStdString();
         IInteractive::Text text;
-        text.text = muse::trc("project", "This file contains errors that could cause MuseScore Studio to malfunction. "
+        text.text = muse::trc("project", "This file contains errors that could cause Reprise to malfunction. "
                                          "Please fix those at the earliest, to prevent crashes and further corruptions.");
         text.detailedText = ret.text();
 

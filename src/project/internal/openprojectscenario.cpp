@@ -843,7 +843,7 @@ Promise<bool> OpenProjectScenario::askIfUserAgreesToOpenCorruptedProject(const S
 {
     std::string title = muse::mtrc("project", "File “%1” is corrupted").arg(projectName).toStdString();
     IInteractive::Text text;
-    text.text = muse::trc("project", "This file contains errors that could cause MuseScore Studio to malfunction.");
+    text.text = muse::trc("project", "This file contains errors that could cause Reprise to malfunction.");
     text.detailedText = errorText;
 
     IInteractive::ButtonData openAnywayBtn(IInteractive::Button::CustomButton, muse::trc("project", "Open anyway"), true /*accent*/);
@@ -887,7 +887,7 @@ void OpenProjectScenario::warnProjectCannotBeOpened(const Ret& ret, const muse::
         break;
     case int(engraving::Err::FileOpenError):
         body = muse::trc("project",
-                         "This file could not be opened. Please make sure that MuseScore Studio has permission to read this file.");
+                         "This file could not be opened. Please make sure that Reprise has permission to read this file.");
         break;
     default:
         if (!ret.text().empty()) {

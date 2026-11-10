@@ -628,7 +628,7 @@ void CustomizeKitDialog::load()
             if (e.attribute("version") != Constants::MSC_VERSION_STR) {
                 auto result = interactive()->warningSync(
                     muse::trc("palette", "Drumset file too old"),
-                    muse::trc("palette", "MuseScore Studio may not be able to load this drumset file."), {
+                    muse::trc("palette", "Reprise may not be able to load this drumset file."), {
                     muse::IInteractive::Button::Cancel,
                     muse::IInteractive::Button::Ignore
                 }, muse::IInteractive::Button::Cancel);

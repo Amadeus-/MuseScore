@@ -33,12 +33,12 @@ static std::vector<QVariantMap> welcomeDialogData()
     museSoundsPro.insert("title", muse::qtrc("appshell/welcome", "Unlock Premium Playback"));
     museSoundsPro.insert("imageUrl", "qrc:/resources/welcomedialog/MuseSoundsPro.png");
     museSoundsPro.insert("description", muse::qtrc("appshell/welcome",
-                                                   "Hear your scores come to life with professionally recorded instrument libraries for expressive, realistic playback in MuseScore Studio."));
+                                                   "Hear your scores come to life with professionally recorded instrument libraries for expressive, realistic playback in Reprise."));
     museSoundsPro.insert("buttonText", muse::qtrc("appshell/welcome", "Get MuseSounds Pro"));
     museSoundsPro.insert("destinationUrl", ""); // Reprise: no outbound Muse/MuseHub URL
 
     QVariantMap whatsNew;
-    whatsNew.insert("title", muse::qtrc("appshell/welcome", "What’s new in MuseScore Studio"));
+    whatsNew.insert("title", muse::qtrc("appshell/welcome", "What’s new in Reprise"));
     whatsNew.insert("imageUrl", "qrc:/resources/welcomedialog/WhatsNew.png");
     whatsNew.insert("description", muse::qtrc("appshell/welcome",
                                               "Includes essential new engraving tools, major improvements to playback, video export, dive notation for guitar, and features to speed up your workflow."));
@@ -65,7 +65,7 @@ static std::vector<QVariantMap> welcomeDialogData()
     exploreTutorials.insert("title", muse::qtrc("appshell/welcome", "Explore our tutorials"));
     exploreTutorials.insert("imageUrl", "qrc:/resources/welcomedialog/ExploreTutorials.png");
     exploreTutorials.insert("description", muse::qtrc("appshell/welcome",
-                                                      "We’ve put together a playlist of tutorials to help both beginners and experienced users get the most out of MuseScore Studio."));
+                                                      "We’ve put together a playlist of tutorials to help both beginners and experienced users get the most out of Reprise."));
     exploreTutorials.insert("buttonText", muse::qtrc("appshell/welcome", "View tutorials"));
     exploreTutorials.insert("destinationUrl",
                             "https://www.youtube.com/playlist?list=PLTYuWi2LmaPECOZrC6bkPHBkYY9_WEexT&utm_source=mss-app-welcome-tutorials&utm_medium=mss-app-welcome-tutorials&utm_campaign=mss-app-welcome-tutorials&utm_id=mss-app-welcome-tutorials");
