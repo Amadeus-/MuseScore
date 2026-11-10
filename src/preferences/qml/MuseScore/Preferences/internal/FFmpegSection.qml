@@ -88,7 +88,7 @@ BaseSection {
                 navigation.column: 100
 
                 onClicked: {
-                    api.launcher.openUrl("https://handbook.musescore.org/video/installing-ffmpeg")
+                    api.launcher.openUrl("")
                 }
             }
         }

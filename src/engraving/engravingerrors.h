@@ -82,12 +82,12 @@ inline muse::Ret make_ret(Err err, const muse::io::path_t& filePath = {})
                                        "You can convert this score by opening and then "
                                        "saving in MuseScore version 2.x. "
                                        "Visit the <a href=\"%1\">MuseScore download page</a> to obtain such a 2.x version.")
-               .arg(u"https://musescore.org/download#older-versions");
+               .arg(u"");
         break;
     case Err::FileTooNew:
         text = muse::mtrc("engraving", "This file was saved using a newer version of MuseScore Studio. "
                                        "Please visit <a href=\"%1\">MuseScore.org</a> to obtain the latest version.")
-               .arg(u"https://musescore.org");
+               .arg(u"");
         break;
     case Err::FileOld300Format:
         text = muse::mtrc("engraving", "This file was last saved in a development version of 3.0.");

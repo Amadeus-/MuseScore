@@ -39,7 +39,8 @@ static const Settings::Key SHOW_LOADING_FAILED_WARNING_KEY(module_name, "musesou
 
 static const Settings::Key MUSESOUNDS_CHECK_FOR_UPDATE_TEST_MODE(module_name, "musesounds/checkForUpdateTestMode");
 
-static const muse::String OPEN_SOUND_URL("https://www.musehub.com/muse-sounds/");
+// Reprise: no outbound Muse/MuseHub URLs.
+static const muse::String OPEN_SOUND_URL("");
 
 static QString osCode()
 {
@@ -79,9 +80,7 @@ RequestHeaders MuseSoundsConfiguration::headers() const
 
 UriQuery MuseSoundsConfiguration::soundsUri() const
 {
-    return !getSoundsTestMode()
-           ? UriQuery("https://customers-api.musehub.com/graphql/v3")
-           : UriQuery("https://customers-api-dev.musehub.com/graphql/v3");
+    return UriQuery("");
 }
 
 UriQuery MuseSoundsConfiguration::soundPageUri(const muse::String& soundCode) const
@@ -92,20 +91,17 @@ UriQuery MuseSoundsConfiguration::soundPageUri(const muse::String& soundCode) co
 
 QUrl MuseSoundsConfiguration::checkForMuseSoundsUpdateUrl() const
 {
-    return !getSoundsTestMode()
-           ? QUrl("https://updates.musescore.org/feed/musesounds.latest.xml")
-           : QUrl("https://updates.musescore.org/feed/musesounds.latest.test.xml");
+    return QUrl();
 }
 
 QUrl MuseSoundsConfiguration::checkForMuseSamplerUpdateUrl() const
 {
-    return QUrl("https://customers-api.musehub.com/graphql/v3");
+    return QUrl();
 }
 
 QUrl MuseSoundsConfiguration::museSoundsTroubleshootUrl() const
 {
-    return QUrl(QString("https://support.musehub.com/%1/articles/15070619-musesounds-missing-in-musescore-studio")
-                .arg(QLocale().bcp47Name()));
+    return QUrl();
 }
 
 QString MuseSoundsConfiguration::getMuseSamplerVersionQuery() const

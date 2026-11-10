@@ -85,6 +85,13 @@ set(MUSESCORE_REVISION "" CACHE STRING "Build revision")
 
 option(MUSE_MODULE_DOCKWINDOW_KDDOCKWIDGETS_V2 "Use KDDockWidgets v2" ON)
 
+# Reprise: no update server and no telemetry. Force the update module OFF for every
+# build of this fork (the muse submodule defaults it ON; FORCE overrides any stale
+# cache entry too). OFF swaps in the update stub, a supported config also used by
+# WIN_PORTABLE, so the app never checks for or offers an update. Set before the muse
+# option() declarations so it wins (option() will not change an already-set value).
+set(MUSE_MODULE_UPDATE OFF CACHE BOOL "Reprise: disable update module (no phone-home)" FORCE)
+
 include(${MUSE_FRAMEWORK_SRC_PATH}/cmake/MuseDeclareOptions.cmake)
 
 # Modules (alphabetical order please)

@@ -66,7 +66,7 @@ ExportSettingsPage {
                 navigation.row: root.navigationOrder
 
                 onClicked: {
-                    api.launcher.openUrl("https://handbook.musescore.org/video/installing-ffmpeg")
+                    api.launcher.openUrl("")
                 }
             }
 

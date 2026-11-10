@@ -375,7 +375,7 @@ muse::async::Notification PlaybackConfiguration::shouldShowOnlineSoundsProcessin
 
 muse::String PlaybackConfiguration::onlineSoundsHandbookUrl() const
 {
-    return u"https://handbook.musescore.org/sound-and-playback/installing-muse-sounds/online-sounds";
+    return u"";
 }
 
 OnlineSoundsShowProgressBarMode PlaybackConfiguration::onlineSoundsShowProgressBarMode() const

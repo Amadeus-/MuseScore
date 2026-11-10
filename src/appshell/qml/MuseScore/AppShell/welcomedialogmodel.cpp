@@ -35,8 +35,7 @@ static std::vector<QVariantMap> welcomeDialogData()
     museSoundsPro.insert("description", muse::qtrc("appshell/welcome",
                                                    "Hear your scores come to life with professionally recorded instrument libraries for expressive, realistic playback in MuseScore Studio."));
     museSoundsPro.insert("buttonText", muse::qtrc("appshell/welcome", "Get MuseSounds Pro"));
-    museSoundsPro.insert("destinationUrl",
-                         "https://www.musehub.com/muse-sounds/musesounds-pro?utm_medium=Referral&utm_source=MSS&utm_campaign=MH_WW_REF_MSS_APP_ALL_040826_crosslink&utm_content=welcome_screen");
+    museSoundsPro.insert("destinationUrl", ""); // Reprise: no outbound Muse/MuseHub URL
 
     QVariantMap whatsNew;
     whatsNew.insert("title", muse::qtrc("appshell/welcome", "What’s new in MuseScore Studio"));
@@ -52,8 +51,7 @@ static std::vector<QVariantMap> welcomeDialogData()
     cloudStorage.insert("description", muse::qtrc("appshell/welcome",
                                                   "Save your scores privately on MuseScore.com to revisit past versions and invite others to view and comment – and when you’re ready, share your music with the world."));
     cloudStorage.insert("buttonText", muse::qtrc("appshell/welcome", "View my scores online"));
-    cloudStorage.insert("destinationUrl",
-                        "https://musescore.com/my-scores?utm_source=mss-app-welcome-musescore-com&utm_medium=mss-app-welcome-musescore-com&utm_campaign=mss-app-welcome-musescore-com");
+    cloudStorage.insert("destinationUrl", ""); // Reprise: no outbound Muse URL
 
     QVariantMap freeMuseSounds;
     freeMuseSounds.insert("title", muse::qtrc("appshell/welcome", "Install our free MuseSounds libraries"));
@@ -61,8 +59,7 @@ static std::vector<QVariantMap> welcomeDialogData()
     freeMuseSounds.insert("description", muse::qtrc("appshell/welcome",
                                                     "Explore our collection of realistic sample libraries, including solo instruments, marching percussion, and full orchestra - available for free on MuseHub."));
     freeMuseSounds.insert("buttonText", muse::qtrc("appshell/welcome", "Get it on MuseHub"));
-    freeMuseSounds.insert("destinationUrl",
-                          "https://www.musehub.com/free-musesounds?utm_source=mss-app-welcome-free-musesounds&utm_medium=mss-app-welcome-free-musesounds&utm_campaign=mss-app-welcome-free-musesounds&utm_id=mss-app-welcome-free-musesounds");
+    freeMuseSounds.insert("destinationUrl", ""); // Reprise: no outbound Muse/MuseHub URL
 
     QVariantMap exploreTutorials;
     exploreTutorials.insert("title", muse::qtrc("appshell/welcome", "Explore our tutorials"));

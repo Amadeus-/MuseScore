@@ -658,33 +658,23 @@ void ProjectConfiguration::setShouldDestinationFolderBeOpenedOnExport(bool shoul
 
 QUrl ProjectConfiguration::supportForumUrl() const
 {
-    if (languagesService()->currentLanguage().code.startsWith("en")) {
-        // The English support forum
-        return QUrl("https://musescore.org/forum/6");
-    }
-
-    // The general forum page, where the support forum is linked at the top
-    // (except in English; there you have the Announcements forum)
-    return QUrl("https://musescore.org/forum");
+    // Reprise: no outbound Muse URLs.
+    return QUrl();
 }
 
 QUrl ProjectConfiguration::dotComBugReportUrl() const
 {
-    // The general .com bug report page
-    return QUrl("https://musescore.com/groups/bug-reports");
+    return QUrl();
 }
 
 QUrl ProjectConfiguration::scoreUploadingGuidelinesUrl() const
 {
-    return QUrl("https://musescore.com/score-uploading-guidelines");
+    return QUrl();
 }
 
 QUrl ProjectConfiguration::termsOfUseUrl() const
 {
-    return QUrl("https://musescore.com/redirect/af?mu_target=https%3A%2F%2Fmusescore.com%2Flegal%2Fterms"
-                "%3Futm_medium%3DReferral%26utm_source%3Dmss%26utm_campaign%3DMU_WW_REF_MSS_DESKTOP_ALL_261026_crosslink"
-                "%26utm_content%3Dconvert_to_score"
-                "&utm_medium=Referral&utm_source=mss&utm_campaign=MU_WW_REF_MSS_DESKTOP_ALL_261026_crosslink&utm_content=convert_to_score");
+    return QUrl();
 }
 
 bool ProjectConfiguration::openDetailedProjectUploadedDialog() const
