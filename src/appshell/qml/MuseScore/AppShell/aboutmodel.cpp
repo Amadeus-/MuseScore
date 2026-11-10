@@ -118,7 +118,7 @@ void AboutModel::copyRevisionToClipboard() const
         osName += " or later";
     }
 
-    QString forClipboard = QString("OS: %1, Arch.: %2, MuseScore Studio version (%3-bit): %4-%5")
+    QString forClipboard = QString("OS: %1, Arch.: %2, Reprise version (%3-bit): %4-%5")
                            .arg(osName, QSysInfo::currentCpuArchitecture())
                            .arg(QSysInfo::WordSize)
                            .arg(application()->version().toString(), application()->build());

@@ -9,7 +9,7 @@
 - Edit model: you get a **`Cursor`** (`curScore.newCursor()`) or walk `Segment`/`Measure` objects, read properties off thin **wrapper objects** (`Note`, `Chord`, …), and mutate either through wrapper properties/methods or `Cursor.add*`. All mutation must be inside `curScore.startCmd(...)` / `curScore.endCmd()` to be one undoable step.
 - Wrappers are **not** the engraving classes — they are `QObject`s holding a pointer to the real `mu::engraving::EngravingObject` plus an *ownership flag* (`PLUGIN` = plugin owns it and deletes it; `SCORE` = score owns it) (`scoreelement.h:42-45,89-96`, dtor `scoreelement.cpp:41`).
 - Legacy plugins are run through the **extensions** framework as `apiversion = 1` "macros/forms" (`muse\framework\extensions\internal\legacy\extpluginsloader.cpp:165`), on a dedicated QML engine (`ExtensionsUiEngine::engineV1`, `extensionsuiengine.cpp:91-124`). They are **disabled until the user enables them** (§6).
-- Per-user plugins directory: **`<Documents>\<AppName>\Plugins`** — on Windows for a normal build `Documents\MuseScoreStudio5\Plugins` (`MuseScoreStudio5Development` in a DEV-mode build). Settings key `application/paths/myPlugins`. Resolved in §6.1.
+- Per-user plugins directory: **`<Documents>\<AppName>\Plugins`** — on Windows for a normal build `Documents\Reprise5\Plugins` (`Reprise5Development` in a DEV-mode build; Reprise fork). Settings key `application/paths/myPlugins`. Resolved in §6.1.
 - Bundled plugins: `share\plugins\` — `note_names`, `new_retrograde`, `intervals`, `lilyrics`, `tuning`, `dev_test_api` (+ `dev_test_websocket.qml_disabled`).
 
 ## 1. Source map (`src\engraving\api\v1\`)
@@ -230,10 +230,10 @@ Two roots are scanned (`extensionsconfiguration.cpp:64-72`):
 | **Bundled** | `<appDataPath>/plugins` — on Windows `<exe dir>/../plugins` (`globalconfiguration.cpp:77-79`); in the repo, installed from `share\plugins` | `pluginsDefaultPath()` |
 | **Per-user** | setting `application/paths/myPlugins` (`USER_PLUGINS_PATH`, `extensionsconfiguration.cpp:36,69-72`); **default** `userDataPath() + "/Plugins"` (`:42`) | `pluginsUserPath()` |
 
-`userDataPath()` = `QStandardPaths::DocumentsLocation + "/" + QCoreApplication::applicationName()` (`globalconfiguration.cpp:161-165`). `applicationName` = `MUSE_APP_NAME_MACHINE_READABLE MUSE_APP_VERSION_MAJOR` (`src\app\main.cpp:124-126`) = `"MuseScoreStudio"` + `"5"` (`version.cmake:22,24`), with a `"Development"` suffix when `MUSE_APP_UNSTABLE` (set for build mode `DEV`, `SetupConfigure.cmake:47-48`). So:
+`userDataPath()` = `QStandardPaths::DocumentsLocation + "/" + QCoreApplication::applicationName()` (`globalconfiguration.cpp:161-165`). `applicationName` = `MUSE_APP_NAME_MACHINE_READABLE MUSE_APP_VERSION_MAJOR` (`src\app\main.cpp:124-126`) = `"Reprise"` + `"5"` (Reprise fork; `version.cmake:22,24`), with a `"Development"` suffix when `MUSE_APP_UNSTABLE` (set for build mode `DEV`, `SetupConfigure.cmake:47-48`). So:
 
-- Release/Testing build, Windows: **`%USERPROFILE%\Documents\MuseScoreStudio5\Plugins`**
-- DEV-mode build: **`…\Documents\MuseScoreStudio5Development\Plugins`**
+- Release/Testing build, Windows: **`%USERPROFILE%\Documents\Reprise5\Plugins`**
+- DEV-mode build: **`…\Documents\Reprise5Development\Plugins`**
 
 The directory is created at startup (`io::Dir::mkpath`, `:47-49`), and the user can repoint it in Preferences → Folders → Plugins (the FileIO helper comments say so, `util.cpp:57`). Plugin code can read the effective value with `FileIO.pluginsUserPath()` (`util.cpp:58`) and its own folder with `FileIO.pluginDirectoryPath()` (`:99`). The user dir is on the file-system write allow-list (`extensionsmodule.cpp:91`; `FileIO::isPathWriteable`, `util.cpp:165-239`).
 
@@ -270,7 +270,7 @@ Not to be confused with `extensions` (new-style, `manifest.json`): `defaultPath(
 
 ## 7. Worked example — minimal plugin (cursor walk + read + add)
 
-Save as `<Documents>\MuseScoreStudio5\Plugins\hello_notes\hello_notes.qml`, then enable it in Home > Plugins:
+Save as `<Documents>\Reprise5\Plugins\hello_notes\hello_notes.qml`, then enable it in Home > Plugins:
 
 ```qml
 import QtQuick

@@ -31,7 +31,7 @@ import MuseScore.AppShell
 StyledDialogView {
     id: root
 
-    title: qsTrc("appshell/about", "About MuseScore Studio")
+    title: qsTrc("appshell/about", "About Reprise")
 
     contentHeight: content.implicitHeight
     contentWidth: 400
@@ -143,6 +143,15 @@ StyledDialogView {
             Layout.fillWidth: true
             text: qsTrc("appshell/about", "Copyright © 1999-2026 MuseScore Limited and others.\nPublished under the <a href=\"%1\">GNU General Public License version 3</a>.")
                   .arg("https://www.gnu.org/licenses/gpl-3.0.html")
+                  .replace("\n", "<br>")
+
+            wrapMode: Text.WordWrap
+            maximumLineCount: 3
+        }
+
+        StyledTextLabel {
+            Layout.fillWidth: true
+            text: qsTrc("appshell/about", "Reprise is built on MuseScore Studio (GPLv3).\nCopyright © 2026 The Reprise contributors.")
                   .replace("\n", "<br>")
 
             wrapMode: Text.WordWrap

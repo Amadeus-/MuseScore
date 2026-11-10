@@ -18,8 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 
-set(MUSE_APP_NAME_HUMAN_READABLE "MuseScore Studio")
-set(MUSE_APP_NAME_MACHINE_READABLE "MuseScoreStudio")
+set(MUSE_APP_NAME_HUMAN_READABLE "Reprise")
+set(MUSE_APP_NAME_MACHINE_READABLE "Reprise")
 
 set(MUSE_APP_VERSION_MAJOR "5")
 set(MUSE_APP_VERSION_MINOR "0")
@@ -33,7 +33,7 @@ if (NOT CMAKE_BUILD_NUMBER)
     set(CMAKE_BUILD_NUMBER "0")
 endif()
 
-set(MUSE_APP_GUI_IDENTIFIER org.musescore.${MUSE_APP_NAME_MACHINE_READABLE}${MUSE_APP_VERSION_MAJOR})
+set(MUSE_APP_GUI_IDENTIFIER com.reprise.Reprise)
 
 set(MUSE_APP_UNSTABLE ON)
 set(MUSE_APP_IS_PRERELEASE ON)

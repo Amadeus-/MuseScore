@@ -110,7 +110,7 @@ import Muse.Ui
 import Muse.UiComponents
 import MuseScore.AppShell                     // ← the qt_add_qml_module URI that exported AboutModel
 StyledDialogView {
-    title: qsTrc("appshell/about", "About MuseScore Studio")
+    title: qsTrc("appshell/about", "About Reprise")
     AboutModel { id: aboutModel }              // engine instantiates the view-model; ctor runs iocCtxForQmlObject
     StyledTextLabel { text: qsTrc("appshell/about", "Version: %1").arg(aboutModel.museScoreVersion())
                       font: ui.theme.bodyBoldFont }                // global `ui` context property

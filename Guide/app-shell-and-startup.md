@@ -24,7 +24,7 @@
 | Linux: `QT_QPA_PLATFORMTHEME=gtk3`, `QT_QPA_PLATFORM=xcb` | `:102-111` | forced X11 ("with Wayland there are a number of problems"); override via `MU_QT_QPA_PLATFORM` |
 | Windows: `QT_OPENGL_BUGLIST=:/resources/win_opengl_buglist.json` | `:113-119` | issue #8270 |
 | `setMousePressAndHoldInterval(250)` | `:121` | |
-| `applicationName` = `MUSE_APP_NAME_MACHINE_READABLE + MUSE_APP_VERSION_MAJOR` (+`"Development"` if `MUSE_APP_UNSTABLE`); org `MuseScore`, domain `musescore.org` | `:123-130` | the app name keys QSettings/user-data paths, so dev builds get a separate profile |
+| `applicationName` = `MUSE_APP_NAME_MACHINE_READABLE + MUSE_APP_VERSION_MAJOR` (+`"Development"` if `MUSE_APP_UNSTABLE`) = `Reprise5` in the Reprise fork; org `MuseScore`, domain `musescore.org` (org/domain left as upstream — identifies QSettings path only, no network use) | `:123-130` | the app name keys QSettings/user-data paths, so dev builds get a separate profile |
 | Freedesktop desktop-file name `org.musescore.MuseScore` + `MUSE_APP_INSTALL_SUFFIX` | `:132-138` | non-Win/mac/wasm only |
 | `fixSslBackend` lambda → `QSslSocket::setActiveBackend("schannel")` | `:143-150` | Windows only; issue #33401 (OpenSSL ABI mismatch crash) |
 
@@ -248,7 +248,7 @@ Despite the stale header guard `MU_APPSHELL_APPLICATIONCONTROLLER_H`, the class 
 
 - **QML window stack**: platform `Main.qml` (`platform\win|mac|linux`) → `AppWindow` (a `QtQuick.Controls.ApplicationWindow`: 1150×800 default, min 1050×500, starts `visible:false`, sets `ui.rootItem`, hosts `MainWindowTitleProvider`, `MainWindowBridge`, `ToolTipProvider`, `ToursProvider`, a `Shortcuts{}` object "need only create", `ToastProvider` on top; `AppWindow.qml:33-92`) → `WindowContent` (`DockWindow`, `WindowContent.qml:39`) which declares the main toolbar and the **pages**: `HomePage`, `NotationPage`, `NotationReviewPage`, `PublishPage`, `DevToolsPage` (`:100-118`). `InteractiveProvider` there maps `IInteractive` page opens to `DockWindow::loadPage(uri, params)` (`:49-56`). The Windows `Main.qml` adds a custom `AppTitleBar` (32 px) above `WindowContent`.
 - **`MainToolBarModel`** (`maintoolbarmodel.cpp`): items **Home**, **Score** (`musescore://notation`, URI re-resolved via `openProjectScenario->resolveNotationPageUri()` — may become `…/review`; bold when a project is open), **Publish**, plus **DevTools** only if `globalConfiguration()->devModeEnabled()` (`:100-120`). Notation/review count as the same checked tab.
-- **`MainWindowTitleProvider`**: no project → `"MuseScore Studio"`; else `notation->projectNameAndPartName()`; `filePath` empty for new/cloud projects; `fileModified` = `isNeedSave()` (`mainwindowtitleprovider.cpp:103-120`).
+- **`MainWindowTitleProvider`**: no project → `"Reprise"` (Reprise fork; upstream `"MuseScore Studio"`); else `notation->projectNameAndPartName()`; `filePath` empty for new/cloud projects; `fileModified` = `isNeedSave()` (`mainwindowtitleprovider.cpp:103-120`).
 - **`NotationPageModel`**: wires dock toggles; **auto-shows the Percussion panel** by selection/note-input on drum staves per `percussionPanelAutoShowMode` and auto-shows the **Extensions toolbar** when any enabled extension action has `showOnToolbar` (`:212-357`).
 - **`AppShellState`** (`appshellstate.cpp`): one UI-state flag, `showNavigator`, via `IUiState`.
 - **DevTools page** (`DevToolsPage.qml`, only reachable with dev mode): Settings, UI Gallery, Interactive, Toast, Crash handler, Corrupt score, MPE, MuseSounds, Extensions, KeyNav (`:74-83`).

@@ -47,11 +47,7 @@
         <icon name="application-x-musescore@MUSE_APP_INSTALL_SUFFIX@"/>
     </mime-type>
 
-    <!-- MuseScore URL Protocol -->
-
-    <mime-type type="x-scheme-handler/musescore">
-        <comment>MuseScore URL Protocol</comment>
-    </mime-type>
+    <!-- Reprise does not register the musescore:// URL protocol (hand-off tool). -->
 
     <!-- MuseScore internal formats -->
 

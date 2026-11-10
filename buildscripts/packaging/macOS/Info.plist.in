@@ -7,104 +7,9 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 
-	<key>UTExportedTypeDeclarations</key>
-	<array>
-		<!-- MuseScore documents -->
-		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>org.musescore.mscz</string>
-			<key>UTTypeDescription</key>
-			<string>MuseScore File</string>
-			<key>UTTypeIconFile</key>
-			<string>MsczIcon.icns</string>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-				<string>public.content</string>
-			</array>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>mscz</string>
-				</array>
-				<key>public.mime-type</key>
-				<array>
-					<string>application/x-musescore</string>
-				</array>
-			</dict>
-		</dict>
-		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>org.musescore.mscx</string>
-			<key>UTTypeDescription</key>
-			<string>MuseScore Uncompressed File</string>
-			<key>UTTypeIconFile</key>
-			<string>MscxIcon.icns</string>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-				<string>public.content</string>
-			</array>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>mscx</string>
-				</array>
-				<key>public.mime-type</key>
-				<array>
-					<string>application/x-musescore+xml</string>
-				</array>
-			</dict>
-		</dict>
-		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>org.musescore.mscs</string>
-			<key>UTTypeDescription</key>
-			<string>MuseScore Stand-alone File</string>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-				<string>public.content</string>
-			</array>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>mscs</string>
-				</array>
-				<key>public.mime-type</key>
-				<array>
-					<string>application/x-musescore+xml</string>
-				</array>
-			</dict>
-		</dict>
-		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>org.musescore.mscz,</string>
-			<key>UTTypeDescription</key>
-			<string>MuseScore Backup File</string>
-			<key>UTTypeIconFile</key>
-			<string>MsczIcon.icns</string>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-				<string>public.content</string>
-			</array>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>mscz~</string>
-				</array>
-				<key>public.mime-type</key>
-				<array>
-					<string>application/x-musescore</string>
-				</array>
-			</dict>
-		</dict>
-	</array>
+	<!-- Reprise is a correction tool that hands off; it does NOT export/own the
+	     org.musescore.mscz/.mscx/.mscs UTIs. The app still opens/reads/writes these
+	     formats internally (see CFBundleDocumentTypes below for "Open With" support). -->
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -552,19 +457,7 @@
 		</dict>
 	</array>
 
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>org.musescore.musescore.musescoreurl</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>musescore</string>
-			</array>
-		</dict>
-	</array>
+	<!-- Reprise does not register the "musescore" URL scheme (hand-off tool, not owner). -->
 
 	<key>CFBundleExecutable</key>
 	<string>${MACOSX_BUNDLE_EXECUTABLE_NAME}</string>
