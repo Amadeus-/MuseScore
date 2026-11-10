@@ -27,6 +27,8 @@ target_sources(reprise PRIVATE
 
     internal/reprisecommandsregister.cpp
     internal/reprisecommandsregister.h
+    internal/reprisecommandsstate.cpp
+    internal/reprisecommandsstate.h
     internal/audiverisrunner.cpp
     internal/audiverisrunner.h
     internal/importpdfcontroller.cpp

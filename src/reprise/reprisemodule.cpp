@@ -24,8 +24,10 @@
 
 #include "modularity/ioc.h"
 #include "rcommand/icommandsregister.h"
+#include "rcommand/icommandsstate.h"
 
 #include "internal/reprisecommandsregister.h"
+#include "internal/reprisecommandsstate.h"
 #include "internal/importpdfcontroller.h"
 
 using namespace mu::reprise;
@@ -56,6 +58,17 @@ IContextSetup* RepriseModule::newContext(const ContextPtr& ctx) const
 void RepriseContext::registerExports()
 {
     m_importPdfController = std::make_shared<ImportPdfController>(iocContext());
+}
+
+void RepriseContext::resolveImports()
+{
+    //! NOTE: Register the reprise command enable-states so "Import PDF" is enabled with no score open. The command
+    //! metadata is registered globally (RepriseModule::resolveImports); the enable-STATE is context-scoped, like project.
+    auto cs = ioc()->resolve<muse::rcommand::ICommandsState>(mname);
+    if (cs)
+    {
+        cs->reg(std::make_shared<RepriseCommandsState>());
+    }
 }
 
 void RepriseContext::onInit(const IApplication::RunMode& mode)
