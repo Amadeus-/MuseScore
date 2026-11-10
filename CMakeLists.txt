@@ -92,6 +92,37 @@ option(MUSE_MODULE_DOCKWINDOW_KDDOCKWIDGETS_V2 "Use KDDockWidgets v2" ON)
 # option() declarations so it wins (option() will not change an already-set value).
 set(MUSE_MODULE_UPDATE OFF CACHE BOOL "Reprise: disable update module (no phone-home)" FORCE)
 
+# Reprise slim build: disable modules this fork does not ship, to cut the deploy footprint.
+# Same mechanism as MUSE_MODULE_UPDATE above -- FORCE the cache value OFF before the option()
+# declarations so every later option() (the muse MuseDeclareOptions macros AND the MUE_BUILD_*
+# options below) respects it. KEEP ON (core to Reprise): musicxml import, playback/audio/mpe +
+# soundfont, palette/propertiespanel/instrumentsscene, audioexport/imagesexport, print, opengl32sw.
+# -- muse framework modules --
+set(MUSE_MODULE_MUSESAMPLER OFF CACHE BOOL "Reprise slim" FORCE)
+set(MUSE_MODULE_AUDIOPLUGINS OFF CACHE BOOL "Reprise slim" FORCE)
+set(MUSE_MODULE_TESTFLOW OFF CACHE BOOL "Reprise slim" FORCE)
+# NOT disabled, left ON on purpose:
+#  * DIAGNOSTICS   - has no stub and appshell_qml imports muse_diagnostics_qml unconditionally,
+#                    so OFF breaks the configure. The heavy crashpad_handler is separately gated
+#                    on MUSE_MODULE_DIAGNOSTICS_CRASHPAD_CLIENT (OFF for this fork), so it is cheap.
+#  * CLOUD / LEARN / TOURS / EXTENSIONS (muse) and MUSESOUNDS (app) - these DO stub when disabled,
+#                    but the desktop appshell Home page consumes their services and SIGSEGVs at
+#                    startup against the stubs (upstream only ships these stubs in the web build).
+#                    Keeping them ON is required for a launchable build; they are small UI modules.
+# -- MuseScore app modules --
+# BRAILLE left ON: notationscene's NotationView.qml imports MuseScore.Braille unconditionally,
+# and the braille stub's QML module does not register that URI, so the main window QML fails to
+# load ("module MuseScore.Braille is not installed") with braille off. The module is tiny.
+# -- unused import/export formats --
+set(MUE_BUILD_IMPEXP_GUITARPRO_MODULE OFF CACHE BOOL "Reprise slim" FORCE)
+set(MUE_BUILD_IMPEXP_MNX_MODULE OFF CACHE BOOL "Reprise slim" FORCE)
+set(MUE_BUILD_IMPEXP_MEI_MODULE OFF CACHE BOOL "Reprise slim" FORCE)
+set(MUE_BUILD_IMPEXP_OVE_MODULE OFF CACHE BOOL "Reprise slim" FORCE)
+set(MUE_BUILD_IMPEXP_CAPELLA_MODULE OFF CACHE BOOL "Reprise slim" FORCE)
+set(MUE_BUILD_IMPEXP_BWW_MODULE OFF CACHE BOOL "Reprise slim" FORCE)
+set(MUE_BUILD_IMPEXP_TABLEDIT_MODULE OFF CACHE BOOL "Reprise slim" FORCE)
+set(MUE_BUILD_IMPEXP_VIDEOEXPORT_MODULE OFF CACHE BOOL "Reprise slim" FORCE)
+
 include(${MUSE_FRAMEWORK_SRC_PATH}/cmake/MuseDeclareOptions.cmake)
 
 # Modules (alphabetical order please)
