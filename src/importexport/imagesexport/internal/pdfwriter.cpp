@@ -151,7 +151,7 @@ Ret PdfWriter::writeList(const INotationPtrList& notations, io::IODevice& destin
 void PdfWriter::preparePdfWriter(QPdfWriter& pdfWriter, const QString& title, const QSizeF& size) const
 {
     pdfWriter.setResolution(configuration()->exportPdfDpiResolution());
-    pdfWriter.setCreator(QString("MuseScore Studio Version: ") + application()->version().toString().toQString());
+    pdfWriter.setCreator(QString("Reprise Version: ") + application()->version().toString().toQString());
     pdfWriter.setTitle(title);
     pdfWriter.setPageMargins(QMarginsF());
     pdfWriter.setPageLayout(QPageLayout(QPageSize(size, QPageSize::Inch), QPageLayout::Orientation::Portrait, QMarginsF()));
