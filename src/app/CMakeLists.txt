@@ -180,6 +180,7 @@ add_to_link_if_exists(playback)
 add_to_link_if_exists(preferences)
 add_to_link_if_exists(print)
 add_to_link_if_exists(project)
+add_to_link_if_exists(reprise)
 
 
 set(MSCORE_APPEND_SRC)

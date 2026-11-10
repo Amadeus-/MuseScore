@@ -81,6 +81,17 @@ The top of the file (`:11-287`) `#include`s either the real module header or a *
 
 - ⭐ **MuseSampler is not added in debug builds** unless `MUSE_MODULE_MUSESAMPLER_LOAD_IN_DEBUG` (`:333-345`, `runtime::isDebug()`).
 - Because order is "unimportant", dependencies are resolved via IoC at `resolveImports`/`onInit` time, never by list position (see `architecture-and-ioc.md`).
+- ⭐ **Reprise fork module** `reprise` (`src\reprise`, added unconditionally right after `project` at `:440`) — a fork-local module kept isolated from upstream modules for clean `Update (from upstream)` merges. It houses Reprise's single OMR path: the **Import PDF** feature (local Audiveris). See §2.5.
+
+### 2.5 Reprise fork module (`src\reprise`) — "Import PDF" (local Audiveris)
+
+New fork-local module holding the Reprise "Import PDF" orchestration. It owns the command `command://reprise/import-pdf` (`REPRISE_IMPORT_PDF_COMMAND`, `src\reprise\reprisecommands.h`).
+
+- **Module setup** `RepriseModule`/`RepriseContext` (`reprisemodule.{h,cpp}`): the module's `resolveImports()` registers command metadata via `globalIoc()->resolve<ICommandsRegister>()->reg(RepriseCommandsRegister)`; the context's `onInit()` (GuiApp only) calls `ImportPdfController::init()`, which registers the handler via `commandDispatcher()->onRequest(...)`. Mirrors the `project` module's register-metadata-at-module / register-handler-at-context split. Registered in `appfactory.cpp` (`new mu::reprise::RepriseModule()`), wired into `src\CMakeLists.txt` (`add_subdirectory(reprise)`) and linked in `src\app\CMakeLists.txt` (`add_to_link_if_exists(reprise)`).
+- **`AudiverisRunner`** (`internal/audiverisrunner.{h,cpp}`): detects `Audiveris.exe` (`C:\Program Files\Audiveris\Audiveris.exe`, else PATH, else common dirs), runs the CLI **blocking** (`muse::IProcess::execute`, injected) as `"<exe>" -batch -save -export -output "<tempdir>" -- "<pdf>"`, best-effort sets `TESSDATA_PREFIX` if a tessdata dir is detected, then locates the produced `.mxl` (fallback `.xml`) by recursive search of the temp dir. Outputs (incl. the `.omr`) are left in a non-auto-removed temp dir (durable copy is a later step).
+- **`ImportPdfController`** (`internal/importpdfcontroller.{h,cpp}`): the handler flow — abort with an Audiveris-not-found warning if the exe is missing; else `interactive()->selectOpeningFileSync(... *.pdf)` → `AudiverisRunner::run()` → on success **dispatch `project::PROJECT_OPEN_COMMAND`** with `url = QUrl::fromLocalFile(mxl)` (the `.mxl` routes through MuseScore's native import / `MusicXmlReader` — no new import plumbing). Cross-module reuse is via the command system only; `reprise` does **not** link `project`.
+- **File-menu change** (`appmenumodel.cpp`, `makeFileMenu()`): the cloud **"Convert file…"** item (`PROJECT_CONVERT_TO_SCORE_COMMAND`) was **replaced** by **"Import &PDF…"** (`REPRISE_IMPORT_PDF_COMMAND`). The underlying `ConvertFileToScore*` code stays dormant (handler still registered in `project`), it is just unreachable from the UI — Reprise has exactly one OMR path.
+- **Not yet implemented** (later steps): page-range dialog, async `QProcess` + progress UI, `reprise:*` metadata persistence, durable `.omr` copy, a Preferences override for the Audiveris path.
 
 ### 2.3 Console module list (`addConsoleModules`, `:451-552`)
 

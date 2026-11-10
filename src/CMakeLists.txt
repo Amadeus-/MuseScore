@@ -87,6 +87,9 @@ if (MUE_BUILD_PROJECT_MODULE)
     add_subdirectory(project)
 endif()
 
+# Reprise fork module (local Audiveris "Import PDF"); kept isolated from upstream modules for clean merges
+add_subdirectory(reprise)
+
 if (MUE_BUILD_APPSHELL_MODULE)
     if (MUE_CONFIGURATION_IS_APPWEB)
         add_subdirectory(web/appshell)

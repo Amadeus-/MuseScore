@@ -282,6 +282,8 @@
 #include "stubs/project/projectstubmodule.h"
 #endif
 
+#include "reprise/reprisemodule.h"
+
 #ifdef MUE_CONFIGURATION_IS_APPWEB
 #include "web/appjs/appjsmodule.h"
 #endif
@@ -438,6 +440,7 @@ std::shared_ptr<muse::IApplication> AppFactory::newGuiApp(const std::shared_ptr<
     app->addModule(new mu::print::PrintModule());
 #endif
     app->addModule(new mu::project::ProjectModule());
+    app->addModule(new mu::reprise::RepriseModule());
     app->addModule(new muse::update::UpdateModule());
     app->addModule(new muse::workspace::WorkspaceModule());
 

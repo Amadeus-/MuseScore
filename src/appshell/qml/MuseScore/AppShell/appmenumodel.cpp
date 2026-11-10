@@ -37,6 +37,7 @@
 
 #include "appshell/appshellcommands.h"
 #include "project/projectcommands.h"
+#include "reprise/reprisecommands.h"
 #include "notationscene/notationcommands.h"
 #include "playback/playbackcommands.h"
 #include "palette/palettecommands.h"
@@ -55,6 +56,7 @@ using namespace mu::appshell;
 using namespace muse::ui;
 using namespace muse::uicomponents;
 using namespace mu::project;
+using namespace mu::reprise;
 using namespace muse::workspace;
 using namespace muse::extensions;
 using namespace mu::notation;
@@ -209,7 +211,7 @@ MenuItem* AppMenuModel::makeFileMenu()
             makeMenuItem(PROJECT_SHARE_AUDIO_COMMAND),
         }),
         makeSeparator(),
-        makeMenuItem(PROJECT_CONVERT_TO_SCORE_COMMAND),
+        makeMenuItem(REPRISE_IMPORT_PDF_COMMAND),
         makeMenuItem(PROJECT_EXPORT_COMMAND),
         makeSeparator(),
         makeMenuItem(PROJECT_PROPERTIES_COMMAND),
