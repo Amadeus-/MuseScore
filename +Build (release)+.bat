@@ -28,7 +28,12 @@ set "VS_NINJA=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\ID
 REM Include the VS Installer dir so the vcvars setup can find vswhere.exe
 REM (otherwise it prints a harmless "'vswhere.exe' is not recognized" line).
 set "VS_INSTALLER=C:\Program Files (x86)\Microsoft Visual Studio\Installer"
-set "PATH=%VS_CMAKE%;%VS_NINJA%;%VS_INSTALLER%;%QT_KIT%\bin;%PATH%"
+REM ninja_build.bat runs "bash ./ninja_build.sh"; Git for Windows only puts git
+REM (not bash) on the system PATH, so a cmd.exe double-click can't find bash.
+REM Add Git\bin (which has bash.exe). NOT Git\usr\bin -- its link.exe would
+REM shadow the MSVC linker.
+set "GIT_BIN=C:\Program Files\Git\bin"
+set "PATH=%VS_CMAKE%;%VS_NINJA%;%VS_INSTALLER%;%QT_KIT%\bin;%GIT_BIN%;%PATH%"
 
 cd /d "C:\Dev\+MuseScore+"
 
