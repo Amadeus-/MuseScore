@@ -8,6 +8,8 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-11-11
+
 ### Added
 - **Recognition progress popup**: Import PDF now runs Audiveris asynchronously and
   shows a branded progress window — a navy header (Reprise mark + wordmark + title,
@@ -79,4 +81,5 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.2.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.1.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
