@@ -30,15 +30,26 @@
 #include "rcommand/icommanddispatcher.h"
 #include "rcommand/commandable.h"
 #include "global/types/ret.h"
+#include "global/iglobalconfiguration.h"
+#include "global/io/ifilesystem.h"
+#include "global/io/path.h"
+
+#include "notation/iinstrumentsrepository.h"
+#include "project/iprojectsession.h"
 
 #include "audiverisrunner.h"
 
 namespace mu::reprise {
-//! Orchestrates Reprise's "Import PDF" flow: pick a PDF -> run Audiveris -> open the recognised score.
+//! Orchestrates Reprise's "Import PDF" flow: pick a PDF -> intake dialog (pages + resolution) -> run Audiveris
+//! -> open the recognised score -> default every imported part to Grand Piano.
 class ImportPdfController : public muse::Contextable, public muse::async::Asyncable, public muse::rcommand::Commandable
 {
     muse::ContextInject<muse::IInteractive> interactive = { this };
     muse::ContextInject<muse::rcommand::ICommandDispatcher> commandDispatcher = { this };
+    muse::ContextInject<mu::project::IProjectSession> projectSession = { this };
+    muse::GlobalInject<muse::IGlobalConfiguration> globalConfiguration;
+    muse::GlobalInject<muse::io::IFileSystem> fileSystem;
+    muse::GlobalInject<mu::notation::IInstrumentsRepository> instrumentsRepository;
 
 public:
     explicit ImportPdfController(const muse::modularity::ContextPtr& iocCtx)
@@ -49,6 +60,22 @@ public:
 private:
     muse::Ret importPdf();
 
+    //! Start folder for the PDF picker: the stored Reprise folder if it still exists, else the Documents folder.
+    muse::io::path_t defaultImportPdfDir() const;
+    //! Persist the folder of the picked PDF (Reprise-private, independent of File > Open). Non-empty picks only.
+    void rememberImportPdfDir(const muse::io::path_t& pdfPath);
+
+    //! Last-used scan resolution, used as the dialog default (defaults to 300 dpi).
+    int scanResolution() const;
+    void setScanResolution(int dpi);
+
+    //! TEMPORARY Reprise default: force every imported part to Grand Piano until an intake step adds real
+    //! instrument selection. Applied once to the just-opened master score. Remove when instrument choice lands.
+    void applyGrandPianoDefault();
+
     std::shared_ptr<AudiverisRunner> m_audiverisRunner;
+
+    //! Set just before the imported score is opened; consumed on the next master-notation change.
+    bool m_pendingGrandPianoReset = false;
 };
 }

@@ -136,7 +136,57 @@ muse::io::path_t AudiverisRunner::locateOutput(const muse::io::path_t& dir, cons
     return firstAny.isEmpty() ? io::path_t() : io::path_t(firstAny);
 }
 
-muse::RetVal<muse::io::path_t> AudiverisRunner::run(const muse::io::path_t& pdfPath)
+std::vector<int> AudiverisRunner::expandSheets(const QString& pages) const
+{
+    //! "all"/empty -> every page (no -sheets argument). Otherwise expand comma lists and dashed ranges into
+    //! explicit 1-based sheet numbers; Audiveris '-sheets' accepts a space-separated int[] (e.g. "1 4-5").
+    std::vector<int> sheets;
+
+    const QString trimmed = pages.trimmed();
+    if (trimmed.isEmpty() || trimmed.compare("all", Qt::CaseInsensitive) == 0)
+    {
+        return sheets;
+    }
+
+    const QStringList tokens = trimmed.split(',', Qt::SkipEmptyParts);
+    for (const QString& rawToken : tokens)
+    {
+        const QString token = rawToken.trimmed();
+        if (token.isEmpty())
+        {
+            continue;
+        }
+
+        const int dash = token.indexOf('-');
+        if (dash > 0)
+        {
+            bool okLo = false;
+            bool okHi = false;
+            const int lo = token.left(dash).trimmed().toInt(&okLo);
+            const int hi = token.mid(dash + 1).trimmed().toInt(&okHi);
+            if (okLo && okHi && lo >= 1 && hi >= lo)
+            {
+                for (int n = lo; n <= hi; ++n)
+                {
+                    sheets.push_back(n);
+                }
+            }
+        }
+        else
+        {
+            bool ok = false;
+            const int n = token.toInt(&ok);
+            if (ok && n >= 1)
+            {
+                sheets.push_back(n);
+            }
+        }
+    }
+
+    return sheets;
+}
+
+muse::RetVal<muse::io::path_t> AudiverisRunner::run(const muse::io::path_t& pdfPath, const QString& pages, int dpi)
 {
     const io::path_t audiverisExe = findAudiveris();
     if (audiverisExe.empty())
@@ -166,15 +216,32 @@ muse::RetVal<muse::io::path_t> AudiverisRunner::run(const muse::io::path_t& pdfP
         LOGW() << "Reprise: TESSDATA_PREFIX not set and no tessdata directory detected; running Audiveris without it";
     }
 
-    const std::vector<std::string> args = {
+    std::vector<std::string> args = {
         "-batch",
         "-save",
         "-export",
-        "-output", outDir.toStdString(),
-        "--", pdfPath.toQString().toStdString()
+        //! Scan resolution. Runtime-confirmed effect on the rasterised image (e.g. =400 -> 3305x4677 vs 300-default 2479x3508).
+        "-constant", "org.audiveris.omr.image.ImageLoading.pdfResolution=" + std::to_string(dpi),
+        "-output", outDir.toStdString()
     };
 
-    LOGI() << "Reprise: running Audiveris: " << audiverisExe.toQString() << " on " << pdfPath.toQString();
+    //! Page selection. '-sheets' takes a space-separated int[]; keep it immediately before '--' so args4j
+    //! stops consuming numbers at the separator. Empty list -> omit entirely -> Audiveris reads every page.
+    const std::vector<int> sheets = expandSheets(pages);
+    if (!sheets.empty())
+    {
+        args.push_back("-sheets");
+        for (int sheet : sheets)
+        {
+            args.push_back(std::to_string(sheet));
+        }
+    }
+
+    args.push_back("--");
+    args.push_back(pdfPath.toQString().toStdString());
+
+    LOGI() << "Reprise: running Audiveris: " << audiverisExe.toQString() << " on " << pdfPath.toQString()
+           << " (dpi=" << dpi << ", sheets=" << (sheets.empty() ? std::string("all") : std::to_string(sheets.size())) << ")";
 
     //! Blocking run (skeleton). Async + progress UI is a later step.
     const int code = process()->execute(audiverisExe.toQString().toStdString(), args);

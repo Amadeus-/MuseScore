@@ -22,6 +22,10 @@
 
 #pragma once
 
+#include <vector>
+
+#include <QString>
+
 #include "modularity/ioc.h"
 #include "global/iprocess.h"
 #include "global/types/ret.h"
@@ -42,10 +46,14 @@ public:
     //! Locate the Audiveris executable (Program Files, PATH, common install dirs). Empty if not found.
     muse::io::path_t findAudiveris() const;
 
-    //! Run Audiveris on the whole PDF, blocking. On success returns the produced .mxl (fallback .xml) to import.
-    muse::RetVal<muse::io::path_t> run(const muse::io::path_t& pdfPath);
+    //! Run Audiveris on the PDF, blocking. On success returns the produced .mxl (fallback .xml) to import.
+    //! pages: free-form range ("all"/"" = every page, "3-7", "1,4,6-9"); dpi: scan resolution passed to Audiveris.
+    muse::RetVal<muse::io::path_t> run(const muse::io::path_t& pdfPath, const QString& pages, int dpi);
 
 private:
+    //! Expand a free-form page range into explicit 1-based sheet numbers for Audiveris '-sheets'. Empty = all pages.
+    std::vector<int> expandSheets(const QString& pages) const;
+
     //! Best-effort detection of a Tesseract tessdata directory to export as TESSDATA_PREFIX. Empty if unknown.
     muse::io::path_t findTessdataPrefix(const muse::io::path_t& audiverisExe) const;
 
