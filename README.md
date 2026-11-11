@@ -1,4 +1,4 @@
-# Reprise
+<p align="center"><img src="share/icons/reprise_readme_banner.png" alt="Reprise" width="760"></p>
 
 **From scan to score.** Open a PDF of sheet music, recognize it (OMR), correct it, and export.
 
