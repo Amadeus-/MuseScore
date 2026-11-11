@@ -36,6 +36,7 @@ using muse::rcommand::Presence;
 using muse::rcommand::Availability;
 using muse::rcommand::Annotation;
 using muse::rcommand::Decoration;
+using muse::rcommand::Checkable;
 
 // A few typed commands as an example. Eventually, all commands should be made typed.
 
@@ -43,19 +44,19 @@ using muse::rcommand::Decoration;
 #define sce_auto static constexpr auto
 
 // select commands
-struct SelectTargetCommand {
-    sci_auto id = Command("command://notation/select/target");
+struct SelectCommand {
+    sci_auto id = Command("command://notation/select");
     sci_auto title = MnemonicString("action", "Select");
     sci_auto description = TranslatableString("action", "Select items by target");
     sci_auto availabilities = Availability::API;
-    sci_auto annotations = Annotation::Idempotent;
+    sci_auto annotations = Annotation::None;
 
     SelectionTarget target = SelectionTarget::FirstItem;
     PlayMode playMode = PlayMode::NoPlay;
 
     sce_auto input = FieldsScheme {
-        Field{ "target", &SelectTargetCommand::target, "Selection target" },
-        Field{ "play-mode", &SelectTargetCommand::playMode, "Play mode", Presence::Optional },
+        Field{ "target", &SelectCommand::target, "Selection target" },
+        Field{ "play-mode", &SelectCommand::playMode, "Play mode", Presence::Optional },
     };
 };
 
@@ -65,7 +66,6 @@ struct SelectFirstItemCommand {
     sci_auto title = MnemonicString("action", "First element");
     sci_auto description = TranslatableString("action", "Go to first element in score");
     sci_auto availabilities = Availability::UI;
-    sci_auto annotations = Annotation::Idempotent;
 };
 
 struct SelectLastItemCommand {
@@ -73,7 +73,6 @@ struct SelectLastItemCommand {
     sci_auto title = MnemonicString("action", "Last element");
     sci_auto description = TranslatableString("action", "Go to last element in score");
     sci_auto availabilities = Availability::UI;
-    sci_auto annotations = Annotation::Idempotent;
 };
 
 struct SelectNextItemCommand {
@@ -165,7 +164,6 @@ struct SelectTopNoteInChordCommand {
     sci_auto title = MnemonicString("action", "Top note in chord");
     sci_auto description = TranslatableString("action", "Select top note in chord");
     sci_auto availabilities = Availability::UI;
-    sci_auto annotations = Annotation::Idempotent;
 };
 
 struct SelectBottomNoteInChordCommand {
@@ -173,7 +171,6 @@ struct SelectBottomNoteInChordCommand {
     sci_auto title = MnemonicString("action", "Bottom note in chord");
     sci_auto description = TranslatableString("action", "Select bottom note in chord");
     sci_auto availabilities = Availability::UI;
-    sci_auto annotations = Annotation::Idempotent;
 };
 
 struct SelectTopStaffCommand {
@@ -181,7 +178,6 @@ struct SelectTopStaffCommand {
     sci_auto title = MnemonicString("action", "Go to top staff");
     sci_auto description = TranslatableString("action", "Go to top staff");
     sci_auto availabilities = Availability::UI;
-    sci_auto annotations = Annotation::Idempotent;
 };
 
 struct SelectEmptyTrailingMeasureCommand {
@@ -189,7 +185,6 @@ struct SelectEmptyTrailingMeasureCommand {
     sci_auto title = MnemonicString("action", "Go to first empty trailing measure");
     sci_auto description = TranslatableString("action", "Go to first empty trailing measure");
     sci_auto availabilities = Availability::UI;
-    sci_auto annotations = Annotation::Idempotent;
 };
 
 struct SelectSimilarCommand {
@@ -197,7 +192,6 @@ struct SelectSimilarCommand {
     sci_auto title = MnemonicString("action", "Similar");
     sci_auto description = TranslatableString("action", "Select similar elements");
     sci_auto availabilities = Availability::UI;
-    sci_auto annotations = Annotation::Idempotent;
 };
 
 struct SelectSimilarInStaffCommand {
@@ -205,7 +199,6 @@ struct SelectSimilarInStaffCommand {
     sci_auto title = MnemonicString("action", "Similar on this staff");
     sci_auto description = TranslatableString("action", "Select similar elements on the same staff");
     sci_auto availabilities = Availability::UI;
-    sci_auto annotations = Annotation::Idempotent;
 };
 
 struct SelectSimilarInRangeCommand {
@@ -213,7 +206,6 @@ struct SelectSimilarInRangeCommand {
     sci_auto title = MnemonicString("action", "Similar in this range");
     sci_auto description = TranslatableString("action", "Select similar elements in the selected range");
     sci_auto availabilities = Availability::UI;
-    sci_auto annotations = Annotation::Idempotent;
 };
 
 struct SelectNotesInChordCommand {
@@ -221,7 +213,6 @@ struct SelectNotesInChordCommand {
     sci_auto title = MnemonicString("action", "Notes in chord");
     sci_auto description = TranslatableString("action", "Select notes in chord");
     sci_auto availabilities = Availability::UI;
-    sci_auto annotations = Annotation::Idempotent;
 };
 
 struct SelectAllCommand {
@@ -229,7 +220,6 @@ struct SelectAllCommand {
     sci_auto title = MnemonicString("action", "Select &all");
     sci_auto description = TranslatableString("action", "Select all");
     sci_auto availabilities = Availability::UI;
-    sci_auto annotations = Annotation::Idempotent;
 };
 
 struct SelectSectionCommand {
@@ -237,23 +227,23 @@ struct SelectSectionCommand {
     sci_auto title = MnemonicString("action", "Select sectio&n");
     sci_auto description = TranslatableString("action", "Select section");
     sci_auto availabilities = Availability::UI;
-    sci_auto annotations = Annotation::Idempotent;
 };
 
-// aliases for add to selection command
-struct AddToSelectionTargetCommand {
-    sci_auto id = Command("command://notation/add-to-selection/target");
+struct AddToSelectionCommand {
+    sci_auto id = Command("command://notation/add-to-selection");
     sci_auto title = MnemonicString("action", "Add to selection");
     sci_auto description = TranslatableString("action", "Add items to selection by target");
     sci_auto availabilities = Availability::API;
+    sci_auto annotations = Annotation::None;
 
     SelectionTarget target = SelectionTarget::BeginSystem;
 
     sce_auto input = FieldsScheme {
-        Field{ "target", &AddToSelectionTargetCommand::target, "Selection target" },
+        Field{ "target", &AddToSelectionCommand::target, "Selection target" },
     };
 };
 
+// aliases for add to selection command
 struct AddToSelectionNextChordCommand {
     sci_auto id = Command("command://notation/add-to-selection/next-chord");
     sci_auto title = MnemonicString("action", "Add next chord to selection");
@@ -324,44 +314,327 @@ struct AddToSelectionEndScoreCommand {
     sci_auto availabilities = Availability::UI;
 };
 
-//inline static const muse::rcommand::Command ADD_TO_SELECTION_NEXT_CHORD_COMMAND("command://notation/add-to-selection-next-chord");
-//inline static const muse::rcommand::Command ADD_TO_SELECTION_PREV_CHORD_COMMAND("command://notation/add-to-selection-prev-chord");
-//inline static const muse::rcommand::Command ADD_TO_SELECTION_NEXT_MEASURE_COMMAND("command://notation/add-to-selection-next-measure");
-//inline static const muse::rcommand::Command ADD_TO_SELECTION_PREV_MEASURE_COMMAND("command://notation/add-to-selection-prev-measure");
-//inline static const muse::rcommand::Command ADD_TO_SELECTION_ABOVE_STAFF_COMMAND("command://notation/add-to-selection-above-staff");
-//inline static const muse::rcommand::Command ADD_TO_SELECTION_BELOW_STAFF_COMMAND("command://notation/add-to-selection-below-staff");
-//inline static const muse::rcommand::Command ADD_TO_SELECTION_BEGIN_SYSTEM_COMMAND("command://notation/add-to-selection-begin-system");
-//inline static const muse::rcommand::Command ADD_TO_SELECTION_END_SYSTEM_COMMAND("command://notation/add-to-selection-end-system");
-//inline static const muse::rcommand::Command ADD_TO_SELECTION_BEGIN_SCORE_COMMAND("command://notation/add-to-selection-begin-score");
-//inline static const muse::rcommand::Command ADD_TO_SELECTION_END_SCORE_COMMAND("command://notation/add-to-selection-end-score");
-
-struct FlipCommand {
-    sci_auto id = Command("command://notation/flip");
-    sci_auto title = MnemonicString("action", "Flip direction");
-    sci_auto description = TranslatableString("action", "Flip direction");
-    sci_auto decoration = muse::rcommand::Decoration(muse::ui::IconCode::Code::NOTE_FLIP);
+struct OpenSelectionOptionsCommand {
+    sci_auto id = Command("command://notation/open-selection-options");
+    sci_auto title = MnemonicString("action", "Selection options");
+    sci_auto description = TranslatableString("action", "Open selection options");
+    sci_auto availabilities = Availability::UI;
 };
 
-struct AddNoteCommand {
-    sci_auto id = muse::rcommand::Command("command://notation/add-note");
-    sci_auto title = MnemonicString("action", "Add note");
-    sci_auto description = TranslatableString("action", "Add note");
+struct ShowLocationCommand {
+    sci_auto id = Command("command://notation/show-location");
+    sci_auto title = MnemonicString("action", "Show location");
+    sci_auto description = TranslatableString("action", "Show current location in score");
+    sci_auto availabilities = Availability::UI;
+};
 
-    NoteName note = NoteName::C;
-    NoteAddingMode mode = NoteAddingMode::CurrentChord;
+// note input commands
+struct ToggleNoteInputCommand {
+    sci_auto id = Command("command://notation/toggle-note-input");
+    sci_auto title = MnemonicString("action", "Toggle note input");
+    sci_auto description = TranslatableString("action", "Toggle note input");
+    sci_auto availabilities = Availability::API;
 
-    sce_auto input = std::tuple {
-        Field{ "note", &AddNoteCommand::note, "Note name" },
-        Field{ "mode", &AddNoteCommand::mode, "Adding mode", Presence::Optional },
+    NoteInputMethod method = NoteInputMethod::DEFAULT;
+
+    sce_auto input = FieldsScheme {
+        Field{ "method", &ToggleNoteInputCommand::method, "Note input method" },
     };
 };
 
-//! NOTE "Read" commands for MCP and maybe API
-struct GetNoteInputStateCommand {
-    sci_auto id = muse::rcommand::Command("command://notation/get-noteinput-state");
+// aliases for toggle note input command
+struct ToggleNoteInputDefaultCommand {
+    sci_auto id = Command("command://notation/toggle-note-input/default");
+    sci_auto title = MnemonicString("action", "Note input");
+    sci_auto description = TranslatableString("action", "Toggle note input mode");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::EDIT, Checkable::Yes);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ToggleNoteInputByNameCommand {
+    sci_auto id = Command("command://notation/toggle-note-input/by-note-name");
+    sci_auto title = MnemonicString("action", "Note input by note name");
+    sci_auto description = TranslatableString("action", "Toggle note input mode by note name");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::EDIT, Checkable::Yes);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ToggleNoteInputByDurationCommand {
+    sci_auto id = Command("command://notation/toggle-note-input/by-duration");
+    sci_auto title = MnemonicString("action", "Note input by duration");
+    sci_auto description = TranslatableString("action", "Toggle note input mode by duration");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::DURATION_CURSOR, Checkable::Yes);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ToggleNoteInputRhythmCommand {
+    sci_auto id = Command("command://notation/toggle-note-input/rhythm");
+    sci_auto title = MnemonicString("action", "Rhythm only (not pitch)");
+    sci_auto description = TranslatableString("action", "Toggle note input mode: rhythm only (not pitch)");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::RHYTHM_ONLY, Checkable::Yes);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ToggleNoteInputRepitchCommand {
+    sci_auto id = Command("command://notation/toggle-note-input/repitch");
+    sci_auto title = MnemonicString("action", "Re-pitch existing notes");
+    sci_auto description = TranslatableString("action", "Toggle note input mode: re-pitch existing notes");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::RE_PITCH, Checkable::Yes);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ToggleNoteInputRealtimeAutoCommand {
+    sci_auto id = Command("command://notation/toggle-note-input/realtime-auto");
+    sci_auto title = MnemonicString("action", "Real-time (metronome)");
+    sci_auto description = TranslatableString("action", "Toggle note input mode: real-time (metronome)");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::METRONOME, Checkable::Yes);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ToggleNoteInputRealtimeManualCommand {
+    sci_auto id = Command("command://notation/toggle-note-input/realtime-manual");
+    sci_auto title = MnemonicString("action", "Real-time (foot pedal)");
+    sci_auto description = TranslatableString("action", "Toggle note input mode: real-time (foot pedal)");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::FOOT_PEDAL, Checkable::Yes);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ToggleNoteInputTimewiseCommand {
+    sci_auto id = Command("command://notation/toggle-note-input/timewise");
+    sci_auto title = MnemonicString("action", "Insert");
+    sci_auto description = TranslatableString("action", "Toggle note input mode: insert (increases measure duration)");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_PLUS, Checkable::Yes);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ToggleInsertModeCommand {
+    sci_auto id = Command("command://notation/toggle-note-input/toggle-insert-mode");
+    sci_auto title = MnemonicString("action", "Insert/overwrite");
+    sci_auto description = TranslatableString("action", "Toggle note input mode: insert/overwrite");
+    sci_auto availabilities = Availability::UI;
+};
+
+// note input set duration commands
+struct SetDurationCommand {
+    sci_auto id = Command("command://notation/set-duration");
+    sci_auto title = MnemonicString("action", "Set duration");
+    sci_auto description = TranslatableString("action", "Set duration");
+    sci_auto availabilities = Availability::API;
+
+    DurationType duration = DurationType::V_QUARTER;
+
+    sce_auto input = FieldsScheme {
+        Field{ "duration", &SetDurationCommand::duration, "Duration" },
+    };
+};
+
+// aliases for set duration commands
+struct SetDurationLongaCommand {
+    sci_auto id = Command("command://notation/set-duration/longa");
+    sci_auto title = MnemonicString("action", "Longa");
+    sci_auto description = TranslatableString("action", "Set duration: longa");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::LONGO);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct SetDurationBreveCommand {
+    sci_auto id = Command("command://notation/set-duration/breve");
+    sci_auto title = MnemonicString("action", "Breve");
+    sci_auto description = TranslatableString("action", "Set duration: breve");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_WHOLE_DOUBLE);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct SetDurationWholeCommand {
+    sci_auto id = Command("command://notation/set-duration/whole");
+    sci_auto title = MnemonicString("action", "Whole note");
+    sci_auto description = TranslatableString("action", "Set duration: whole note");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_WHOLE);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct SetDurationHalfCommand {
+    sci_auto id = Command("command://notation/set-duration/half");
+    sci_auto title = MnemonicString("action", "Half note");
+    sci_auto description = TranslatableString("action", "Set duration: half note");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_HALF);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct SetDurationQuarterCommand {
+    sci_auto id = Command("command://notation/set-duration/quarter");
+    sci_auto title = MnemonicString("action", "Quarter note");
+    sci_auto description = TranslatableString("action", "Set duration: quarter note");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_QUARTER);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct SetDurationEighthCommand {
+    sci_auto id = Command("command://notation/set-duration/eighth");
+    sci_auto title = MnemonicString("action", "Eighth note");
+    sci_auto description = TranslatableString("action", "Set duration: eighth note");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_8TH);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct SetDuration16thCommand {
+    sci_auto id = Command("command://notation/set-duration/16th");
+    sci_auto title = MnemonicString("action", "16th note");
+    sci_auto description = TranslatableString("action", "Set duration: 16th note");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_16TH);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct SetDuration32ndCommand {
+    sci_auto id = Command("command://notation/set-duration/32nd");
+    sci_auto title = MnemonicString("action", "32nd note");
+    sci_auto description = TranslatableString("action", "Set duration: 32nd note");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_32ND);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct SetDuration64thCommand {
+    sci_auto id = Command("command://notation/set-duration/64th");
+    sci_auto title = MnemonicString("action", "64th note");
+    sci_auto description = TranslatableString("action", "Set duration: 64th note");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_64TH);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct SetDuration128thCommand {
+    sci_auto id = Command("command://notation/set-duration/128th");
+    sci_auto title = MnemonicString("action", "128th note");
+    sci_auto description = TranslatableString("action", "Set duration: 128th note");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_128TH);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct SetDuration256thCommand {
+    sci_auto id = Command("command://notation/set-duration/256th");
+    sci_auto title = MnemonicString("action", "256th note");
+    sci_auto description = TranslatableString("action", "Set duration: 256th note");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_256TH);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct SetDuration512thCommand {
+    sci_auto id = Command("command://notation/set-duration/512th");
+    sci_auto title = MnemonicString("action", "512th note");
+    sci_auto description = TranslatableString("action", "Set duration: 512th note");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_512TH);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct SetDuration1024thCommand {
+    sci_auto id = Command("command://notation/set-duration/1024th");
+    sci_auto title = MnemonicString("action", "1024th note");
+    sci_auto description = TranslatableString("action", "Set duration: 1024th note");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_1024TH);
+    sci_auto availabilities = Availability::UI;
+};
+
+// increase/decrease duration commands
+struct ChangeDurationCommand {
+    sci_auto id = Command("command://notation/change-duration");
+    sci_auto title = MnemonicString("action", "Change duration");
+    sci_auto description = TranslatableString("action", "Change duration");
+    sci_auto availabilities = Availability::API;
+
+    ChangeDurationMode mode = ChangeDurationMode::Double;
+
+    sce_auto input = FieldsScheme {
+        Field{ "mode", &ChangeDurationCommand::mode, "Change duration mode" },
+    };
+};
+
+// aliases for change duration command
+struct ChangeDurationDoubleCommand {
+    sci_auto id = Command("command://notation/change-duration/double");
+    sci_auto title = MnemonicString("action", "Double duration");
+    sci_auto description = TranslatableString("action", "Double selected duration");
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ChangeDurationHalveCommand {
+    sci_auto id = Command("command://notation/change-duration/halve");
+    sci_auto title = MnemonicString("action", "Halve duration");
+    sci_auto description = TranslatableString("action", "Halve selected duration");
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ChangeDurationDoubleDottedCommand {
+    sci_auto id = Command("command://notation/change-duration/double-dotted");
+    sci_auto title = MnemonicString("action", "Double selected duration (dotted)");
+    sci_auto description = TranslatableString("action", "Double selected duration (includes dotted values)");
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ChangeDurationHalveDottedCommand {
+    sci_auto id = Command("command://notation/change-duration/halve-dotted");
+    sci_auto title = MnemonicString("action", "Halve selected duration (dotted)");
+    sci_auto description = TranslatableString("action", "Halve selected duration (includes dotted values)");
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ToggleDotsCommand {
+    sci_auto id = Command("command://notation/toggle-dots");
+    sci_auto title = MnemonicString("action", "Toggle dots");
+    sci_auto description = TranslatableString("action", "Toggle dots");
+    sci_auto availabilities = Availability::API;
+
+    int dots = 1;
+
+    sce_auto input = FieldsScheme {
+        Field{ "dots", &ToggleDotsCommand::dots, "Number of dots", 1, engraving::MAX_DOTS },
+    };
+};
+
+// aliases for toggle dots command
+struct ToggleDotCommand {
+    sci_auto id = Command("command://notation/toggle-dots/1");
+    sci_auto title = MnemonicString("action", "Augmentation dot");
+    sci_auto description = TranslatableString("action", "Toggle duration dot");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_DOTTED);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ToggleDot2Command {
+    sci_auto id = Command("command://notation/toggle-dots/2");
+    sci_auto title = MnemonicString("action", "Double augmentation dot");
+    sci_auto description = TranslatableString("action", "Toggle duration dot: double");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_DOTTED_2);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ToggleDot3Command {
+    sci_auto id = Command("command://notation/toggle-dots/3");
+    sci_auto title = MnemonicString("action", "Triple augmentation dot");
+    sci_auto description = TranslatableString("action", "Toggle duration dot: triple");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_DOTTED_3);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ToggleDot4Command {
+    sci_auto id = Command("command://notation/toggle-dots/4");
+    sci_auto title = MnemonicString("action", "Quadruple augmentation dot");
+    sci_auto description = TranslatableString("action", "Toggle duration dot: quadruple");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::NOTE_DOTTED_4);
+    sci_auto availabilities = Availability::UI;
+};
+
+struct ToggleRestCommand {
+    sci_auto id = Command("command://notation/toggle-rest");
+    sci_auto title = MnemonicString("action", "Rest");
+    sci_auto description = TranslatableString("action", "Toggle rest");
+    sci_auto decoration = Decoration(muse::ui::IconCode::Code::REST);
+    sci_auto availabilities = Availability::All;
+};
+
+struct RequestNoteInputStateCommand {
+    sci_auto id = Command("command://notation/request-noteinput-state");
     sci_auto title = MnemonicString("action", "Get note input state");
     sci_auto description = TranslatableString("action", "Get note input state");
-    sci_auto availabilities = muse::rcommand::Availability::MCP;
+    sci_auto availabilities = muse::rcommand::Availability::API;
     sci_auto annotations = muse::rcommand::Annotation::ReadOnly;
 
     struct Output {
@@ -369,11 +642,211 @@ struct GetNoteInputStateCommand {
         NoteInputMethod method = NoteInputMethod::BY_NOTE_NAME;
     };
 
-    using O = GetNoteInputStateCommand::Output;
+    using O = RequestNoteInputStateCommand::Output;
     sce_auto output = std::tuple {
         Field{ "enabled", &O::enabled, "Flag indicating whether the note input mode is enabled" },
         Field{ "method", &O::method, "The method used to input the note" },
     };
+};
+
+// add note command
+struct AddNoteCommand {
+    sci_auto id = muse::rcommand::Command("command://notation/add-note");
+    sci_auto title = MnemonicString("action", "Add note");
+    sci_auto description = TranslatableString("action", "Add note");
+    sci_auto availabilities = Availability::API;
+
+    NoteName note = NoteName::C;
+    NoteAddingMode mode = NoteAddingMode::NextChord;
+
+    sce_auto input = std::tuple {
+        Field{ "note", &AddNoteCommand::note, "Note name" },
+        Field{ "mode", &AddNoteCommand::mode, "Adding mode", Presence::Optional },
+    };
+};
+
+//! NOTE Shared templates for note commands, declared once to avoid translation duplication.
+//! They are created on first use, so they cannot be used before initialization
+//! (the static initialization order across translation units is undefined).
+namespace prv {
+using TS = TranslatableString;
+//: Note
+inline const TS& noteC() { static const TS s = TranslatableString("action", "C"); return s; }
+//: Note
+inline const TS& noteD() { static const TS s = TranslatableString("action", "D"); return s; }
+//: Note
+inline const TS& noteE() { static const TS s = TranslatableString("action", "E"); return s; }
+//: Note
+inline const TS& noteF() { static const TS s = TranslatableString("action", "F"); return s; }
+//: Note
+inline const TS& noteG() { static const TS s = TranslatableString("action", "G"); return s; }
+//: Note
+inline const TS& noteA() { static const TS s = TranslatableString("action", "A"); return s; }
+//: Note
+inline const TS& noteB() { static const TS s = TranslatableString("action", "B"); return s; }
+//: Enter note %1
+inline const TS& Enter_note_X() { static const TS s = TranslatableString("action", "Enter note %1"); return s; }
+//: Add %1 to chord
+inline const TS& Add_X_to_chord() { static const TS s = TranslatableString("action", "Add %1 to chord"); return s; }
+//: Add note %1 to chord
+inline const TS& Add_note_X_to_chord() { static const TS s = TranslatableString("action", "Add note %1 to chord"); return s; }
+//: Insert %1
+inline const TS& Insert_X() { static const TS s = TranslatableString("action", "Insert %1"); return s; }
+} // namespace prv
+
+// aliases for add note command
+struct AddNoteC_ToNextChordCommand {
+    sci_auto id = Command("command://notation/add-note/next-chord/c");
+    sci_auto title = MnemonicString(prv::noteC());
+    sci_auto description = prv::Enter_note_X().arg(prv::noteC());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteD_ToNextChordCommand {
+    sci_auto id = Command("command://notation/add-note/next-chord/d");
+    sci_auto title = MnemonicString(prv::noteD());
+    sci_auto description = prv::Enter_note_X().arg(prv::noteD());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteE_ToNextChordCommand {
+    sci_auto id = Command("command://notation/add-note/next-chord/e");
+    sci_auto title = MnemonicString(prv::noteE());
+    sci_auto description = prv::Enter_note_X().arg(prv::noteE());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteF_ToNextChordCommand {
+    sci_auto id = Command("command://notation/add-note/next-chord/f");
+    sci_auto title = MnemonicString(prv::noteF());
+    sci_auto description = prv::Enter_note_X().arg(prv::noteF());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteG_ToNextChordCommand {
+    sci_auto id = Command("command://notation/add-note/next-chord/g");
+    sci_auto title = MnemonicString(prv::noteG());
+    sci_auto description = prv::Enter_note_X().arg(prv::noteG());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteA_ToNextChordCommand {
+    sci_auto id = Command("command://notation/add-note/next-chord/a");
+    sci_auto title = MnemonicString(prv::noteA());
+    sci_auto description = prv::Enter_note_X().arg(prv::noteA());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteB_ToNextChordCommand {
+    sci_auto id = Command("command://notation/add-note/next-chord/b");
+    sci_auto title = MnemonicString(prv::noteB());
+    sci_auto description = prv::Enter_note_X().arg(prv::noteB());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteC_ToCurrentChordCommand {
+    sci_auto id = Command("command://notation/add-note/current-chord/c");
+    sci_auto title = MnemonicString(prv::Add_X_to_chord().arg(prv::noteC()));
+    sci_auto description = prv::Add_note_X_to_chord().arg(prv::noteC());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteD_ToCurrentChordCommand {
+    sci_auto id = Command("command://notation/add-note/current-chord/d");
+    sci_auto title = MnemonicString(prv::Add_X_to_chord().arg(prv::noteD()));
+    sci_auto description = prv::Add_note_X_to_chord().arg(prv::noteD());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteE_ToCurrentChordCommand {
+    sci_auto id = Command("command://notation/add-note/current-chord/e");
+    sci_auto title = MnemonicString(prv::Add_X_to_chord().arg(prv::noteE()));
+    sci_auto description = prv::Add_note_X_to_chord().arg(prv::noteE());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteF_ToCurrentChordCommand {
+    sci_auto id = Command("command://notation/add-note/current-chord/f");
+    sci_auto title = MnemonicString(prv::Add_X_to_chord().arg(prv::noteF()));
+    sci_auto description = prv::Add_note_X_to_chord().arg(prv::noteF());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteG_ToCurrentChordCommand {
+    sci_auto id = Command("command://notation/add-note/current-chord/g");
+    sci_auto title = MnemonicString(prv::Add_X_to_chord().arg(prv::noteG()));
+    sci_auto description = prv::Add_note_X_to_chord().arg(prv::noteG());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteA_ToCurrentChordCommand {
+    sci_auto id = Command("command://notation/add-note/current-chord/a");
+    sci_auto title = MnemonicString(prv::Add_X_to_chord().arg(prv::noteA()));
+    sci_auto description = prv::Add_note_X_to_chord().arg(prv::noteA());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteB_ToCurrentChordCommand {
+    sci_auto id = Command("command://notation/add-note/current-chord/b");
+    sci_auto title = MnemonicString(prv::Add_X_to_chord().arg(prv::noteB()));
+    sci_auto description = prv::Add_note_X_to_chord().arg(prv::noteB());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteC_ToInsertChordCommand {
+    sci_auto id = Command("command://notation/add-note/insert-chord/c");
+    sci_auto title = MnemonicString(prv::Insert_X().arg(prv::noteC()));
+    sci_auto description = prv::Insert_X().arg(prv::noteC());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteD_ToInsertChordCommand {
+    sci_auto id = Command("command://notation/add-note/insert-chord/d");
+    sci_auto title = MnemonicString(prv::Insert_X().arg(prv::noteD()));
+    sci_auto description = prv::Insert_X().arg(prv::noteD());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteE_ToInsertChordCommand {
+    sci_auto id = Command("command://notation/add-note/insert-chord/e");
+    sci_auto title = MnemonicString(prv::Insert_X().arg(prv::noteE()));
+    sci_auto description = prv::Insert_X().arg(prv::noteE());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteF_ToInsertChordCommand {
+    sci_auto id = Command("command://notation/add-note/insert-chord/f");
+    sci_auto title = MnemonicString(prv::Insert_X().arg(prv::noteF()));
+    sci_auto description = prv::Insert_X().arg(prv::noteF());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteG_ToInsertChordCommand {
+    sci_auto id = Command("command://notation/add-note/insert-chord/g");
+    sci_auto title = MnemonicString(prv::Insert_X().arg(prv::noteG()));
+    sci_auto description = prv::Insert_X().arg(prv::noteG());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteA_ToInsertChordCommand {
+    sci_auto id = Command("command://notation/add-note/insert-chord/a");
+    sci_auto title = MnemonicString(prv::Insert_X().arg(prv::noteA()));
+    sci_auto description = prv::Insert_X().arg(prv::noteA());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct AddNoteB_ToInsertChordCommand {
+    sci_auto id = Command("command://notation/add-note/insert-chord/b");
+    sci_auto title = MnemonicString(prv::Insert_X().arg(prv::noteB()));
+    sci_auto description = prv::Insert_X().arg(prv::noteB());
+    sci_auto availabilities = Availability::UI;
+};
+
+struct FlipCommand {
+    sci_auto id = Command("command://notation/flip");
+    sci_auto title = MnemonicString("action", "Flip direction");
+    sci_auto description = TranslatableString("action", "Flip direction");
+    sci_auto decoration = muse::rcommand::Decoration(muse::ui::IconCode::Code::NOTE_FLIP);
 };
 
 #undef sci_auto
@@ -386,12 +859,7 @@ inline static const muse::rcommand::Command CANCEL_COMMAND("command://notation/c
 inline static const muse::rcommand::Command UNDO_COMMAND("command://notation/undo");
 inline static const muse::rcommand::Command REDO_COMMAND("command://notation/redo");
 
-// navigation and selection commands
-
-inline static const muse::rcommand::Command OPEN_SELECTION_OPTIONS_COMMAND("command://notation/open-selection-options");
-
 // ------------------------------------------------------------
-inline static const muse::rcommand::Command GET_LOCATION_COMMAND("command://notation/get-location");
 
 // text navigation commands
 inline static const muse::rcommand::Command EDITTEXT_NEXT_WORD_COMMAND("command://notation/edittext-next-word");
@@ -426,45 +894,10 @@ inline static const muse::rcommand::Command EDITTEXT_TOGGLE_SUBSCRIPT_COMMAND("c
 inline static const muse::rcommand::Command EDITTEXT_TOGGLE_SUPERSCRIPT_COMMAND("command://notation/edittext-toggle-superscript");
 
 // note input commands
-inline static const muse::rcommand::Command TOGGLE_NOTE_INPUT_COMMAND("command://notation/toggle-note-input");
-inline static const muse::rcommand::Command TOGGLE_NOTE_INPUT_BY_NOTE_NAME_COMMAND("command://notation/toggle-note-input-by-note-name");
-inline static const muse::rcommand::Command TOGGLE_NOTE_INPUT_BY_DURATION_COMMAND("command://notation/toggle-note-input-by-duration");
-inline static const muse::rcommand::Command TOGGLE_NOTE_INPUT_RHYTHM_COMMAND("command://notation/toggle-note-input-rhythm");
-inline static const muse::rcommand::Command TOGGLE_NOTE_INPUT_REPITCH_COMMAND("command://notation/toggle-note-input-repitch");
-inline static const muse::rcommand::Command TOGGLE_NOTE_INPUT_REALTIME_AUTO_COMMAND("command://notation/toggle-note-input-realtime-auto");
-inline static const muse::rcommand::Command TOGGLE_NOTE_INPUT_REALTIME_MANUAL_COMMAND(
-    "command://notation/toggle-note-input-realtime-manual");
-inline static const muse::rcommand::Command TOGGLE_NOTE_INPUT_TIMEWISE_COMMAND("command://notation/toggle-note-input-timewise");
-inline static const muse::rcommand::Command TOGGLE_INSERT_MODE_COMMAND("command://notation/toggle-insert-mode");
+
 inline static const muse::rcommand::Command REALTIME_ADVANCE_COMMAND("command://notation/realtime-advance");
 
-inline static const muse::rcommand::Command SET_DURATION_LONGA_COMMAND("command://notation/set-duration-longa");
-inline static const muse::rcommand::Command SET_DURATION_BREVE_COMMAND("command://notation/set-duration-breve");
-inline static const muse::rcommand::Command SET_DURATION_WHOLE_COMMAND("command://notation/set-duration-whole");
-inline static const muse::rcommand::Command SET_DURATION_HALF_COMMAND("command://notation/set-duration-half");
-inline static const muse::rcommand::Command SET_DURATION_QUARTER_COMMAND("command://notation/set-duration-quarter");
-inline static const muse::rcommand::Command SET_DURATION_EIGHTH_COMMAND("command://notation/set-duration-eighth");
-inline static const muse::rcommand::Command SET_DURATION_16TH_COMMAND("command://notation/set-duration-16th");
-inline static const muse::rcommand::Command SET_DURATION_32ND_COMMAND("command://notation/set-duration-32nd");
-inline static const muse::rcommand::Command SET_DURATION_64TH_COMMAND("command://notation/set-duration-64th");
-inline static const muse::rcommand::Command SET_DURATION_128TH_COMMAND("command://notation/set-duration-128th");
-inline static const muse::rcommand::Command SET_DURATION_256TH_COMMAND("command://notation/set-duration-256th");
-inline static const muse::rcommand::Command SET_DURATION_512TH_COMMAND("command://notation/set-duration-512th");
-inline static const muse::rcommand::Command SET_DURATION_1024TH_COMMAND("command://notation/set-duration-1024th");
-
-inline static const muse::rcommand::Command SET_DOUBLE_DURATION_COMMAND("command://notation/set-double-duration");
-inline static const muse::rcommand::Command SET_HALVE_DURATION_COMMAND("command://notation/set-halve-duration");
-inline static const muse::rcommand::Command SET_DOUBLE_DURATION_DOTTED_COMMAND("command://notation/set-double-duration-dotted");
-inline static const muse::rcommand::Command SET_HALVE_DURATION_DOTTED_COMMAND("command://notation/set-halve-duration-dotted");
-
 inline static const muse::rcommand::Command EXTEND_TO_NEXT_NOTE_COMMAND("command://notation/extend-to-next-note");
-
-inline static const muse::rcommand::Command TOGGLE_DOT_COMMAND("command://notation/toggle-dot");
-inline static const muse::rcommand::Command TOGGLE_DOT2_COMMAND("command://notation/toggle-dot2");
-inline static const muse::rcommand::Command TOGGLE_DOT3_COMMAND("command://notation/toggle-dot3");
-inline static const muse::rcommand::Command TOGGLE_DOT4_COMMAND("command://notation/toggle-dot4");
-
-inline static const muse::rcommand::Command TOGGLE_REST_COMMAND("command://notation/toggle-rest");
 
 inline static const muse::rcommand::Command TOGGLE_FLAT2_COMMAND("command://notation/toggle-flat2");
 inline static const muse::rcommand::Command TOGGLE_FLAT_COMMAND("command://notation/toggle-flat");
@@ -505,28 +938,6 @@ inline static const muse::rcommand::Command FLIP_HORIZONTALLY_COMMAND("command:/
 
 //inline static const muse::rcommand::Command ADD_NOTE_COMMAND("command://notation/add-note"); // with params
 inline static const muse::rcommand::Command ADD_DRUM_NOTE_COMMAND("command://notation/add-drum-note"); // with params
-
-inline static const muse::rcommand::Command ENTER_NOTE_C_COMMAND("command://notation/enter-note-c");
-inline static const muse::rcommand::Command ENTER_NOTE_D_COMMAND("command://notation/enter-note-d");
-inline static const muse::rcommand::Command ENTER_NOTE_E_COMMAND("command://notation/enter-note-e");
-inline static const muse::rcommand::Command ENTER_NOTE_F_COMMAND("command://notation/enter-note-f");
-inline static const muse::rcommand::Command ENTER_NOTE_G_COMMAND("command://notation/enter-note-g");
-inline static const muse::rcommand::Command ENTER_NOTE_A_COMMAND("command://notation/enter-note-a");
-inline static const muse::rcommand::Command ENTER_NOTE_B_COMMAND("command://notation/enter-note-b");
-inline static const muse::rcommand::Command ADD_NOTE_C_COMMAND("command://notation/add-note-c");
-inline static const muse::rcommand::Command ADD_NOTE_D_COMMAND("command://notation/add-note-d");
-inline static const muse::rcommand::Command ADD_NOTE_E_COMMAND("command://notation/add-note-e");
-inline static const muse::rcommand::Command ADD_NOTE_F_COMMAND("command://notation/add-note-f");
-inline static const muse::rcommand::Command ADD_NOTE_G_COMMAND("command://notation/add-note-g");
-inline static const muse::rcommand::Command ADD_NOTE_A_COMMAND("command://notation/add-note-a");
-inline static const muse::rcommand::Command ADD_NOTE_B_COMMAND("command://notation/add-note-b");
-inline static const muse::rcommand::Command INSERT_NOTE_C_COMMAND("command://notation/insert-note-c");
-inline static const muse::rcommand::Command INSERT_NOTE_D_COMMAND("command://notation/insert-note-d");
-inline static const muse::rcommand::Command INSERT_NOTE_E_COMMAND("command://notation/insert-note-e");
-inline static const muse::rcommand::Command INSERT_NOTE_F_COMMAND("command://notation/insert-note-f");
-inline static const muse::rcommand::Command INSERT_NOTE_G_COMMAND("command://notation/insert-note-g");
-inline static const muse::rcommand::Command INSERT_NOTE_A_COMMAND("command://notation/insert-note-a");
-inline static const muse::rcommand::Command INSERT_NOTE_B_COMMAND("command://notation/insert-note-b");
 
 inline static const muse::rcommand::Command ENTER_REST_COMMAND("command://notation/enter-rest");
 
