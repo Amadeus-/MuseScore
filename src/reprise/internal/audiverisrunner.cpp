@@ -217,6 +217,9 @@ bool AudiverisRunner::start(const muse::io::path_t& pdfPath, const QString& page
     m_totalSheets = -1;
     m_currentSheet = -1;
     m_requestedSheetCount = 0;
+    m_totalLocked = false;
+    m_maxSheet = 0;
+    m_maxPercent = -1;
     m_currentStep.clear();
     m_stdoutBuffer.clear();
     m_tail.clear();
@@ -249,6 +252,15 @@ bool AudiverisRunner::start(const muse::io::path_t& pdfPath, const QString& page
     //! stops consuming numbers at the separator. Empty list -> omit entirely -> Audiveris reads every page.
     const std::vector<int> sheets = expandSheets(pages);
     m_requestedSheetCount = static_cast<int>(sheets.size());
+
+    //! When a page range was requested we already know EXACTLY how many sheets Audiveris will process, so take that
+    //! as the authoritative total up front and lock it -- no parsing, and immune to any stray "N sheet(s)" line.
+    if (m_requestedSheetCount > 0)
+    {
+        m_totalSheets = m_requestedSheetCount;
+        m_totalLocked = true;
+    }
+
     if (!sheets.empty())
     {
         args.push_back("-sheets");
@@ -367,16 +379,25 @@ void AudiverisRunner::parseLine(const QString& line)
 {
     bool changed = false;
 
-    //! Total sheets: "Book ... | N sheets in ...".
-    static const QRegularExpression reTotal("(\\d+)\\s+sheets?\\b");
-    const QRegularExpressionMatch mTotal = reTotal.match(line);
-    if (mTotal.hasMatch())
+    //! Total sheets. The book prints its sheet count ONCE ("... N sheets in <pdf>"), before any per-sheet
+    //! processing, so the authoritative total is the FIRST "N sheets" line that is not itself a per-sheet-tagged
+    //! status line (those carry a "#<n>]" tag). We lock on that first accept, so a later stray "<n> sheet(s)"
+    //! line can never overwrite it -- that clobber is what previously drove the total down to 1 ("page 3 of 1").
+    //! Skipped entirely once the total is already locked (e.g. from a requested page range).
+    static const QRegularExpression reSheetTag("#\\d+\\]");
+    if (!m_totalLocked && !reSheetTag.match(line).hasMatch())
     {
-        const int total = mTotal.captured(1).toInt();
-        if (total > 0 && total != m_totalSheets)
+        static const QRegularExpression reTotal("(\\d+)\\s+sheets?\\b", QRegularExpression::CaseInsensitiveOption);
+        const QRegularExpressionMatch mTotal = reTotal.match(line);
+        if (mTotal.hasMatch())
         {
-            m_totalSheets = total;
-            changed = true;
+            const int total = mTotal.captured(1).toInt();
+            if (total > 0)
+            {
+                m_totalSheets = total;
+                m_totalLocked = true;
+                changed = true;
+            }
         }
     }
 
@@ -410,18 +431,39 @@ void AudiverisRunner::parseLine(const QString& line)
 
     if (changed)
     {
-        emit progressChanged(computePercent(), m_currentSheet, m_totalSheets, humanStage(m_currentStep));
+        //! Clamp the current sheet to the known total so we never report current > total ("page 3 of 1").
+        int sheet = m_currentSheet;
+        if (m_totalSheets > 0 && sheet > m_totalSheets)
+        {
+            sheet = m_totalSheets;
+        }
+
+        //! Monotonic: recognition only moves forward, so never let the reported sheet / percent go backwards.
+        if (sheet > m_maxSheet)
+        {
+            m_maxSheet = sheet;
+        }
+        sheet = m_maxSheet;
+
+        int percent = computePercent(sheet);
+        if (percent > m_maxPercent)
+        {
+            m_maxPercent = percent;
+        }
+        percent = m_maxPercent;
+
+        emit progressChanged(percent, sheet, m_totalSheets, humanStage(m_currentStep));
     }
 }
 
-int AudiverisRunner::computePercent() const
+int AudiverisRunner::computePercent(int currentSheet) const
 {
     if (m_totalSheets <= 0)
     {
         return -1;
     }
 
-    const int sheet = m_currentSheet > 0 ? m_currentSheet : 1;
+    const int sheet = currentSheet > 0 ? currentSheet : 1;
 
     double withinSheet = 0.0;
     const int stepIndex = STEP_ORDER.indexOf(m_currentStep);

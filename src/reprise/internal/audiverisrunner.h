@@ -100,8 +100,8 @@ private:
     //! Map an Audiveris step name (LOAD/BINARY/GRID/HEADS/...) to a friendly label; raw (lowercased) as fallback.
     QString humanStage(const QString& rawStep) const;
 
-    //! Compute 0-100 from the current sheet + step position within the known step order; -1 if total unknown.
-    int computePercent() const;
+    //! Compute 0-100 from the given (clamped) sheet + step position within the known step order; -1 if total unknown.
+    int computePercent(int sheet) const;
 
     //! Keep only the last N lines (a small ring) for the error tail.
     void pushTail(const QString& line);
@@ -115,6 +115,15 @@ private:
     int m_currentSheet = -1;
     int m_requestedSheetCount = 0;
     QString m_currentStep;
+
+    //! Once the authoritative sheet total is known (the requested page count, else the book's one-time "N sheets"
+    //! line), lock it so a later stray "<n> sheet(s)" status line can never clobber it back down (e.g. to 1).
+    bool m_totalLocked = false;
+
+    //! Recognition only moves forward: the highest sheet / percent reported so far, so the popup bar and the
+    //! "page X" caption are monotonic and never regress on a transient stdout re-order or a late total correction.
+    int m_maxSheet = 0;
+    int m_maxPercent = -1;
 
     QStringList m_tail;
     bool m_cancelled = false;

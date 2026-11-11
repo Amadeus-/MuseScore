@@ -204,7 +204,13 @@ QString ImportProgressModel::progressCaption() const
     }
 
     const int total = m_totalPages;
-    const int current = m_currentPage > 0 ? m_currentPage : (total > 0 ? 1 : -1);
+    int current = m_currentPage > 0 ? m_currentPage : (total > 0 ? 1 : -1);
+
+    //! Defensive: never display current > total (the runner already clamps, but guard the caption too).
+    if (total > 0 && current > total)
+    {
+        current = total;
+    }
 
     if (total > 0 && current > 0)
     {

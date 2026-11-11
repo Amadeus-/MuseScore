@@ -132,15 +132,18 @@ StyledDialogView {
                     spacing: 12
 
                     Image {
-                        Layout.preferredWidth: 34
-                        Layout.preferredHeight: 34
+                        Layout.preferredWidth: 52
+                        Layout.preferredHeight: 52
                         Layout.alignment: Qt.AlignVCenter
 
-                        source: "resources/reprise-mark.svg"
-                        sourceSize.width: 68
-                        sourceSize.height: 68
+                        //! The full cream-R + gold-blade + two-notes mark, sized to match the approved mockup's
+                        //! 52px header slot. sourceSize is rasterised at 2x so the SVG stays crisp when scaled down.
+                        source: "resources/titlebar-mark.svg"
+                        sourceSize.width: 104
+                        sourceSize.height: 104
                         fillMode: Image.PreserveAspectFit
                         smooth: true
+                        mipmap: true
                     }
 
                     ColumnLayout {

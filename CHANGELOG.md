@@ -24,6 +24,16 @@ below `1.0.0` is pre-release.
   automatically once the score has opened.
 
 ### Fixed
+- **Recognition popup header mark**: the header now shows the full cream-R +
+  gold-blade + two-notes mark (the transparent `titlebar-mark` glyph) at the 52px
+  size of the approved mockup, instead of the small app badge (a navy rounded square
+  whose inner glyph read tiny against the navy header).
+- **Progress total / backwards bar on some PDFs**: the sheet total is now fixed up
+  front from a reliable source — the requested page count when a range was given,
+  otherwise the book's one-time "N sheets" line, locked so a later stray "N sheet(s)"
+  line can no longer clobber it down to 1. The current sheet is clamped to the total
+  (no more "page 3 of 1") and both the bar and the "page X" caption are monotonic, so
+  progress never regresses.
 - **Import PDF crash on launch**: the recognition popup's view-model
   (`ImportProgressModel`) resolved its IoC context inside its constructor, but a
   QML-instantiated object has no `QQmlContext` yet during construction — the

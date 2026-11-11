@@ -30,7 +30,7 @@ qt_add_qml_module(reprise_qml
         ImportPdfOptionsDialog.qml
         ImportProgressDialog.qml
     RESOURCES
-        resources/reprise-mark.svg
+        resources/titlebar-mark.svg
     IMPORTS
         TARGET muse_ui_qml
         TARGET muse_uicomponents_qml
