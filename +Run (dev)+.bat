@@ -23,6 +23,6 @@ set "PATH=%QT_KIT%\bin;%D%\ogg\bin;%D%\opus\bin;%D%\vorbis\bin;%D%\zlib\bin;%D%\
 start "" "%EXE%" %*
 
 echo.
-echo Launched MuseScore (it runs in its own window). You can close this console.
+echo Launched Reprise (it runs in its own window). You can close this console.
 echo.
 pause

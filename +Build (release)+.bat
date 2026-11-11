@@ -62,14 +62,15 @@ if errorlevel 1 (
 echo.
 echo === Build OK. ===
 echo.
-set /p "DODEPLOY=Deploy now (make the exe double-clickable)? [Y/N]: "
+set /p "DODEPLOY=Deploy now (make the exe double-clickable)? [Y/n]: "
+if "%DODEPLOY%"=="" set "DODEPLOY=Y"
 if /i not "%DODEPLOY%"=="Y" goto :nodeploy
 echo.
 call "C:\Dev\+MuseScore+\+Deploy (standalone)+.bat"
 :nodeploy
 
 echo.
-set /p "DORUN=Launch MuseScore now? [Y/N]: "
+set /p "DORUN=Launch Reprise now? [y/N]: "
 if /i not "%DORUN%"=="Y" goto :norun
 echo.
 call "C:\Dev\+MuseScore+\+Run (dev)+.bat"

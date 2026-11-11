@@ -63,7 +63,8 @@ echo     main:         %MAIN_BEFORE:~0,9%  to  %MAIN_AFTER:~0,9%
 echo     reprise-main: %RM_BEFORE:~0,9%  to  %RM_AFTER:~0,9%
 echo.
 
-set /p "DOPUSH=Push updated main and reprise-main to origin now? [Y/N]: "
+set /p "DOPUSH=Push updated main and reprise-main to origin now? [Y/n]: "
+if "%DOPUSH%"=="" set "DOPUSH=Y"
 if /i not "%DOPUSH%"=="Y" goto :skippush
 echo.
 echo === Pushing origin main ===
@@ -73,7 +74,8 @@ git push origin reprise-main
 :skippush
 
 echo.
-set /p "DOBUILD=Rebuild now (runs the release build)? [Y/N]: "
+set /p "DOBUILD=Rebuild now (runs the release build)? [Y/n]: "
+if "%DOBUILD%"=="" set "DOBUILD=Y"
 if /i not "%DOBUILD%"=="Y" goto :skipbuild
 echo.
 call "C:\Dev\+MuseScore+\+Build (release)+.bat"
