@@ -104,6 +104,10 @@ signals:
     void closeRequested();
 
 private:
+    //! Deferred IoC-context setup (runner + signal wiring + master-notation subscription + settings default),
+    //! run from load() -- NOT the ctor, where qmlContext(this) is still null. Idempotent (first call only).
+    void initContext();
+
     void onRunnerProgress(int percent, int sheet, int total, const QString& stageHuman);
     void onRunnerFinished(bool ok, const QString& outputPath, const QString& error, const QString& tail);
 

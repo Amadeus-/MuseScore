@@ -535,7 +535,7 @@ StyledDialogView {
 
                             StyledTextLabel {
                                 anchors.verticalCenter: parent.verticalCenter
-                                text: qsTrc("reprise", "Close this window when import finishes")
+                                text: qsTrc("reprise", "Close this window after importing")
                                 color: root.inkCheck
                                 horizontalAlignment: Text.AlignLeft
                             }

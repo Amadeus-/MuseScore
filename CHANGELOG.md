@@ -19,9 +19,17 @@ below `1.0.0` is pre-release.
   success the step line becomes "Done — recognized M measures across N pages.", the
   score opens, and a navy **Close** button appears; on failure the window stays up
   with the Audiveris error and a tail of its output instead of vanishing.
-- **"Close this window when import finishes"** option in the popup (remembered
+- **"Close this window after importing"** option in the popup (remembered
   between runs, **off by default**): when checked, the window closes itself
   automatically once the score has opened.
+
+### Fixed
+- **Import PDF crash on launch**: the recognition popup's view-model
+  (`ImportProgressModel`) resolved its IoC context inside its constructor, but a
+  QML-instantiated object has no `QQmlContext` yet during construction — the
+  injected `IProjectSession` came back null and the app crashed (SIGSEGV) the moment
+  an import began. The context-dependent setup now runs from `load()` (driven by the
+  popup's `Component.onCompleted`), matching the other MuseScore QML dialog models.
 
 ## [0.1.0] — 2026-11-10
 

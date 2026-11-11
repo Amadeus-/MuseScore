@@ -63,6 +63,22 @@ static constexpr int AUTO_CLOSE_DELAY_MS = 1400;
 ImportProgressModel::ImportProgressModel(QObject* parent)
     : QObject(parent), muse::Contextable(muse::iocCtxForQmlObject(this))
 {
+    //! NOTE: Nothing that resolves the IoC context may run here. iocCtxForQmlObject(this) is lazy: it reads
+    //! qmlContext(this), which QML only attaches AFTER this C++ ctor returns. Touching a ContextInject (e.g.
+    //! projectSession()) or iocContext() now trips the "QQmlContext is not set" assert, resolves to a null
+    //! service, and crashes on first use. All context-dependent setup is deferred to initContext(), run from
+    //! load() (driven by the popup's Component.onCompleted, by which point the context is live).
+}
+
+ImportProgressModel::~ImportProgressModel() = default;
+
+void ImportProgressModel::initContext()
+{
+    if (m_runner)
+    {
+        return;
+    }
+
     //! Default UNCHECKED: the window stays up after a successful import unless the user opts in.
     settings()->setDefaultValue(CLOSE_POPUP_ON_COMPLETE, Val(false));
 
@@ -95,8 +111,6 @@ ImportProgressModel::ImportProgressModel(QObject* parent)
     });
 }
 
-ImportProgressModel::~ImportProgressModel() = default;
-
 bool ImportProgressModel::closePopupOnComplete() const
 {
     return settings()->value(CLOSE_POPUP_ON_COMPLETE).toBool();
@@ -115,6 +129,10 @@ void ImportProgressModel::setClosePopupOnComplete(bool close)
 
 void ImportProgressModel::load(const QString& pdfPath, const QString& pages, int dpi)
 {
+    //! Resolve the IoC context + build the runner now (first call only) -- the QQmlContext is attached by the
+    //! time Component.onCompleted calls load(), so this is safe here where the ctor was not.
+    initContext();
+
     m_title = QFileInfo(pdfPath).fileName();
     m_pages = pages;
     m_dpi = dpi;
