@@ -191,6 +191,11 @@ void PreferencesModel::load(const QString& currentPageId)
         makeItem("import", QT_TRANSLATE_NOOP("preferences", "Import"), IconCode::Code::IMPORT,
                  "Preferences/ImportPreferencesPage.qml"),
 
+        //! Reprise fork: local-Audiveris recognition settings (paths + scan resolution + progress-popup behaviour).
+        //! Placeholder glyph reuses IMPORT until a dedicated Reprise icon exists.
+        makeItem("reprise", QT_TRANSLATE_NOOP("preferences", "Reprise"), IconCode::Code::IMPORT,
+                 "Preferences/ReprisePreferencesPage.qml"),
+
         makeItem("shortcuts", QT_TRANSLATE_NOOP("preferences", "Shortcuts"), IconCode::Code::SHORTCUTS,
                  "Preferences/ShortcutsPreferencesPage.qml"),
 

@@ -8,6 +8,20 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+### Added
+- **Reprise Preferences page**: a new **Reprise** section in Edit > Preferences (placed
+  after Import) collecting the recognition settings in one place — the **Audiveris** and
+  **Tesseract** program paths (each with a **Detect** button that finds the installed
+  program and fills the field), the **scan resolution** (200–400 dpi), and the **"close
+  the progress window after a successful import"** toggle.
+- **Audiveris/Tesseract auto-detection** matching the original Reprise search order: the
+  PATH first, then the standard install folders under Program Files / Program Files (x86) /
+  ProgramW6432 / LocalAppData for Audiveris, and `…\Tesseract-OCR\tesseract.exe` for
+  Tesseract. A path you set by hand always overrides detection.
+- **Tesseract path drives OCR**: when a Tesseract program path is set, `TESSDATA_PREFIX`
+  for Audiveris' OCR is derived from it (its sibling `tessdata` folder); otherwise the
+  previous automatic detection next to Audiveris is used.
+
 ## [0.2.0] — 2026-11-11
 
 ### Added
