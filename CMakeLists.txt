@@ -250,6 +250,10 @@ endif()
 include(SetupBuildEnvironment)
 include(GetPlatformInfo)
 
+# Reprise: fork-local build flags (kept in a separate, merge-safe file). Currently
+# scopes the Qt-header C4702 flood to external headers only. See RepriseBuildFlags.cmake.
+include(${CMAKE_CURRENT_LIST_DIR}/RepriseBuildFlags.cmake)
+
 if (MUSE_COMPILE_USE_COMPILER_CACHE)
     include(SetupCompilerCache)
 endif(MUSE_COMPILE_USE_COMPILER_CACHE)
