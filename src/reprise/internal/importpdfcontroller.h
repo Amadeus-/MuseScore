@@ -34,22 +34,18 @@
 #include "global/io/ifilesystem.h"
 #include "global/io/path.h"
 
-#include "notation/iinstrumentsrepository.h"
-#include "project/iprojectsession.h"
-
 #include "audiverisrunner.h"
 
 namespace mu::reprise {
-//! Orchestrates Reprise's "Import PDF" flow: pick a PDF -> intake dialog (pages + resolution) -> run Audiveris
-//! -> open the recognised score -> default every imported part to Grand Piano.
+//! Orchestrates Reprise's "Import PDF" flow: pick a PDF -> intake dialog (pages + resolution) -> show the async
+//! recognition progress popup. The popup's view-model (ImportProgressModel) owns the Audiveris run, the import,
+//! and the Grand-Piano override; this controller only drives the picker + intake dialog and launches the popup.
 class ImportPdfController : public muse::Contextable, public muse::async::Asyncable, public muse::rcommand::Commandable
 {
     muse::ContextInject<muse::IInteractive> interactive = { this };
     muse::ContextInject<muse::rcommand::ICommandDispatcher> commandDispatcher = { this };
-    muse::ContextInject<mu::project::IProjectSession> projectSession = { this };
     muse::GlobalInject<muse::IGlobalConfiguration> globalConfiguration;
     muse::GlobalInject<muse::io::IFileSystem> fileSystem;
-    muse::GlobalInject<mu::notation::IInstrumentsRepository> instrumentsRepository;
 
 public:
     explicit ImportPdfController(const muse::modularity::ContextPtr& iocCtx)
@@ -69,13 +65,7 @@ private:
     int scanResolution() const;
     void setScanResolution(int dpi);
 
-    //! TEMPORARY Reprise default: force every imported part to Grand Piano until an intake step adds real
-    //! instrument selection. Applied once to the just-opened master score. Remove when instrument choice lands.
-    void applyGrandPianoDefault();
-
+    //! Kept only for the pre-flight findAudiveris() check; the actual run lives in ImportProgressModel.
     std::shared_ptr<AudiverisRunner> m_audiverisRunner;
-
-    //! Set just before the imported score is opened; consumed on the next master-notation change.
-    bool m_pendingGrandPianoReset = false;
 };
 }

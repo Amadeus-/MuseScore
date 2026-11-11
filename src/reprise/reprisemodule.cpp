@@ -55,6 +55,9 @@ void RepriseModule::resolveImports()
     if (ir)
     {
         ir->registerQmlUri(Uri("musescore://reprise/importpdf/options"), "MuseScore.Reprise", "ImportPdfOptionsDialog");
+
+        //! NOTE: Register the recognition progress popup, shown while Audiveris runs asynchronously.
+        ir->registerQmlUri(Uri("musescore://reprise/importpdf/progress"), "MuseScore.Reprise", "ImportProgressDialog");
     }
 }
 

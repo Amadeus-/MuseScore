@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and Reprise aims to follow [Semantic Versioning](https://semver.org/). Everything
 below `1.0.0` is pre-release.
 
+## [Unreleased]
+
+### Added
+- **Recognition progress popup**: Import PDF now runs Audiveris asynchronously and
+  shows a branded progress window — a live current-stage line ("Recognizing page X
+  of N — reading notes…"), a gold progress bar (determinate once the page count is
+  known, animated before), and a **Cancel** button that stops recognition and aborts
+  the import. On success it shows a Done state and opens the score; on failure it
+  stays up with the Audiveris error and a tail of its output instead of vanishing.
+- **"Close after import complete"** option in the popup (remembered between runs):
+  when checked, the window closes itself automatically once the score has opened.
+
 ## [0.1.0] — 2026-11-10
 
 Initial pre-release. Reprise is established as a fork of
