@@ -139,6 +139,15 @@ void ImportProgressModel::load(const QString& pdfPath, const QString& pages, int
     m_pagesLabel = formatPagesLabel(pages);
     emit titleChanged();
 
+    //! Reset ALL per-import state so every run starts independent of any earlier one (idempotent).
+    m_currentPage = -1;
+    m_totalPages = -1;
+    m_errorDetails.clear();
+    m_logText.clear();
+    emit logTextChanged();
+    m_pendingGrandPianoReset = false;
+    m_pendingDoneCounts = false;
+
     setStatus("running");
     m_indeterminate = true;
     m_percent = -1;

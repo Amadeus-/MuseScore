@@ -404,8 +404,10 @@ void AudiverisRunner::parseLine(const QString& line)
         }
     }
 
-    //! Current sheet: a "[<book>#<N>]" tag.
-    static const QRegularExpression reSheet("#(\\d+)\\]");
+    //! Current sheet: the LEADING logger tag "LEVEL [<book>#<N>] ...". Anchored to that first bracket on purpose: a
+    //! multi-sheet run also prints "Book reaching PAGE on sheets:[#1#2]" (empty leading tag) BEFORE any sheet starts, and an
+    //! unanchored "#<n>]" search matched its trailing "#2]" -> "page 2 of 2" + a near-full bar from the first moment.
+    static const QRegularExpression reSheet("^\\s*\\w+\\s+\\[[^\\]]*#(\\d+)\\]");
     const QRegularExpressionMatch mSheet = reSheet.match(line);
     if (mSheet.hasMatch())
     {

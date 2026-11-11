@@ -27,6 +27,11 @@ below `1.0.0` is pre-release.
   the Reprise log file, tagged `[audiveris]`, so failed imports can be diagnosed later.
 
 ### Fixed
+- **Progress popup started at "page 2 of 2" with a full bar on a multi-page PDF with a
+  page range**: Audiveris prints `Book reaching PAGE on sheets:[#1#2]` before any sheet
+  starts, and the sheet parser read its trailing `#2]` as the current sheet. The current
+  sheet is now read only from the leading `[<book>#N]` log tag. The popup also resets all
+  per-import state when a run begins.
 - **Recognition popup header mark**: the header now shows the full cream-R +
   gold-blade + two-notes mark (the transparent `titlebar-mark` glyph) at the 52px
   size of the approved mockup, instead of the small app badge (a navy rounded square
