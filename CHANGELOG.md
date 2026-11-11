@@ -36,4 +36,4 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
-[0.1.0]: https://github.com/Amadeus-/MuseScore/tree/reprise-main
+[0.1.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main

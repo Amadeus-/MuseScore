@@ -10,7 +10,7 @@
 - **Every build is parameterised by `build_mode`**: `devel | nightly | testing | stable`. The mode flows through `make_build_mode_env.sh` → `build.artifacts\env\build_mode.env` → each platform script, which maps it to CMake's `MUSE_APP_BUILD_MODE` (`dev | testing | release`) and to a packaging/naming variant. See §3.
 - **Artifacts** land in `build.artifacts\` with a small `env\*.env` side-channel (`build_mode`, `build_number`, `build_version`, `build_revision`, `build_branch`, `release_channel`, `artifact_name`) written by `buildscripts\ci\tools\make_*_env.sh`. Later steps (package, checksum, publish, release collation) read these instead of re-deriving.
 - **Version** = `MUSE_APP_VERSION` from `version.cmake` (`5.0.0`) + `.` + CI build number (`yymmddHHM`, 9 digits). No version is stored anywhere else.
-- **Fork reality:** most jobs gate on secrets (Transifex, Sentry, OSUOSL, S3, Apple, Windows signing). The workflows degrade gracefully (`::warning::` and a `DO_*=false` flag) rather than fail, and scheduled jobs are gated `github.repository == 'musescore/MuseScore'` — so on `Amadeus-/MuseScore` schedules do not run and signing/publishing is off.
+- **Fork reality:** most jobs gate on secrets (Transifex, Sentry, OSUOSL, S3, Apple, Windows signing). The workflows degrade gracefully (`::warning::` and a `DO_*=false` flag) rather than fail, and scheduled jobs are gated `github.repository == 'musescore/MuseScore'` — so on `Amadeus-/Reprise` schedules do not run and signing/publishing is off.
 
 ## 1. CI workflow inventory
 
@@ -265,6 +265,6 @@ Only the two **`_en.ts` source files** are generated locally; all other-language
 - **`buildscripts/ci/linux/local/workflow.sh`** (in `muse\buildscripts\ci`) and `muse\buildscripts\ci\windows\Dockerfile` — local/containerised CI helpers, not read.
 - **`muse\buildscripts\ci\crashdumps\*`** (`generate_syms.cmake`, `ci_generate_*`, `view_dump.sh`, python scripts): ADR 00105 says these are **legacy and "still to be dropped"**; no workflow in this repo calls them. Their README still describes `dump_syms`/`minidump_stackwalk`.
 - **`tools\release_notes`** and `buildscripts\ci\tools\osuosl\index.html` purpose beyond the nightly index page.
-- **Fork behaviour** (`Amadeus-/MuseScore`): which of the above jobs actually run there, given scheduled jobs and triage jobs are hard-gated to `musescore/MuseScore`, and secrets are absent.
+- **Fork behaviour** (`Amadeus-/Reprise`): which of the above jobs actually run there, given scheduled jobs and triage jobs are hard-gated to `musescore/MuseScore`, and secrets are absent.
 
 *Authored from: all 22 files in `.github\workflows\`; `buildscripts\ci\{linux,macos,windows,backend,wasm,withoutqt,vtests,release,translation,tools}\*` (build/package/sign/publish/env scripts), `buildscripts\packaging\{macOS,Windows}`; `version.cmake`, `SetupConfigure.cmake`, `ninja_build.sh`; `.tx\config`, `tools\translations\*`; `muse\buildscripts\ci\{release,tools\sentry,crashdumps}`, `muse\docs\adr\00105`; `muse\framework\diagnostics` (CMake, `crashhandler.cpp`, config), `muse\buildscripts\cmake\ExtDepsManifest.cmake`, `muse_deps\recipes\{crashpad_handler,sentry-cli}`; `muse\framework\update\internal\updateconfiguration.cpp`. Deep pass 2026-11-08. **If this contradicts the live source, the source wins.***

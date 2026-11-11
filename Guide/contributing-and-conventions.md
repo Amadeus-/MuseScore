@@ -8,12 +8,12 @@
 - Style is enforced by **uncrustify 0.74** (`muse\tools\codestyle\uncrustify_muse.cfg:2`), **not** clang-format. There is **no root `.clang-format`**; the only one in the tree is third-party (`muse\framework\dockwindow\thirdparty\KDDockWidgets\.clang-format`).
 - CI job **`Check: Codestyle`** (`.github\workflows\check_codestyle.yml`) re-formats `./src/` and `./muse/framework/` and fails the PR if `git diff` is non-empty.
 - ⭐ **AI policy:** AI use is allowed; you are fully accountable; if AI produced a *substantial portion* you must tick the PR-template AI field, name the tool, and add the commit trailer **`Assisted-by: <tool name> <version, if known>`** — **never `Co-authored-by:`** (`AI_POLICY.md:59-67`). See §3 for the clash with the user's usual `Co-Authored-By: Claude …` trailer.
-- Remotes: `origin` = `https://github.com/Amadeus-/MuseScore.git` (user's fork), `upstream` = `https://github.com/musescore/MuseScore` (`git remote -v`). Single local branch `main` tracking `origin/main`.
+- Remotes: `origin` = `https://github.com/Amadeus-/Reprise.git` (user's fork), `upstream` = `https://github.com/musescore/MuseScore` (`git remote -v`). Single local branch `main` tracking `origin/main`.
 
 ## 1. Contributing workflow (fork → branch → PR → wiki)
 
 1. **Read the wiki** Contributing page (above). `CONTRIBUTING.md` itself says nothing more.
-2. **Fork** `musescore/MuseScore` (here: `Amadeus-/MuseScore`), branch off `main`, make focused commits.
+2. **Fork** `musescore/MuseScore` (here: `Amadeus-/Reprise`), branch off `main`, make focused commits.
 3. **Sign the CLA** — <https://musescore.org/en/cla> (PR template `.github\pull_request_template.md:7`). Source files carry the marker `MuseScore-Studio-CLA-applies` right under the SPDX line (e.g. `src\notation\inotation.h:3`, `hooks\pre-commit:3`).
 4. **Open the PR** against `musescore/MuseScore` using the template; fill the checklist truthfully — the template states *"failure to complete this checklist accurately will result in the PR being closed"* (`pull_request_template.md:5`).
 5. Pass CI (build matrix, unit tests, vtests, codestyle — see `ci-and-release.md`); respond to review.
@@ -132,7 +132,7 @@ Real examples in this repo's history (`git log --grep=Assisted-by` matches ~49 r
 | **User's global rule / harness default** | `Co-Authored-By: Claude <model> <noreply@anthropic.com>` |
 | **MuseScore upstream requires** | `Assisted-by: Claude Code <version> (<model>)` |
 
-The two are **not interchangeable**: MuseScore explicitly forbids `Co-authored-by:` for AI. For any commit/PR **bound for `musescore/MuseScore`**, use `Assisted-by:` (and tick the PR-template AI box + list the tool). For fork-only commits to `Amadeus-/MuseScore` that will never go upstream, the user's normal trailer is fine — but if a fork commit may later be upstreamed or cherry-picked, prefer `Assisted-by:` from the start. Either way: **never commit/push without the user's explicit instruction** (global rule); the choice of trailer is a thing to **flag and confirm**, not decide silently. Also respect §2: the human submitter must personally understand and approve everything; an agent must not open an upstream PR/issue on its own.
+The two are **not interchangeable**: MuseScore explicitly forbids `Co-authored-by:` for AI. For any commit/PR **bound for `musescore/MuseScore`**, use `Assisted-by:` (and tick the PR-template AI box + list the tool). For fork-only commits to `Amadeus-/Reprise` that will never go upstream, the user's normal trailer is fine — but if a fork commit may later be upstreamed or cherry-picked, prefer `Assisted-by:` from the start. Either way: **never commit/push without the user's explicit instruction** (global rule); the choice of trailer is a thing to **flag and confirm**, not decide silently. Also respect §2: the human submitter must personally understand and approve everything; an agent must not open an upstream PR/issue on its own.
 
 ## 4. Commit / PR conventions (inferred from `git log`; not formally specified in-repo)
 
@@ -152,7 +152,7 @@ Observed subject styles (`git log --oneline -60`):
 
 ## 6. Fork ↔ upstream relationship
 
-- `origin` = `Amadeus-/MuseScore` (user's fork; fetch+push), `upstream` = `musescore/MuseScore` (fetch+push URLs both listed — **never push to upstream**; the user's repo is `origin`).
+- `origin` = `Amadeus-/Reprise` (user's fork; fetch+push), `upstream` = `musescore/MuseScore` (fetch+push URLs both listed — **never push to upstream**; the user's repo is `origin`).
 - Local branch `main` tracks `origin/main` (`git branch -a`). Submodules `muse\` and `muse_deps\` follow pointers recorded by the superproject (`check_submodules.yml` guards that in CI).
 - The agent's standing policy: no fetch/pull/branch/submodule update/commit/push unless the user asks in the current request. Procedure for syncing the fork lives in the agent playbook `git-and-upstream-sync.md` (`~/.claude/agents/musescore/playbooks/`), not here.
 - Anything contributed upstream must satisfy §1 (CLA, template), §2 (uncrustify), §3 (AI disclosure).
