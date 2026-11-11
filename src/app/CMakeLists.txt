@@ -189,8 +189,13 @@ if (OS_IS_WIN)
     set(MANIFEST_FILE_NAME "${EXECUTABLE_NAME}.manifest")
     configure_file("configs/app_win.manifest.in" ${MANIFEST_FILE_NAME} @ONLY)
 
+    # Stamp the exe VERSIONINFO (FileVersion/ProductVersion) from the single version source of truth.
+    set(WINDOWS_VERSION_RC "${CMAKE_CURRENT_BINARY_DIR}/windows_version.rc")
+    configure_file("${PROJECT_SOURCE_DIR}/share/icons/windows_version.rc.in" ${WINDOWS_VERSION_RC} @ONLY)
+
     list(APPEND MSCORE_APPEND_SRC
         ${WINDOWS_ICONS_RC}
+        ${WINDOWS_VERSION_RC}
         "${CMAKE_CURRENT_BINARY_DIR}/${MANIFEST_FILE_NAME}"
     )
 endif()
