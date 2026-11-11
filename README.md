@@ -1,95 +1,95 @@
-# ![MuseScore Studio](share/icons/musescore_logo_full.png)
+# Reprise
 
-Music notation and composition software
+**From scan to score.** Open a PDF of sheet music, recognize it (OMR), correct it, and export.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
-[![Coverage](https://musescore.github.io/mss_code_coverage/badge/coverage_badge.svg)](https://musescore.github.io/mss_code_coverage/)
 
-MuseScore Studio is an open source and free music notation software. For support, contribution, and bug reports visit MuseScore.org. Fork and make pull requests!
+Reprise is a focused music-scanning and correction tool built on
+[MuseScore Studio](https://github.com/musescore/MuseScore). It takes a scanned PDF
+of sheet music, runs optical music recognition (OMR) with
+[Audiveris](https://github.com/Audiveris/audiveris), and gives you a streamlined
+workflow to correct the result and export clean **MusicXML** — or hand the score
+onward to MuseScore to finish.
+
+> **Pre-release (0.1.0) — work in progress.** Reprise is early software under
+> active development. Expect rough edges and changing behavior.
+
+## Relationship to MuseScore
+
+Reprise is a **fork of MuseScore Studio** and is built directly on MuseScore's
+notation, engraving, and playback engine — the editing you do in Reprise is
+MuseScore-native. All of MuseScore's copyright notices, author credits, and
+license terms are preserved in this repository (see
+[`LICENSE.txt`](LICENSE.txt) and the per-file source headers). Nothing in
+MuseScore's attribution has been removed.
+
+- Upstream project: https://github.com/musescore/MuseScore
+
+Reprise is an **independent fork** and is **not affiliated with, sponsored by, or
+endorsed by** MuseScore or Muse Group. *"MuseScore"* is a trademark of its
+respective owners; Reprise uses the name only to describe its origin and
+compatibility.
 
 ## Features
 
-- WYSIWYG design, notes are entered on a "virtual notepaper"
-- TrueType font(s) for printing & display allows for high quality scaling to all sizes
-- Easy & fast note entry
-- Many editing functions
-- MusicXML import/export
-- MIDI (SMF) import/export
-- MEI import/export
-- MuseData import
-- MIDI input for note entry
-- Integrated sequencer and software synthesizer to play the score
-- Print or create PDF files
+**Working now**
+- **Import PDF** — *File ▸ Import PDF* runs Audiveris OMR on a PDF and opens the
+  recognized score. A dialog lets you pick a page range (e.g. `all`, `1-5`,
+  `1,3,8`) and a scan resolution.
+- Everything MuseScore's editor provides — **MusicXML / MIDI import and export**,
+  score editing, and **playback**.
 
-## More info
+**Temporary behavior**
+- Imported scores currently default **every part to Grand Piano**, overriding the
+  instruments the OMR guesses. This is a deliberate stopgap until instrument
+  selection is added to the import flow.
 
-- [MuseScore Studio Homepage](https://musescore.org)
-- [MuseScore Studio Git workflow instructions](https://musescore.org/en/developers-handbook/git-workflow)
-- [How to compile MuseScore Studio?](https://github.com/musescore/MuseScore/wiki/Set-up-developer-environment)
+**Planned**
+- A two-pane **scan ↔ score** correction view — the scanned page shown alongside
+  the editable score, kept position-synced.
+- A streamlined, correction-focused interface and richer import/OMR options.
+- More to come *(TBD)*.
 
 ## License
 
-MuseScore Studio is licensed under GPL version 3.0. See [license file](https://github.com/musescore/MuseScore/blob/master/LICENSE.txt) in the same directory.
+Reprise is licensed under **GPL-3.0-only** — the same license as MuseScore Studio.
+See [`LICENSE.txt`](LICENSE.txt). MuseScore's original license and attribution are
+retained in full.
 
-## Packages
+## Requirements
 
-See [Code Structure on Wiki](https://github.com/musescore/MuseScore/wiki/CodeStructure)
+- **[Audiveris](https://github.com/Audiveris/audiveris)** (installed separately) —
+  performs the PDF optical music recognition. Reprise auto-detects it at its
+  default install location.
+- **Tesseract** OCR language data — needed only for lyric/text recognition; note
+  recognition does not require it.
 
-## Building
+## Building & running
 
-**Read the [Compilation section](https://github.com/musescore/MuseScore/wiki/Set-up-developer-environment) of the [MuseScore Wiki](https://github.com/musescore/MuseScore/wiki) for a complete build walkthrough and a list of dependencies.**
+> **Status: WIP / TBD.** Full, platform-general build instructions are still being
+> written. Reprise uses the standard MuseScore build system (Qt 6, a C++ toolchain,
+> and the `muse` + `muse_deps` git submodules).
 
-### Getting sources
+The repository includes fork-local Windows helper scripts for a one-click flow:
 
-If using git to download repo of entire code history, type:
+- `+Build (release)+.bat` — configure and build
+- `+Deploy (standalone)+.bat` — make the built executable double-clickable
+- `+Run (dev)+.bat` — launch the development build
+- `+Update (from upstream)+.bat` — sync from upstream MuseScore
 
-    git clone  --recurse-submodules https://github.com/musescore/MuseScore.git
-    cd MuseScore
+For the underlying build system and dependencies, see MuseScore's
+[developer setup guide](https://github.com/musescore/MuseScore/wiki/Set-up-developer-environment).
 
-(The `--recurse-submodules` ensures that the [`muse_framework`](https://github.com/musescore/muse_framework) git submodule is checked out into the `muse/` subdirectory.)
+## Credits
 
-Otherwise, you can just download the latest source release tarball from the [Releases page](https://github.com/musescore/MuseScore/releases), and then from your download directory type:
+- **[MuseScore Studio](https://github.com/musescore/MuseScore)** — the notation,
+  engraving, and playback engine Reprise is built on.
+- **[Audiveris](https://github.com/Audiveris/audiveris)** — optical music
+  recognition.
+- **[Tesseract](https://github.com/tesseract-ocr/tesseract)** — OCR for text and
+  lyrics.
 
-    tar xzf MuseScore-x.x.x.tar.gz
-    cd MuseScore-x.x.x
+---
 
-### Release Build
-
-To compile MuseScore Studio for release, type:
-
-    cmake -P build.cmake -DCMAKE_BUILD_TYPE=Release
-
-On MacOS, append `-G Ninja` in order to use the `ninja` build tool (which you may need to install), since this
-is required to compile Swift components.
-
-If something goes wrong, append the word "clean" to the above command to delete the build subdirectory:
-
-    cmake -P build.cmake -DCMAKE_BUILD_TYPE=Release clean
-
-Then try running the first command again.
-
-### Running
-
-To start MuseScore Studio, type:
-
-    cmake -P build.cmake -DCMAKE_BUILD_TYPE=Release run
-
-Or run the compiled executable directly.
-
-### Debug Build
-
-A debug version can be built and run by replacing `-DCMAKE_BUILD_TYPE=Release`
-with `-DCMAKE_BUILD_TYPE=Debug` in the above commands.
-
-If you omit the `-DCMAKE_BUILD_TYPE` option entirely then `RelWithDebInfo` is
-used by default, as it provides a useful compromise between Release and Debug.
-
-### Testing
-
-See the [Unit tests section](https://github.com/musescore/MuseScore/wiki/Unit-tests) of the [MuseScore Studio Wiki](https://github.com/musescore/MuseScore/wiki) for instructions on how to run the test suite.
-
-### Code Formatting
-
-Run `./hooks/install.sh` to install a pre-commit hook that will format your staged files. Requires that you install `uncrustify`.
-
-If you have problems, please report them. To uninstall, run `./hooks/uninstall.sh`.
+*Reprise is built on MuseScore Studio (GPLv3). "MuseScore" © its authors — see
+[`LICENSE.txt`](LICENSE.txt).*
