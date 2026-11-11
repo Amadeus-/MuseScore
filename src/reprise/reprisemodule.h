@@ -28,6 +28,7 @@
 
 namespace mu::reprise {
 class ImportPdfController;
+class RepriseConfiguration;
 
 //! NOTE: Reprise fork module. Houses the local-Audiveris "Import PDF" orchestration, kept isolated
 //! from upstream modules so that "Update (from upstream)" merges stay clean.
@@ -36,9 +37,19 @@ class RepriseModule : public muse::modularity::IModuleSetup
 public:
     std::string moduleName() const override;
 
+    //! Export the single Reprise configuration globally so the Preferences page view-model (a separate module) and
+    //! the reprise-internal consumers all share it via GlobalInject<IRepriseConfiguration>.
+    void registerExports() override;
+
     void resolveImports() override;
 
+    //! Seed the configuration defaults (mirrors the per-module configuration init pattern, e.g. MusicXmlModule).
+    void onInit(const muse::IApplication::RunMode& mode) override;
+
     muse::modularity::IContextSetup* newContext(const muse::modularity::ContextPtr& ctx) const override;
+
+private:
+    std::shared_ptr<RepriseConfiguration> m_configuration;
 };
 
 class RepriseContext : public muse::modularity::IContextSetup

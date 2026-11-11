@@ -33,6 +33,9 @@ target_sources(reprise PRIVATE
     internal/audiverisrunner.h
     internal/importpdfcontroller.cpp
     internal/importpdfcontroller.h
+    internal/irepriseconfiguration.h
+    internal/repriseconfiguration.cpp
+    internal/repriseconfiguration.h
 )
 
 #! NOTE: Reprise's Import-PDF flow reaches into project (IProjectSession, PROJECT_OPEN_COMMAND) and into

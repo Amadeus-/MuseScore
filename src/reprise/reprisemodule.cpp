@@ -30,6 +30,8 @@
 #include "internal/reprisecommandsregister.h"
 #include "internal/reprisecommandsstate.h"
 #include "internal/importpdfcontroller.h"
+#include "internal/irepriseconfiguration.h"
+#include "internal/repriseconfiguration.h"
 
 using namespace mu::reprise;
 using namespace muse;
@@ -40,6 +42,12 @@ static const std::string mname("reprise");
 std::string RepriseModule::moduleName() const
 {
     return mname;
+}
+
+void RepriseModule::registerExports()
+{
+    m_configuration = std::make_shared<RepriseConfiguration>();
+    globalIoc()->registerExport<IRepriseConfiguration>(mname, m_configuration);
 }
 
 void RepriseModule::resolveImports()
@@ -59,6 +67,11 @@ void RepriseModule::resolveImports()
         //! NOTE: Register the recognition progress popup, shown while Audiveris runs asynchronously.
         ir->registerQmlUri(Uri("musescore://reprise/importpdf/progress"), "MuseScore.Reprise", "ImportProgressDialog");
     }
+}
+
+void RepriseModule::onInit(const IApplication::RunMode&)
+{
+    m_configuration->init();
 }
 
 IContextSetup* RepriseModule::newContext(const ContextPtr& ctx) const

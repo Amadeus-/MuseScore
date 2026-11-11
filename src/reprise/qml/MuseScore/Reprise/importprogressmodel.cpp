@@ -28,8 +28,6 @@
 #include <QTimer>
 #include <QUrl>
 
-#include "settings.h"
-
 #include "global/translation.h"
 #include "global/log.h"
 #include "global/types/val.h"
@@ -53,9 +51,6 @@ using namespace mu;
 using namespace mu::reprise;
 using namespace muse;
 
-//! Reprise-private setting: when checked, the popup closes itself automatically once the import succeeds.
-static const Settings::Key CLOSE_POPUP_ON_COMPLETE("reprise", "import/closePopupOnComplete");
-
 //! How long the Done state lingers before an auto-close (ms) -- enough to show the gold check, and to let the
 //! just-opened score's master-notation change fire so the Grand-Piano override lands before the model is gone.
 static constexpr int AUTO_CLOSE_DELAY_MS = 1400;
@@ -78,9 +73,6 @@ void ImportProgressModel::initContext()
     {
         return;
     }
-
-    //! Default UNCHECKED: the window stays up after a successful import unless the user opts in.
-    settings()->setDefaultValue(CLOSE_POPUP_ON_COMPLETE, Val(false));
 
     m_runner = std::make_shared<AudiverisRunner>(iocContext());
 
@@ -113,7 +105,7 @@ void ImportProgressModel::initContext()
 
 bool ImportProgressModel::closePopupOnComplete() const
 {
-    return settings()->value(CLOSE_POPUP_ON_COMPLETE).toBool();
+    return repriseConfiguration()->closePopupOnComplete();
 }
 
 void ImportProgressModel::setClosePopupOnComplete(bool close)
@@ -123,7 +115,7 @@ void ImportProgressModel::setClosePopupOnComplete(bool close)
         return;
     }
 
-    settings()->setSharedValue(CLOSE_POPUP_ON_COMPLETE, Val(close));
+    repriseConfiguration()->setClosePopupOnComplete(close);
     emit closePopupOnCompleteChanged();
 }
 

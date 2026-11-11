@@ -51,42 +51,15 @@ static const QStringList STEP_ORDER = {
 
 muse::io::path_t AudiverisRunner::findAudiveris() const
 {
-    //! Step 1. Default Program Files install.
-    static const QString defaultExe = "C:/Program Files/Audiveris/Audiveris.exe";
-    if (QFileInfo::exists(defaultExe))
+    //! A user-set path wins (decision: a configured path overrides detection), as long as it still exists.
+    const io::path_t configured = repriseConfiguration()->audiverisPath();
+    if (!configured.empty() && QFileInfo::exists(configured.toQString()))
     {
-        return io::path_t(defaultExe);
+        return configured;
     }
 
-    //! Step 2. On PATH.
-    const QString onPath = QStandardPaths::findExecutable("Audiveris");
-    if (!onPath.isEmpty())
-    {
-        return io::path_t(onPath);
-    }
-
-    //! Step 3. Other common install locations (exe and launcher variants).
-    const QString localAppData = qEnvironmentVariable("LOCALAPPDATA");
-    QStringList candidates = {
-        "C:/Program Files (x86)/Audiveris/Audiveris.exe",
-        "C:/Program Files/Audiveris/bin/Audiveris.exe",
-        "C:/Program Files/Audiveris/Audiveris.bat",
-    };
-
-    if (!localAppData.isEmpty())
-    {
-        candidates << (QDir::fromNativeSeparators(localAppData) + "/Programs/Audiveris/Audiveris.exe");
-    }
-
-    for (const QString& candidate : candidates)
-    {
-        if (QFileInfo::exists(candidate))
-        {
-            return io::path_t(candidate);
-        }
-    }
-
-    return io::path_t();
+    //! Otherwise the C#-matched detection search order (PATH names, then the standard install folders).
+    return repriseConfiguration()->detectAudiveris();
 }
 
 muse::io::path_t AudiverisRunner::findTessdataPrefix(const muse::io::path_t& audiverisExe) const
@@ -283,9 +256,21 @@ bool AudiverisRunner::start(const muse::io::path_t& pdfPath, const QString& page
     m_process->setProgram(audiverisExe.toQString());
     m_process->setArguments(qargs);
 
-    //! Point Tesseract at its training data if we can detect it; otherwise let Audiveris try its own default.
+    //! Point Tesseract at its training data. When the user configured a Tesseract path, derive the tessdata folder
+    //! from it (C# parity); otherwise fall back to the auto-detection next to Audiveris. Empty -> let Audiveris try
+    //! its own default.
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    const io::path_t tessdata = findTessdataPrefix(audiverisExe);
+    io::path_t tessdata;
+    const io::path_t configuredTesseract = repriseConfiguration()->tesseractPath();
+    if (!configuredTesseract.empty())
+    {
+        tessdata = repriseConfiguration()->resolveTessdataPrefix(configuredTesseract);
+    }
+    if (tessdata.empty())
+    {
+        tessdata = findTessdataPrefix(audiverisExe);
+    }
+
     if (!tessdata.empty())
     {
         env.insert("TESSDATA_PREFIX", tessdata.toQString());

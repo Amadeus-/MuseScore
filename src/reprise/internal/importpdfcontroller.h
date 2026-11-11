@@ -34,6 +34,7 @@
 #include "global/io/ifilesystem.h"
 #include "global/io/path.h"
 
+#include "irepriseconfiguration.h"
 #include "audiverisrunner.h"
 
 namespace mu::reprise {
@@ -46,6 +47,7 @@ class ImportPdfController : public muse::Contextable, public muse::async::Asynca
     muse::ContextInject<muse::rcommand::ICommandDispatcher> commandDispatcher = { this };
     muse::GlobalInject<muse::IGlobalConfiguration> globalConfiguration;
     muse::GlobalInject<muse::io::IFileSystem> fileSystem;
+    muse::GlobalInject<mu::reprise::IRepriseConfiguration> repriseConfiguration;
 
 public:
     explicit ImportPdfController(const muse::modularity::ContextPtr& iocCtx)

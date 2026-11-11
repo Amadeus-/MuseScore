@@ -31,6 +31,8 @@
 #include "modularity/ioc.h"
 #include "global/io/path.h"
 
+#include "irepriseconfiguration.h"
+
 class QProcess;
 
 namespace mu::reprise {
@@ -47,7 +49,8 @@ public:
     explicit AudiverisRunner(const muse::modularity::ContextPtr& iocCtx, QObject* parent = nullptr)
         : QObject(parent), muse::Contextable(iocCtx) {}
 
-    //! Locate the Audiveris executable (Program Files, PATH, common install dirs). Empty if not found.
+    //! Locate the Audiveris executable: the configured override (if set and still present) wins, else the detection
+    //! search order ported from the C# Reprise Recognizer. Empty if not found.
     muse::io::path_t findAudiveris() const;
 
     //! True once start() has launched a process that has not yet finished/been cancelled.
@@ -79,6 +82,8 @@ signals:
     void outputLine(const QString& line);
 
 private:
+    muse::GlobalInject<mu::reprise::IRepriseConfiguration> repriseConfiguration;
+
     //! Expand a free-form page range into explicit 1-based sheet numbers for Audiveris '-sheets'. Empty = all pages.
     std::vector<int> expandSheets(const QString& pages) const;
 

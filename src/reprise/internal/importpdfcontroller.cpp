@@ -26,8 +26,6 @@
 #include <QVariant>
 #include <QVariantMap>
 
-#include "settings.h"
-
 #include "global/translation.h"
 #include "global/log.h"
 #include "global/types/val.h"
@@ -38,18 +36,9 @@ using namespace mu;
 using namespace mu::reprise;
 using namespace muse;
 
-//! Reprise-private settings, kept out of the "project" module so upstream merges stay clean.
-static const Settings::Key LAST_IMPORT_PDF_DIR("reprise", "application/paths/lastImportPdfDir");
-static const Settings::Key SCAN_RESOLUTION("reprise", "import/scanResolution");
-
-//! Default scan resolution (dpi). The useful range for notation really starts ~300.
-static constexpr int DEFAULT_SCAN_RESOLUTION = 300;
-
 void ImportPdfController::init()
 {
     m_audiverisRunner = std::make_shared<AudiverisRunner>(iocContext());
-
-    settings()->setDefaultValue(SCAN_RESOLUTION, Val(DEFAULT_SCAN_RESOLUTION));
 
     commandDispatcher()->onRequest(this, REPRISE_IMPORT_PDF_COMMAND, [this]() { return importPdf(); });
 }
@@ -113,7 +102,7 @@ muse::Ret ImportPdfController::importPdf()
 
 muse::io::path_t ImportPdfController::defaultImportPdfDir() const
 {
-    const io::path_t dir = settings()->value(LAST_IMPORT_PDF_DIR).toPath();
+    const io::path_t dir = repriseConfiguration()->lastImportPdfDir();
     if (!dir.empty() && fileSystem()->exists(dir))
     {
         return dir;
@@ -129,15 +118,15 @@ void ImportPdfController::rememberImportPdfDir(const muse::io::path_t& pdfPath)
         return;
     }
 
-    settings()->setSharedValue(LAST_IMPORT_PDF_DIR, Val(io::dirpath(pdfPath)));
+    repriseConfiguration()->setLastImportPdfDir(io::dirpath(pdfPath));
 }
 
 int ImportPdfController::scanResolution() const
 {
-    return settings()->value(SCAN_RESOLUTION).toInt();
+    return repriseConfiguration()->scanResolution();
 }
 
 void ImportPdfController::setScanResolution(int dpi)
 {
-    settings()->setSharedValue(SCAN_RESOLUTION, Val(dpi));
+    repriseConfiguration()->setScanResolution(dpi);
 }
