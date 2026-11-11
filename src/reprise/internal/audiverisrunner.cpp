@@ -305,6 +305,7 @@ bool AudiverisRunner::start(const muse::io::path_t& pdfPath, const QString& page
 
     LOGI() << "Reprise: running Audiveris: " << audiverisExe.toQString() << " on " << pdfPath.toQString()
            << " (dpi=" << dpi << ", sheets=" << (sheets.empty() ? std::string("all") : std::to_string(sheets.size())) << ")";
+    LOGI() << "[audiveris] command: \"" << audiverisExe.toQString() << "\" " << qargs.join(' ');
 
     //! Kick an initial indeterminate tick so the popup shows an animated bar immediately.
     QMetaObject::invokeMethod(this, [this]()
@@ -347,6 +348,7 @@ void AudiverisRunner::onReadyReadStandardOutput()
         line.remove('\r');
         if (!line.trimmed().isEmpty())
         {
+            LOGI() << "[audiveris] " << line;
             parseLine(line);
             pushTail(line);
             emit outputLine(line);
@@ -369,6 +371,7 @@ void AudiverisRunner::onReadyReadStandardError()
         line.remove('\r');
         if (!line.trimmed().isEmpty())
         {
+            LOGW() << "[audiveris:stderr] " << line;
             pushTail(line);
             emit outputLine(line);
         }
@@ -554,6 +557,8 @@ void AudiverisRunner::onFinished(int exitCode)
     //! Drain anything still buffered before we judge the outcome.
     onReadyReadStandardOutput();
     onReadyReadStandardError();
+
+    LOGI() << "[audiveris] exited with code " << exitCode;
 
     const QString tail = m_tail.join('\n');
 

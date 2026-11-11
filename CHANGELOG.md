@@ -22,6 +22,9 @@ below `1.0.0` is pre-release.
 - **"Close this window after importing"** option in the popup (remembered
   between runs, **off by default**): when checked, the window closes itself
   automatically once the score has opened.
+- **Audiveris output in the log file** (internal diagnostics): the recognition
+  command line, every stdout/stderr line and the exit code are now also written to
+  the Reprise log file, tagged `[audiveris]`, so failed imports can be diagnosed later.
 
 ### Fixed
 - **Recognition popup header mark**: the header now shows the full cream-R +
