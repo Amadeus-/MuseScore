@@ -31,6 +31,28 @@ PreferencesPage {
 
     Component.onCompleted: {
         reprisePreferencesModel.load()
+
+        //! Never leave a path blank: auto-detect any path that was never set. A found path is persisted at once
+        //! (the model's setters write the shared setting immediately), so it is still there on reopen.
+        if (!Boolean(reprisePreferencesModel.audiverisPath)) {
+            var audiveris = reprisePreferencesModel.detectAudiveris()
+            if (Boolean(audiveris)) {
+                reprisePreferencesModel.audiverisPath = audiveris
+                recognitionSection.audiverisStatus = qsTrc("preferences", "Found: %1").arg(audiveris)
+            } else {
+                recognitionSection.audiverisStatus = qsTrc("preferences", "Not detected. Set the path manually.")
+            }
+        }
+
+        if (!Boolean(reprisePreferencesModel.tesseractPath)) {
+            var tesseract = reprisePreferencesModel.detectTesseract()
+            if (Boolean(tesseract)) {
+                reprisePreferencesModel.tesseractPath = tesseract
+                recognitionSection.tesseractStatus = qsTrc("preferences", "Found: %1").arg(tesseract)
+            } else {
+                recognitionSection.tesseractStatus = qsTrc("preferences", "Not detected. Set the path manually.")
+            }
+        }
     }
 
     ReprisePreferencesModel {

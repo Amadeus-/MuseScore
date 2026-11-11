@@ -9,6 +9,9 @@ below `1.0.0` is pre-release.
 ## [Unreleased]
 
 ### Added
+- **Auto-detect OMR paths on first Preferences open**: if the Audiveris or Tesseract path has
+  never been set, the Reprise page detects it on open and saves it so it stays; if the program
+  is not installed the field reads "Not detected" instead of being blank.
 - **Reprise Preferences page**: a new **Reprise** section in Edit > Preferences (placed
   after Import) collecting the recognition settings in one place — the **Audiveris** and
   **Tesseract** program paths (each with a **Detect** button that finds the installed
