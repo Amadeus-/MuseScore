@@ -166,6 +166,10 @@ Two fork-local size optimisations cut the Windows deploy footprint from ~507 MB 
 
 > **Agent / headless builds — use `reprise-agent-build.bat`** (repo root, fork-local, internal). It applies the same toolchain env as `+Build (release)+.bat` (VS cmake/ninja first, Qt 6.11.2 kit, Git bash) **and strips msys64 from PATH**, but with **no** deploy/launch/pause prompts, so an automated build can't hang or hit the poisoning above. Automated/agent builds should call this, not raw `ninja_build.bat` from a plain shell. `+Build`/`+Run`/`+Deploy`/`+Update` stay the user-facing `+Name+` scripts Andy runs; this wrapper is internal only. Usage: `reprise-agent-build.bat` (Release) or `reprise-agent-build.bat -t debug`.
 
+> **⚠ Reprise release TODOs (DEFERRED — the OMR deps must not be forgotten at release time):**
+> - **Installer / bundle:** when Reprise ships an installer, it must **install/bundle Audiveris AND Tesseract** — the external OMR + OCR engines the Import-PDF pipeline shells out to (`AudiverisRunner`; `TESSDATA_PREFIX`). Today they are user-installed + auto-detected; a real distributable has to carry (or fetch) them, or recognition fails on a clean machine.
+> - **In-app auto-update:** when auto-update is added (MuseScore's update module is currently OFF in this fork), it must also keep **Audiveris + Tesseract** up to date, not just the Reprise app itself.
+
 ## 5. Release flow (`deploy.yml`)
 
 ```
