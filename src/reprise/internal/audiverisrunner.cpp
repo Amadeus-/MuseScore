@@ -216,6 +216,7 @@ bool AudiverisRunner::start(const muse::io::path_t& pdfPath, const QString& page
     m_cancelled = false;
     m_totalSheets = -1;
     m_currentSheet = -1;
+    m_requestedSheetCount = 0;
     m_currentStep.clear();
     m_stdoutBuffer.clear();
     m_tail.clear();
@@ -247,6 +248,7 @@ bool AudiverisRunner::start(const muse::io::path_t& pdfPath, const QString& page
     //! Page selection. '-sheets' takes a space-separated int[]; keep it immediately before '--' so args4j
     //! stops consuming numbers at the separator. Empty list -> omit entirely -> Audiveris reads every page.
     const std::vector<int> sheets = expandSheets(pages);
+    m_requestedSheetCount = static_cast<int>(sheets.size());
     if (!sheets.empty())
     {
         args.push_back("-sheets");
@@ -335,6 +337,7 @@ void AudiverisRunner::onReadyReadStandardOutput()
         {
             parseLine(line);
             pushTail(line);
+            emit outputLine(line);
         }
     }
 }
@@ -355,6 +358,7 @@ void AudiverisRunner::onReadyReadStandardError()
         if (!line.trimmed().isEmpty())
         {
             pushTail(line);
+            emit outputLine(line);
         }
     }
 }

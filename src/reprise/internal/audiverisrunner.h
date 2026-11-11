@@ -61,6 +61,10 @@ public:
     //! Kill the running Audiveris process and abandon the run. finished() is NOT emitted after a cancel().
     void cancel();
 
+    //! Number of pages recognised in this run: the count of explicitly requested sheets, or the whole-book total
+    //! (parsed from Audiveris' output) when every page was processed. Valid once the run has reported a total.
+    int pageCount() const { return m_requestedSheetCount > 0 ? m_requestedSheetCount : m_totalSheets; }
+
 signals:
     //! percent: 0-100 determinate, or -1 while the sheet total is still unknown (indeterminate/animated bar).
     //! sheet/total: 1-based current sheet and the total (both -1 until known). stageHuman: a friendly, already
@@ -70,6 +74,9 @@ signals:
     //! ok=true -> outputPath is the produced .mxl/.xml. ok=false -> error is a short message and tail holds the
     //! last lines of Audiveris output (stdout+stderr) for surfacing in the popup's error state.
     void finished(bool ok, const QString& outputPath, const QString& error, const QString& tail);
+
+    //! One line of Audiveris output (stdout or stderr) as it streams, for the popup's recognition-log expander.
+    void outputLine(const QString& line);
 
 private:
     //! Expand a free-form page range into explicit 1-based sheet numbers for Audiveris '-sheets'. Empty = all pages.
@@ -106,6 +113,7 @@ private:
 
     int m_totalSheets = -1;
     int m_currentSheet = -1;
+    int m_requestedSheetCount = 0;
     QString m_currentStep;
 
     QStringList m_tail;

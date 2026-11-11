@@ -40,11 +40,22 @@ StyledDialogView {
 
     objectName: "ImportProgressDialog"
 
-    //! Brand palette (from the Reprise mark SVG).
+    //! Brand palette (from the Reprise mark SVG). The popup is a fixed LIGHT card (cream body/footer under the navy
+    //! header), independent of the app theme, so its text/track colours are hard-set rather than theme-bound.
     readonly property color brandNavy: "#23264A"
     readonly property color brandNavyDeep: "#191C38"
     readonly property color brandGold: "#C9A24B"
-    readonly property color brandCream: "#EFE7D6"
+    readonly property color brandGoldLight: "#DCB95F"
+    readonly property color brandGoldDark: "#B0862C"
+    readonly property color brandCream: "#EFE7D6"          // header "REPRISE" wordmark
+    readonly property color cardBody: "#FBF9F3"            // cream body
+    readonly property color cardFooter: "#F3EFE2"          // cream footer
+    readonly property color cardStroke: "#E4DCC8"          // hairlines / log border on the cream card
+    readonly property color inkStep: "#2A2E3F"             // dark body/step text
+    readonly property color inkSub: "#8A8D96"              // gray sub-line
+    readonly property color inkCaption: "#5A5E6B"          // progress caption row
+    readonly property color inkCheck: "#3C4049"            // checkbox label
+    readonly property color trackTan: "#E8DFC9"            // progress-bar track
 
     contentWidth: 468
     contentHeight: mainColumn.implicitHeight
@@ -83,7 +94,7 @@ StyledDialogView {
 
         radius: 6
         clip: true
-        color: ui.theme.backgroundPrimaryColor
+        color: root.cardBody
 
         ColumnLayout {
             id: mainColumn
@@ -98,7 +109,11 @@ StyledDialogView {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 60
 
-                color: root.brandNavy
+                //! Subtle navy gradient (lighter top -> deeper bottom) for a little depth.
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: "#2A2E54" }
+                    GradientStop { position: 1.0; color: root.brandNavyDeep }
+                }
 
                 //! Subtle deeper band at the very bottom of the header for a little depth.
                 Rectangle {
@@ -135,7 +150,8 @@ StyledDialogView {
 
                         StyledTextLabel {
                             text: "REPRISE"
-                            color: root.brandCream
+                            color: root.brandGold
+                            font.family: "Georgia"
                             font.pixelSize: 13
                             font.bold: true
                             font.letterSpacing: 2.5
@@ -148,6 +164,27 @@ StyledDialogView {
                             font.pixelSize: 16
                             font.bold: true
                             horizontalAlignment: Text.AlignLeft
+                        }
+                    }
+
+                    //! Gold circular success badge, shown immediately left of the X once recognition has finished.
+                    Rectangle {
+                        id: doneBadge
+
+                        visible: progressModel.status === "done"
+
+                        Layout.preferredWidth: 26
+                        Layout.preferredHeight: 26
+                        Layout.alignment: Qt.AlignVCenter
+
+                        radius: width / 2
+                        color: root.brandGold
+
+                        StyledIconLabel {
+                            anchors.centerIn: parent
+                            iconCode: IconCode.TICK_RIGHT_ANGLE
+                            color: root.brandNavyDeep
+                            font.pixelSize: 14
                         }
                     }
 
@@ -180,116 +217,240 @@ StyledDialogView {
                 }
             }
 
-            // ===== Body =====
+            // ===== Body (cream) =====
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.leftMargin: 20
                 Layout.rightMargin: 20
-                Layout.topMargin: 18
+                Layout.topMargin: 16
                 Layout.bottomMargin: 14
-                spacing: 10
+                spacing: 12
 
-                // File title
-                StyledTextLabel {
-                    Layout.fillWidth: true
-                    text: progressModel.title
-                    font: ui.theme.largeBodyBoldFont
-                    horizontalAlignment: Text.AlignLeft
-                    elide: Text.ElideMiddle
-                    visible: progressModel.title.length > 0
-                }
-
-                // Current stage line (running) / Done line / error headline
+                //! Gray sub-line: "<filename>  ·  pages 1-3  ·  300 dpi", with gold middot separators.
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 7
 
-                    StyledIconLabel {
-                        visible: progressModel.status === "done"
-                        iconCode: IconCode.TICK_RIGHT_ANGLE_THICK
-                        color: root.brandGold
-                        font.pixelSize: 22
+                    StyledTextLabel {
+                        text: progressModel.title
+                        color: root.inkSub
+                        horizontalAlignment: Text.AlignLeft
+                        elide: Text.ElideMiddle
+                        Layout.maximumWidth: 280
+                        visible: progressModel.title.length > 0
                     }
 
                     StyledTextLabel {
-                        Layout.fillWidth: true
-                        text: {
-                            if (progressModel.status === "done") {
-                                return qsTrc("reprise", "Done")
-                            }
-                            if (progressModel.status === "error") {
-                                return progressModel.stageText
-                            }
-                            return progressModel.stageText
-                        }
-                        color: progressModel.status === "error" ? "#D64C3C"
-                                                                : (progressModel.status === "done" ? root.brandGold
-                                                                                                   : ui.theme.fontPrimaryColor)
-                        font: progressModel.status === "done" ? ui.theme.largeBodyBoldFont : ui.theme.bodyFont
-                        horizontalAlignment: Text.AlignLeft
-                        wrapMode: Text.Wrap
+                        text: "·"
+                        color: root.brandGold
+                        font.bold: true
+                        visible: progressModel.title.length > 0
                     }
+
+                    StyledTextLabel {
+                        text: progressModel.pagesLabel
+                        color: root.inkSub
+                        horizontalAlignment: Text.AlignLeft
+                    }
+
+                    StyledTextLabel {
+                        text: "·"
+                        color: root.brandGold
+                        font.bold: true
+                    }
+
+                    StyledTextLabel {
+                        text: progressModel.dpi + " " + qsTrc("reprise", "dpi")
+                        color: root.inkSub
+                        horizontalAlignment: Text.AlignLeft
+                    }
+
+                    Item { Layout.fillWidth: true }
                 }
 
-                // ===== Gold progress bar (hidden in the error state) =====
-                Rectangle {
-                    id: track
-
+                //! Step line (large, dark): running stage / Done-with-counts; red headline in the error state.
+                StyledTextLabel {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 8
-                    Layout.topMargin: 2
+                    text: progressModel.stageText
+                    color: progressModel.status === "error" ? "#D64C3C" : root.inkStep
+                    font: ui.theme.largeBodyBoldFont
+                    horizontalAlignment: Text.AlignLeft
+                    wrapMode: Text.Wrap
+                }
+
+                // ===== Gold progress bar + caption (hidden in the error state) =====
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
 
                     visible: progressModel.status !== "error"
 
-                    radius: height / 2
-                    clip: true
-                    color: Qt.rgba(root.brandNavy.r, root.brandNavy.g, root.brandNavy.b, 0.12)
-
-                    // Determinate fill
                     Rectangle {
-                        id: fill
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        radius: parent.radius
-                        color: root.brandGold
-                        visible: !progressModel.indeterminate
-                        width: parent.width * Math.max(0, Math.min(100, progressModel.percent)) / 100
+                        id: track
 
-                        Behavior on width {
-                            NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 8
+
+                        radius: height / 2
+                        clip: true
+                        color: root.trackTan
+
+                        // Determinate gold-gradient fill
+                        Rectangle {
+                            id: fill
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            radius: parent.radius
+                            visible: !progressModel.indeterminate
+                            width: parent.width * Math.max(0, Math.min(100, progressModel.percent)) / 100
+
+                            gradient: Gradient {
+                                orientation: Gradient.Horizontal
+                                GradientStop { position: 0.0; color: root.brandGoldLight }
+                                GradientStop { position: 1.0; color: root.brandGoldDark }
+                            }
+
+                            Behavior on width {
+                                NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                            }
+                        }
+
+                        // Indeterminate sweeping segment
+                        Rectangle {
+                            id: sweep
+                            height: parent.height
+                            radius: parent.radius
+                            color: root.brandGold
+                            visible: progressModel.indeterminate
+                            width: parent.width * 0.35
+
+                            SequentialAnimation on x {
+                                running: track.visible && progressModel.indeterminate
+                                loops: Animation.Infinite
+                                NumberAnimation { from: -sweep.width; to: track.width; duration: 1100; easing.type: Easing.InOutQuad }
+                            }
                         }
                     }
 
-                    // Indeterminate sweeping segment
-                    Rectangle {
-                        id: sweep
-                        height: parent.height
-                        radius: parent.radius
-                        color: root.brandGold
-                        visible: progressModel.indeterminate
-                        width: parent.width * 0.35
+                    //! Caption row: "Page X of N" (left) + "<pct>%" (right).
+                    RowLayout {
+                        Layout.fillWidth: true
 
-                        SequentialAnimation on x {
-                            running: track.visible && progressModel.indeterminate
-                            loops: Animation.Infinite
-                            NumberAnimation { from: -sweep.width; to: track.width; duration: 1100; easing.type: Easing.InOutQuad }
+                        StyledTextLabel {
+                            text: progressModel.progressCaption
+                            color: root.inkCaption
+                            horizontalAlignment: Text.AlignLeft
+                            visible: progressModel.progressCaption.length > 0
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        StyledTextLabel {
+                            text: progressModel.percent >= 0 ? (progressModel.percent + "%") : ""
+                            color: root.inkCaption
+                            horizontalAlignment: Text.AlignRight
+                            visible: progressModel.percent >= 0
                         }
                     }
                 }
 
-                // ===== Error output tail =====
+                // ===== "Details" expander -> the streamed recognition log (hidden in the error state) =====
+                ColumnLayout {
+                    id: detailsBlock
+
+                    Layout.fillWidth: true
+                    Layout.topMargin: 2
+                    spacing: 8
+
+                    visible: progressModel.status !== "error"
+
+                    property bool expanded: false
+
+                    RowLayout {
+                        id: detailsRow
+
+                        Layout.fillWidth: true
+                        spacing: 6
+
+                        StyledIconLabel {
+                            iconCode: detailsBlock.expanded ? IconCode.SMALL_ARROW_DOWN : IconCode.SMALL_ARROW_RIGHT
+                            color: root.brandGold
+                            font.pixelSize: 12
+                        }
+
+                        StyledTextLabel {
+                            text: qsTrc("reprise", "Details")
+                            color: root.brandGold
+                            font.bold: true
+                            horizontalAlignment: Text.AlignLeft
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        StyledTextLabel {
+                            text: detailsBlock.expanded ? qsTrc("reprise", "Hide recognition log")
+                                                        : qsTrc("reprise", "Show recognition log")
+                            color: root.brandGold
+                            horizontalAlignment: Text.AlignRight
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: detailsBlock.expanded = !detailsBlock.expanded
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 130
+
+                        visible: detailsBlock.expanded
+
+                        radius: 4
+                        color: "#FFFFFF"
+                        border.width: 1
+                        border.color: root.cardStroke
+
+                        Flickable {
+                            id: logFlick
+
+                            anchors.fill: parent
+                            anchors.margins: 8
+                            clip: true
+                            contentWidth: width
+                            contentHeight: logLabel.implicitHeight
+
+                            //! Keep the newest streamed output in view.
+                            onContentHeightChanged: contentY = Math.max(0, contentHeight - height)
+
+                            StyledTextLabel {
+                                id: logLabel
+                                width: parent.width
+                                text: progressModel.logText
+                                color: root.inkStep
+                                font: ui.theme.bodyFont
+                                horizontalAlignment: Text.AlignLeft
+                                wrapMode: Text.Wrap
+                                opacity: 0.85
+                            }
+                        }
+                    }
+                }
+
+                // ===== Error output tail (retained error state) =====
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 120
-                    Layout.topMargin: 4
+                    Layout.topMargin: 2
 
                     visible: progressModel.status === "error" && progressModel.errorDetails.length > 0
 
                     radius: 4
-                    color: ui.theme.textFieldColor
+                    color: "#FFFFFF"
                     border.width: 1
-                    border.color: ui.theme.strokeColor
+                    border.color: root.cardStroke
 
                     Flickable {
                         anchors.fill: parent
@@ -302,21 +463,31 @@ StyledDialogView {
                             id: tailLabel
                             width: parent.width
                             text: progressModel.errorDetails
+                            color: root.inkStep
                             font: ui.theme.bodyFont
                             horizontalAlignment: Text.AlignLeft
                             wrapMode: Text.Wrap
-                            opacity: 0.8
+                            opacity: 0.85
                         }
                     }
                 }
             }
 
-            // ===== Footer =====
+            // ===== Footer (cream) =====
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: footerRow.implicitHeight + 24
+                Layout.preferredHeight: footerRow.implicitHeight + 28
 
-                color: ui.theme.backgroundSecondaryColor
+                color: root.cardFooter
+
+                //! Hairline separating the footer from the body.
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    height: 1
+                    color: root.cardStroke
+                }
 
                 RowLayout {
                     id: footerRow
@@ -324,31 +495,94 @@ StyledDialogView {
                     anchors.fill: parent
                     anchors.leftMargin: 20
                     anchors.rightMargin: 20
-                    anchors.topMargin: 12
-                    anchors.bottomMargin: 12
+                    anchors.topMargin: 14
+                    anchors.bottomMargin: 14
                     spacing: 12
 
-                    CheckBox {
+                    //! Custom (fixed-light) checkbox so the box + label read correctly on the cream footer
+                    //! regardless of the app theme. Default UNCHECKED.
+                    Item {
+                        id: closeCheck
+
                         Layout.fillWidth: true
+                        implicitHeight: 20
 
-                        text: qsTrc("reprise", "Close after import complete")
-                        checked: progressModel.closePopupOnComplete
+                        Row {
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 8
 
-                        onClicked: {
-                            progressModel.closePopupOnComplete = !progressModel.closePopupOnComplete
+                            Rectangle {
+                                id: cbox
+
+                                width: 18
+                                height: 18
+                                anchors.verticalCenter: parent.verticalCenter
+
+                                radius: 3
+                                color: progressModel.closePopupOnComplete ? root.brandGold : "#FFFFFF"
+                                border.width: 1
+                                border.color: progressModel.closePopupOnComplete ? root.brandGold : "#B9B09A"
+
+                                StyledIconLabel {
+                                    anchors.centerIn: parent
+                                    iconCode: IconCode.TICK_RIGHT_ANGLE
+                                    color: "#FFFFFF"
+                                    font.pixelSize: 12
+                                    visible: progressModel.closePopupOnComplete
+                                }
+                            }
+
+                            StyledTextLabel {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: qsTrc("reprise", "Close this window when import finishes")
+                                color: root.inkCheck
+                                horizontalAlignment: Text.AlignLeft
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: progressModel.closePopupOnComplete = !progressModel.closePopupOnComplete
                         }
                     }
 
+                    //! Cancel = GOLD (while running).
                     FlatButton {
                         text: qsTrc("global", "Cancel")
                         visible: progressModel.status === "running"
+
+                        normalColor: root.brandGold
+                        hoverHitColor: root.brandGoldLight
+
+                        contentItem: Component {
+                            StyledTextLabel {
+                                text: qsTrc("global", "Cancel")
+                                color: root.brandNavyDeep
+                                font: ui.theme.bodyFont
+                            }
+                        }
+
                         onClicked: progressModel.cancel()
                     }
 
+                    //! Close = NAVY (when finished / error).
                     FlatButton {
                         text: qsTrc("global", "Close")
-                        accentButton: progressModel.status === "done"
                         visible: progressModel.status !== "running"
+
+                        normalColor: root.brandNavy
+                        hoverHitColor: root.brandNavyDeep
+
+                        contentItem: Component {
+                            StyledTextLabel {
+                                text: qsTrc("global", "Close")
+                                color: "#FFFFFF"
+                                font: ui.theme.bodyFont
+                            }
+                        }
+
                         onClicked: root.hide()
                     }
                 }

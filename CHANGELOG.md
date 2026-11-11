@@ -10,13 +10,18 @@ below `1.0.0` is pre-release.
 
 ### Added
 - **Recognition progress popup**: Import PDF now runs Audiveris asynchronously and
-  shows a branded progress window — a live current-stage line ("Recognizing page X
-  of N — reading notes…"), a gold progress bar (determinate once the page count is
-  known, animated before), and a **Cancel** button that stops recognition and aborts
-  the import. On success it shows a Done state and opens the score; on failure it
-  stays up with the Audiveris error and a tail of its output instead of vanishing.
-- **"Close after import complete"** option in the popup (remembered between runs):
-  when checked, the window closes itself automatically once the score has opened.
+  shows a branded progress window — a navy header (Reprise mark + wordmark + title,
+  with a gold check badge once finished) over a cream card. It shows the file, page
+  range and dpi; a live current-stage line ("Analyzing page X of N — detecting
+  staves…"); a gold progress bar on a tan track with a "Page X of N" / percent
+  caption; a **Details** expander that reveals the live Audiveris recognition log;
+  and a **Cancel** button (gold) that stops recognition and aborts the import. On
+  success the step line becomes "Done — recognized M measures across N pages.", the
+  score opens, and a navy **Close** button appears; on failure the window stays up
+  with the Audiveris error and a tail of its output instead of vanishing.
+- **"Close this window when import finishes"** option in the popup (remembered
+  between runs, **off by default**): when checked, the window closes itself
+  automatically once the score has opened.
 
 ## [0.1.0] — 2026-11-10
 
