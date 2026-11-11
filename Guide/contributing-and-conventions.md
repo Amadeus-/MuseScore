@@ -8,12 +8,12 @@
 - Style is enforced by **uncrustify 0.74** (`muse\tools\codestyle\uncrustify_muse.cfg:2`), **not** clang-format. There is **no root `.clang-format`**; the only one in the tree is third-party (`muse\framework\dockwindow\thirdparty\KDDockWidgets\.clang-format`).
 - CI job **`Check: Codestyle`** (`.github\workflows\check_codestyle.yml`) re-formats `./src/` and `./muse/framework/` and fails the PR if `git diff` is non-empty.
 - ⭐ **AI policy:** AI use is allowed; you are fully accountable; if AI produced a *substantial portion* you must tick the PR-template AI field, name the tool, and add the commit trailer **`Assisted-by: <tool name> <version, if known>`** — **never `Co-authored-by:`** (`AI_POLICY.md:59-67`). See §3 for the clash with the user's usual `Co-Authored-By: Claude …` trailer.
-- Remotes: `origin` = `https://github.com/Amadeus-/Reprise.git` (user's fork), `upstream` = `https://github.com/musescore/MuseScore` (`git remote -v`). Single local branch `main` tracking `origin/main`.
+- Remotes: `origin` = `https://github.com/Amadeus-/Reprise.git` (user's fork), `upstream` = `https://github.com/musescore/MuseScore` (`git remote -v`). Two-branch model: `main` = pristine mirror of `upstream/main` (never commit to it); `reprise-main` = the Reprise dev branch (all fork work; GitHub default branch). See §6.
 
 ## 1. Contributing workflow (fork → branch → PR → wiki)
 
 1. **Read the wiki** Contributing page (above). `CONTRIBUTING.md` itself says nothing more.
-2. **Fork** `musescore/MuseScore` (here: `Amadeus-/Reprise`), branch off `main`, make focused commits.
+2. **Fork** `musescore/MuseScore` (here: `Amadeus-/Reprise`), cut the PR branch from `upstream/main` (NOT from `reprise-main`; see §6), make focused commits.
 3. **Sign the CLA** — <https://musescore.org/en/cla> (PR template `.github\pull_request_template.md:7`). Source files carry the marker `MuseScore-Studio-CLA-applies` right under the SPDX line (e.g. `src\notation\inotation.h:3`, `hooks\pre-commit:3`).
 4. **Open the PR** against `musescore/MuseScore` using the template; fill the checklist truthfully — the template states *"failure to complete this checklist accurately will result in the PR being closed"* (`pull_request_template.md:5`).
 5. Pass CI (build matrix, unit tests, vtests, codestyle — see `ci-and-release.md`); respond to review.
@@ -143,7 +143,7 @@ Observed subject styles (`git log --oneline -60`):
 - **Body:** wrapped prose explaining cause and fix, then trailers (`Assisted-by:` if applicable). Merged PRs appear as GitHub `Merge pull request #NNNNN from <user>/<branch>` merge commits; framework bumps are `Updated the framework` / `Update the muse framework` (submodule pointer moves).
 - **One logical change per commit**, each buildable (PR checklist `:11-12`); extensive work = a reviewable series.
 - Bundle a **test** (gtest) or **vtest** reference update with behavior changes (`Update MNX test reference…`, `Add vtest for square and triangle fret diagram dots`) — see `testing-and-vtest.md`.
-- Branch names upstream are contributor-chosen (`dsg-…`, `ci_ccache_fix`, `codex/fix-30534-…` visible in merge subjects); no mandated scheme found. Only `main` exists locally.
+- Branch names upstream are contributor-chosen (`dsg-…`, `ci_ccache_fix`, `codex/fix-30534-…` visible in merge subjects); no mandated scheme found. Locally the branches are `main` (upstream mirror) and `reprise-main` (fork dev); see §6.
 - Architectural decisions go in ADRs: `muse\docs\adr\` (template `00000-template.md`; `README.md`: numbers 1-100 reserved for past decisions; new ones start at 101+; `maintainers_ref.md` present). See `architecture-and-ioc.md`.
 
 ## 5. Code of Conduct (`CODE_OF_CONDUCT.md`)
@@ -153,7 +153,11 @@ Observed subject styles (`git log --oneline -60`):
 ## 6. Fork ↔ upstream relationship
 
 - `origin` = `Amadeus-/Reprise` (user's fork; fetch+push), `upstream` = `musescore/MuseScore` (fetch+push URLs both listed — **never push to upstream**; the user's repo is `origin`).
-- Local branch `main` tracks `origin/main` (`git branch -a`). Submodules `muse\` and `muse_deps\` follow pointers recorded by the superproject (`check_submodules.yml` guards that in CI).
+- **`main`** = a PRISTINE mirror of `upstream/main`. NEVER commit to it directly; it only fast-forwards to upstream. (Early in the fork some commits landed on `main` by mistake; corrected by resetting `main` to `upstream/main`.)
+- **`reprise-main`** = the Reprise dev/product branch. ALL fork work lives here; it is the default branch on GitHub (`Amadeus-/Reprise`).
+- **Upstream sync** = the fork-local `+Update (from upstream)+.bat`: (1) `git fetch upstream`; (2) check out `reprise-main`; (3) fast-forward local `main` to `upstream/main` (FF-only; if it can't, a commit landed on `main` and the script stops with a warning); (4) `git merge --no-edit main` into `reprise-main` (stops on conflicts for manual resolution); (5) `git submodule update --init --recursive` (re-syncs `muse` and `muse_deps` to their pinned commits); (6) offers to push `main` and `reprise-main`; (7) offers to rebuild.
+- **Contributing upstream:** cut PR branches from `upstream/main` (not `reprise-main`), and never include the fork-local Guide, helper scripts, branding, or BUGS files in an upstream PR.
+- Submodules `muse\` and `muse_deps\` follow pointers recorded by the superproject (`check_submodules.yml` guards that in CI).
 - The agent's standing policy: no fetch/pull/branch/submodule update/commit/push unless the user asks in the current request. Procedure for syncing the fork lives in the agent playbook `git-and-upstream-sync.md` (`~/.claude/agents/musescore/playbooks/`), not here.
 - Anything contributed upstream must satisfy §1 (CLA, template), §2 (uncrustify), §3 (AI disclosure).
 

@@ -13,7 +13,7 @@
 ## 1. Project identity
 
 - **App:** MuseScore — open-source music notation software (scorewriter + playback). GPL-licensed.
-- **Local version:** **5.0.0** dev line, branch `main`. (MuseScore 3.x and 4.x differ **greatly**; this Guide documents the local 5.x `main` tree only. Never assume 3.x/4.x behavior.)
+- **Local version:** **5.0.0** dev line, working branch `reprise-main` (the Reprise dev branch; local `main` is a pristine mirror of `upstream/main` — see `contributing-and-conventions.md` §6). (MuseScore 3.x and 4.x differ **greatly**; this Guide documents the local 5.x `main`-lineage tree only. Never assume 3.x/4.x behavior.)
 - **Repo:** origin `https://github.com/Amadeus-/Reprise` (the user's fork) · upstream `https://github.com/musescore/MuseScore`.
 - **Submodules (TWO — update SEPARATELY on every upstream sync):** `muse\` = the **Muse Framework** (submodule `muse_framework`, `github.com/musescore/muse_framework.git`, ~40 modules under `muse\framework\`) · `muse_deps\` = third-party dependency recipes/manifests (submodule `muse_deps`, `github.com/musescore/muse_deps.git`, ~60 libs). ⛔ The superproject pins exact commits; a `git pull` does NOT move the submodule trees — after ANY upstream sync run `git submodule update --init --recursive` or you build against stale framework/deps. Mechanics: the agent's `playbooks\git-and-upstream-sync.md`.
 - **Tech stack:** C++ (C++17/20) + **Qt 6** (Quick/QML primary UI, minimal Widgets) + **CMake/Ninja**. Architecture: **modular** with an **IoC / dependency-injection** container and **MVVM** QML view-models. Design rationale is written down in the **ADRs** (`muse\docs\adr\`).
