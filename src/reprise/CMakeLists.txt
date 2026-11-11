@@ -34,3 +34,11 @@ target_sources(reprise PRIVATE
     internal/importpdfcontroller.cpp
     internal/importpdfcontroller.h
 )
+
+#! NOTE: Reprise's Import-PDF flow reaches into project (IProjectSession, PROJECT_OPEN_COMMAND) and into
+#! notation/engraving (instruments repository + Part/Instrument API) to default imported parts to Grand Piano.
+target_link_libraries(reprise PRIVATE project notation engraving)
+
+if (MUE_BUILD_PROJECT_QML)
+    add_subdirectory(qml/MuseScore/Reprise)
+endif()

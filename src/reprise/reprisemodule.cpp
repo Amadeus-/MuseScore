@@ -25,6 +25,7 @@
 #include "modularity/ioc.h"
 #include "rcommand/icommandsregister.h"
 #include "rcommand/icommandsstate.h"
+#include "interactive/iinteractiveuriregister.h"
 
 #include "internal/reprisecommandsregister.h"
 #include "internal/reprisecommandsstate.h"
@@ -47,6 +48,13 @@ void RepriseModule::resolveImports()
     if (cr)
     {
         cr->reg(std::make_shared<RepriseCommandsRegister>());
+    }
+
+    //! NOTE: Register the Import-PDF intake dialog (pages + resolution). Mirrors project's registerQmlUri pattern.
+    auto ir = globalIoc()->resolve<muse::interactive::IInteractiveUriRegister>(mname);
+    if (ir)
+    {
+        ir->registerQmlUri(Uri("musescore://reprise/importpdf/options"), "MuseScore.Reprise", "ImportPdfOptionsDialog");
     }
 }
 
