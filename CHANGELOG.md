@@ -8,6 +8,23 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-11-11
+
+### Changed
+- **Home/shell stripped down for Reprise**: the sidebar is trimmed (removed
+  **MuseSounds** and **My accounts**), **"Scores"** is renamed to **"Scans"**, and
+  **"New"** / **"New Scan"** are rewired to the **Import PDF** flow. Removed the
+  welcome promos, and applied a targeted user-facing **"Score" → "Scan"** rename
+  across the shell. The **Learn** page is now a **"Coming soon"** stub.
+- **Top ribbon "Score" tab renamed to "Edit"**, and disabled/grayed until a scan is
+  open — Reprise is edit-only.
+- **Separate PDB for Release builds** (`/Z7`): Release crashes can now be symbolized
+  without bloating the shipped binary.
+
+### Removed
+- **Publish tab and all cloud/online UI**: the Publish tab and the remaining
+  cloud/online surfaces (and their promos) are gone — Reprise is fully offline.
+
 ## [0.3.0] — 2026-11-11
 
 ### Added
@@ -107,6 +124,7 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.4.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.3.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.2.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.1.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
