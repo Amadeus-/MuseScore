@@ -35,6 +35,7 @@ target_sources(reprise PRIVATE
     internal/importpdfcontroller.h
     internal/iimportprogresstracker.h
     internal/importprogresstracker.h
+    internal/mcpcuration.h
     internal/irepriseconfiguration.h
     internal/repriseconfiguration.cpp
     internal/repriseconfiguration.h

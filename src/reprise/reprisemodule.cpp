@@ -34,6 +34,7 @@
 #include "internal/repriseconfiguration.h"
 #include "internal/iimportprogresstracker.h"
 #include "internal/importprogresstracker.h"
+#include "internal/mcpcuration.h"
 
 using namespace mu::reprise;
 using namespace muse;
@@ -80,6 +81,18 @@ void RepriseModule::resolveImports()
 void RepriseModule::onInit(const IApplication::RunMode&)
 {
     m_configuration->init();
+}
+
+void RepriseModule::onAllInited(const IApplication::RunMode& mode)
+{
+    //! The MCP server only runs in GuiApp; curate there. By onAllInited every module's command register has been
+    //! registered (in its resolveImports), so we can wrap them all -- src\ and pristine muse\ alike -- fork-side.
+    if (IApplication::RunMode::GuiApp != mode)
+    {
+        return;
+    }
+
+    curateMcpToolset(globalIoc()->resolve<muse::rcommand::ICommandsRegister>(mname));
 }
 
 IContextSetup* RepriseModule::newContext(const ContextPtr& ctx) const

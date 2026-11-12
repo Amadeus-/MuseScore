@@ -47,6 +47,10 @@ public:
     //! Seed the configuration defaults (mirrors the per-module configuration init pattern, e.g. MusicXmlModule).
     void onInit(const muse::IApplication::RunMode& mode) override;
 
+    //! Curate the MCP toolset once every module's command register is registered (clears the MCP availability
+    //! bit on all non-allowlisted commands). GuiApp only -- the MCP server only runs there.
+    void onAllInited(const muse::IApplication::RunMode& mode) override;
+
     muse::modularity::IContextSetup* newContext(const muse::modularity::ContextPtr& ctx) const override;
 
 private:
