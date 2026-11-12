@@ -84,7 +84,21 @@ set /p "DOBUILD=Build-verify reprise-main before pushing it (runs the release bu
 if "%DOBUILD%"=="" set "DOBUILD=Y"
 if /i not "%DOBUILD%"=="Y" goto :nobuild
 echo.
-call "C:\Dev\+MuseScore+\+Build (release)+.bat"
+echo Build type for the verify-build:
+echo   1. Release        [default - just press ENTER]
+echo   2. Debug
+echo   3. RelWithDebInfo
+set /p "BT=Choose [1/2/3]: "
+if "%BT%"=="" set "BT=1"
+if "%BT%"=="1" set "BTTOKEN=release"
+if "%BT%"=="2" set "BTTOKEN=debug"
+if "%BT%"=="3" set "BTTOKEN=relwithdebinfo"
+if not defined BTTOKEN (
+  echo Invalid choice "%BT%" - defaulting to Release.
+  set "BTTOKEN=release"
+)
+echo.
+call "C:\Dev\+MuseScore+\+Build (release)+.bat" -t %BTTOKEN%
 if errorlevel 1 goto :buildfailed
 echo.
 echo === Build OK - reprise-main is build-verified. ===

@@ -5,9 +5,12 @@ REM  Points CMake at the aqt-installed Qt 6.11.2 kit, then runs
 REM  the stock ninja_build.bat (which sets up MSVC via vcvars64).
 REM
 REM  Usage:
-REM    "+Build (release)+.bat"            Release build (default)
-REM    "+Build (release)+.bat" -t debug   pass any target through
-REM    "+Build (release)+.bat" -t relwithdebinfo
+REM    "+Build (release)+.bat"            interactive build-type chooser
+REM                                       (1=Release [ENTER default],
+REM                                        2=Debug, 3=RelWithDebInfo)
+REM    "+Build (release)+.bat" -t debug   pass any target through verbatim
+REM    "+Build (release)+.bat" -t relwithdebinfo   (chooser is skipped when
+REM                                                 args are given)
 REM ============================================================
 setlocal
 set "QT_KIT=C:\Dev\Qt\6.11.2\msvc2022_64"
@@ -45,12 +48,36 @@ for /f "usebackq delims=" %%p in ("%TEMP%\reprise_clean_path.txt") do set "PATH=
 
 cd /d "C:\Dev\+MuseScore+"
 
-if "%~1"=="" (
-  call "C:\Dev\+MuseScore+\ninja_build.bat" -t release
-) else (
-  call "C:\Dev\+MuseScore+\ninja_build.bat" %*
-)
+REM Args on the command line (e.g. -t debug) are passed through verbatim and
+REM skip the chooser. With no args, prompt for the build type.
+if not "%~1"=="" goto :passthrough
 
+echo Build type:
+echo   1. Release        [default - just press ENTER]
+echo   2. Debug
+echo   3. RelWithDebInfo
+set /p "BT=Choose [1/2/3]: "
+if "%BT%"=="" set "BT=1"
+if "%BT%"=="1" set "BTTOKEN=release"
+if "%BT%"=="2" set "BTTOKEN=debug"
+if "%BT%"=="3" set "BTTOKEN=relwithdebinfo"
+if not defined BTTOKEN (
+  echo Invalid choice "%BT%" - defaulting to Release.
+  set "BTTOKEN=release"
+)
+echo.
+echo === Building %BTTOKEN% ===
+call "C:\Dev\+MuseScore+\ninja_build.bat" -t %BTTOKEN%
+goto :afterbuild
+
+:passthrough
+REM Clear BTTOKEN BEFORE the call so the call is the last statement before the
+REM errorlevel check (a successful "set" would otherwise reset errorlevel to 0
+REM and mask a build failure).
+set "BTTOKEN="
+call "C:\Dev\+MuseScore+\ninja_build.bat" %*
+
+:afterbuild
 if errorlevel 1 (
   echo.
   echo *** Build FAILED - see the errors above. ***
@@ -66,14 +93,14 @@ set /p "DODEPLOY=Deploy now (make the exe double-clickable)? [Y/n]: "
 if "%DODEPLOY%"=="" set "DODEPLOY=Y"
 if /i not "%DODEPLOY%"=="Y" goto :nodeploy
 echo.
-call "C:\Dev\+MuseScore+\+Deploy (standalone)+.bat"
+call "C:\Dev\+MuseScore+\+Deploy (standalone)+.bat" %BTTOKEN%
 :nodeploy
 
 echo.
 set /p "DORUN=Launch Reprise now? [y/N]: "
 if /i not "%DORUN%"=="Y" goto :norun
 echo.
-call "C:\Dev\+MuseScore+\+Run (dev)+.bat"
+call "C:\Dev\+MuseScore+\+Run (dev)+.bat" %BTTOKEN%
 goto :eof
 :norun
 

@@ -1,6 +1,10 @@
 @echo off
 REM ============================================================
-REM  Make the Release build double-click runnable (standalone).
+REM  Make a built config double-click runnable (standalone).
+REM  Prompts for which already-built config to deploy (Release default;
+REM  Debug and RelWithDebInfo also offered). Release and RelWithDebInfo
+REM  both live in build.release; Debug lives in build.debug. windeployqt
+REM  gets --release for Release/RelWithDebInfo and --debug for Debug.
 REM  Run this AFTER "+Build (release)+.bat". It does the FULL deploy:
 REM    1. copies the 6 C-lib DLLs the exe imports next to the exe
 REM       (opus, FLAC, FLAC++, fdk-aac, zlib1, ogg),
@@ -28,12 +32,54 @@ REM  (Re-run after any clean rebuild of build.release.)
 REM ============================================================
 setlocal
 set "QT_KIT=C:\Dev\Qt\6.11.2\msvc2022_64"
-set "BR=C:\Dev\+MuseScore+\build.release"
+
+REM --- Which already-built config to deploy? A token may be passed as %1
+REM     (release|debug|relwithdebinfo) to skip the prompt (the build scripts
+REM     pass the config they just built). Note: Release AND RelWithDebInfo
+REM     both live in build.release (ninja_build builds relwithdebinfo there);
+REM     only Debug uses build.debug.
+set "BTTOKEN=%~1"
+if not "%BTTOKEN%"=="" goto :haveconfig
+echo Which build config to deploy?
+echo   1. Release        [default - just press ENTER]
+echo   2. Debug
+echo   3. RelWithDebInfo
+set /p "BT=Choose [1/2/3]: "
+if "%BT%"=="" set "BT=1"
+if "%BT%"=="1" set "BTTOKEN=release"
+if "%BT%"=="2" set "BTTOKEN=debug"
+if "%BT%"=="3" set "BTTOKEN=relwithdebinfo"
+:haveconfig
+if /i "%BTTOKEN%"=="release" (
+  set "BTDIR=build.release"
+  set "WDQFLAG=--release"
+  set "BTNAME=Release"
+)
+if /i "%BTTOKEN%"=="debug" (
+  set "BTDIR=build.debug"
+  set "WDQFLAG=--debug"
+  set "BTNAME=Debug"
+)
+if /i "%BTTOKEN%"=="relwithdebinfo" (
+  set "BTDIR=build.release"
+  set "WDQFLAG=--release"
+  set "BTNAME=RelWithDebInfo"
+)
+if not defined BTDIR (
+  echo Invalid choice "%BT%%BTTOKEN%" - defaulting to Release.
+  set "BTDIR=build.release"
+  set "WDQFLAG=--release"
+  set "BTNAME=Release"
+)
+
+set "BR=C:\Dev\+MuseScore+\%BTDIR%"
 set "D=%BR%\_deps"
+
+echo === Deploying %BTNAME% from %BR% ===
 
 if not exist "%BR%\Reprise.exe" (
   echo *** Not built: %BR%\Reprise.exe
-  echo *** Run "+Build (release)+.bat" first.
+  echo *** Build the %BTNAME% config first with "+Build (release)+.bat".
   echo.
   pause
   exit /b 1
@@ -49,7 +95,7 @@ copy /y "%D%\ogg\bin\ogg.dll"         "%BR%\" >nul
 
 echo === 2/5 Deploying Qt plugins (windeployqt) ===
 set "PATH=%QT_KIT%\bin;%PATH%"
-"%QT_KIT%\bin\windeployqt.exe" --release "%BR%\Reprise.exe"
+"%QT_KIT%\bin\windeployqt.exe" %WDQFLAG% "%BR%\Reprise.exe"
 
 echo === 3/5 Copying the full Qt qml module tree ===
 xcopy /e /i /y /q "%QT_KIT%\qml" "%BR%\qml" >nul
