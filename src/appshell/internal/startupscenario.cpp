@@ -38,7 +38,6 @@ using namespace mu::appshell;
 using namespace muse;
 
 static const muse::UriQuery FIRST_LAUNCH_SETUP_URI("musescore://firstLaunchSetup?floating=true");
-static const muse::UriQuery WELCOME_DIALOG_URI("musescore://welcomedialog");
 
 static StartupModeType modeTypeTromString(const std::string& str)
 {
@@ -232,57 +231,23 @@ void StartupScenario::showStartupDialogsIfNeed(StartupModeType modeType)
         return;
     }
 
-    //! NOTE: The welcome dialog should not show if the first launch setup has not been completed, or if we're going
-    //! to show a MuseSounds update dialog (see ProjectActionsController::doFinishOpenProject). MuseSampler's update
-    //! dialog should be shown after the welcome dialog.
-    const auto showWelcomeDialogAndSamplerUpdateIfNeed = [this, modeType]() {
+    //! NOTE: The first launch setup must complete before anything else. MuseSampler's update
+    //! dialog is shown afterwards for the empty/new-score startup modes.
+    const auto showStartupDialogsAndSamplerUpdateIfNeed = [this, modeType]() {
         if (!configuration()->hasCompletedFirstLaunchSetup()) {
             interactive()->open(FIRST_LAUNCH_SETUP_URI);
             return;
         }
 
-        const Version welcomeDialogLastShownVersion(configuration()->welcomeDialogLastShownVersion());
-        const Version currentMuseScoreVersion(configuration()->museScoreVersion());
-        if (welcomeDialogLastShownVersion < currentMuseScoreVersion) {
-            configuration()->setWelcomeDialogShowOnStartup(true); // override user preference
-            configuration()->setWelcomeDialogLastShownIndex(-1); // reset
-        }
-
         const bool shouldCheckForMuseSamplerUpdate = modeType == StartupModeType::StartEmpty
                                                      || modeType == StartupModeType::StartWithNewScore;
 
-        if (shouldShowWelcomeDialog(modeType)) {
-            interactive()->open(WELCOME_DIALOG_URI).onResolve(this, [this, shouldCheckForMuseSamplerUpdate](const Val&) {
-                configuration()->setWelcomeDialogLastShownVersion(configuration()->museScoreVersion());
-
-                if (shouldCheckForMuseSamplerUpdate) {
-                    checkAndShowMuseSamplerStatusIfNeed();
-                }
-            });
-        } else if (shouldCheckForMuseSamplerUpdate) {
+        if (shouldCheckForMuseSamplerUpdate) {
             checkAndShowMuseSamplerStatusIfNeed();
         }
     };
 
-    showWelcomeDialogAndSamplerUpdateIfNeed();
-}
-
-bool StartupScenario::shouldShowWelcomeDialog(StartupModeType modeType) const
-{
-    if (!configuration()->welcomeDialogShowOnStartup()) {
-        return false;
-    }
-
-    if (!multiwindowsProvider()->isFirstWindow()) {
-        return false;
-    }
-
-    if (museSoundsUpdateScenario() && museSoundsUpdateScenario()->hasUpdate()) {
-        return false;
-    }
-
-    const Uri& startupUri = startupPageUri(modeType);
-    return interactive()->currentUri().val == startupUri;
+    showStartupDialogsAndSamplerUpdateIfNeed();
 }
 
 void StartupScenario::checkAndShowMuseSamplerStatusIfNeed()

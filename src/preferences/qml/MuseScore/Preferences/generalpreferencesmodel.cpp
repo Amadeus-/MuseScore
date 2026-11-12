@@ -54,10 +54,6 @@ void GeneralPreferencesModel::load()
         emit startupScorePathChanged();
     });
 
-    configuration()->welcomeDialogShowOnStartupChanged().onNotify(this, [this]() {
-        emit showWelcomeDialogChanged();
-    });
-
     updateConfiguration()->needCheckForUpdateChanged().onNotify(this, [this]() {
         emit needCheckForNewAppVersionChanged(needCheckForNewAppVersion());
     });
@@ -247,20 +243,6 @@ QStringList GeneralPreferencesModel::scorePathFilter() const
 {
     return { muse::qtrc("preferences", "MuseScore file") + " (*.mscz)",
              muse::qtrc("preferences", "All") + " (*)" };
-}
-
-bool GeneralPreferencesModel::showWelcomeDialog() const
-{
-    return configuration()->welcomeDialogShowOnStartup();
-}
-
-void GeneralPreferencesModel::setShowWelcomeDialog(bool show)
-{
-    if (configuration()->welcomeDialogShowOnStartup() == show) {
-        return;
-    }
-
-    configuration()->setWelcomeDialogShowOnStartup(show);
 }
 
 bool GeneralPreferencesModel::isAppUpdatable() const

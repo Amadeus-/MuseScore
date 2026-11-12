@@ -130,7 +130,6 @@ qt_add_qml_module(preferences_qml
         internal/ThemeSample.qml
         internal/UiColorsSection.qml
         internal/UiFontSection.qml
-        internal/WelcomeDialogSection.qml
         internal/ZoomSection.qml
         internal/FFmpegSection.qml
     IMPORTS

@@ -33,7 +33,6 @@ import MuseScore.AppShell
 import "./HomePage"
 import "./NotationPage"
 import "./NotationReviewPage"
-import "./PublishPage"
 import "./DevTools"
 
 DockWindow {
@@ -107,10 +106,6 @@ DockWindow {
         },
 
         NotationReviewPage {
-            topToolbarKeyNavSec: topToolbarKeyNavSec
-        },
-
-        PublishPage {
             topToolbarKeyNavSec: topToolbarKeyNavSec
         },
 

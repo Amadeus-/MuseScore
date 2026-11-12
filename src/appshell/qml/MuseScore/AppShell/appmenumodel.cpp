@@ -201,14 +201,9 @@ MenuItem* AppMenuModel::makeFileMenu()
         makeSeparator(),
         makeMenuItem(PROJECT_SAVE_COMMAND),
         makeMenuItem(PROJECT_SAVE_AS_COMMAND),
-        makeMenuItem(PROJECT_SAVE_TO_CLOUD_COMMAND),
         makeMenu(TranslatableString("appshell/menu/file", "Save o&ther"), {
             makeMenuItem(PROJECT_SAVE_A_COPY_COMMAND),
             makeMenuItem(PROJECT_SAVE_SELECTION_COMMAND),
-        }),
-        makeMenu(TranslatableString("appshell/menu/file", "Pu&blish online"), {
-            makeMenuItem(PROJECT_PUBLISH_COMMAND),
-            makeMenuItem(PROJECT_SHARE_AUDIO_COMMAND),
         }),
         makeSeparator(),
         makeMenuItem(PROJECT_EXPORT_COMMAND),

@@ -44,10 +44,6 @@ qt_add_qml_module(appshell_qml
         notationpagemodel.h
         notationstatusbarmodel.cpp
         notationstatusbarmodel.h
-        PublishPage/publishtoolbarmodel.cpp
-        PublishPage/publishtoolbarmodel.h
-        welcomedialogmodel.cpp
-        welcomedialogmodel.h
     QML_FILES
         AboutDialog.qml
         AboutMusicXMLDialog.qml
@@ -81,9 +77,6 @@ qt_add_qml_module(appshell_qml
         platform/AppButtonBackground.qml
         platform/AppMenuBar.qml
         platform/PlatformMenuBar.qml
-        PublishPage/PublishPage.qml
-        PublishPage/PublishToolBar.qml
-        WelcomeDialog.qml
         WindowContent.qml
     RESOURCES
         FirstLaunchSetup/resources/MuseSounds.png
@@ -162,5 +155,4 @@ qt_add_resources(appshell_qml appshell_qml_resources
 target_include_directories(appshell_qml PRIVATE
     DevTools/Settings
     FirstLaunchSetup
-    PublishPage
 )

@@ -74,15 +74,6 @@ PreferencesPage {
             navigation.order: root.navigationOrderStart + 2
         }
 
-        SeparatorLine { }
-
-        WelcomeDialogSection {
-            model: preferencesModel
-
-            navigation.section: root.navigationSection
-            navigation.order: root.navigationOrderStart + 3
-        }
-
         /*
          * TODO: https://github.com/musescore/MuseScore/issues/9807
         KeyboardLayoutsSection {
