@@ -107,7 +107,6 @@ private:
     muse::uicomponents::MenuItemList makeFramesItems();
     muse::uicomponents::MenuItemList makeTextItems();
     muse::uicomponents::MenuItemList makeLinesItems();
-    muse::uicomponents::MenuItemList makeChordAndFretboardDiagramsItems();
     muse::uicomponents::MenuItemList makeExtensionsItems();
 
     mu::notation::INotationUndoStackPtr undoStack() const;

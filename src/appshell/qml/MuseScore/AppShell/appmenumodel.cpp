@@ -169,18 +169,6 @@ bool AppMenuModel::isMuseSamplerModuleAdded() const
 #endif
 }
 
-MenuItemList AppMenuModel::makeChordAndFretboardDiagramsItems()
-{
-    MenuItemList items {
-        makeMenuItem(ADD_CHORD_TEXT_COMMAND),
-        makeMenuItem(ADD_FRETBOARD_DIAGRAM_COMMAND),
-        makeSeparator(),
-        makeMenuItem(INSERT_FRETFRAME_COMMAND, TranslatableString("appshell/menu/add/chordandfret", "Fretboard diagram legend"))
-    };
-
-    return items;
-}
-
 MenuItem* AppMenuModel::makeMenuItem(const muse::rcommand::Command& command, MenuItemRole role)
 {
     MenuItem* item = makeMenuItem(command);
@@ -201,15 +189,11 @@ MenuItem* AppMenuModel::makeFileMenu()
         makeSeparator(),
         makeMenuItem(PROJECT_SAVE_COMMAND),
         makeMenuItem(PROJECT_SAVE_AS_COMMAND),
-        makeMenu(TranslatableString("appshell/menu/file", "Save o&ther"), {
-            makeMenuItem(PROJECT_SAVE_A_COPY_COMMAND),
-            makeMenuItem(PROJECT_SAVE_SELECTION_COMMAND),
-        }),
+        makeMenuItem(PROJECT_SAVE_A_COPY_COMMAND),
         makeSeparator(),
         makeMenuItem(PROJECT_EXPORT_COMMAND),
         makeSeparator(),
         makeMenuItem(PROJECT_PROPERTIES_COMMAND),
-        makeMenuItem(OPEN_PARTS_COMMAND),
         makeSeparator(),
         makeMenuItem(PROJECT_PRINT_COMMAND),
         makeSeparator(),
@@ -275,16 +259,13 @@ MenuItem* AppMenuModel::makeViewMenu()
 #endif
         makeMenuItem(DOCK_TOGGLE_PALETTES_COMMAND),
         makeMenuItem(TOGGLE_MASTER_PALETTE_COMMAND),
-        makeMenuItem(DOCK_TOGGLE_INSTRUMENTS_COMMAND),
         makeMenuItem(DOCK_TOGGLE_PROPERTIES_COMMAND),
         makeMenuItem(DOCK_TOGGLE_SELECTION_FILTER_COMMAND),
         makeMenuItem(DOCK_TOGGLE_UNDO_HISTORY_COMMAND),
         makeMenuItem(DOCK_TOGGLE_NAVIGATOR_COMMAND),
-        makeMenuItem(DOCK_TOGGLE_BRAILLE_COMMAND),
         makeMenuItem(DOCK_TOGGLE_TIMELINE_COMMAND),
         makeMenuItem(DOCK_TOGGLE_MIXER_COMMAND),
         makeMenuItem(DOCK_TOGGLE_PIANO_KEYBOARD_COMMAND),
-        makeMenuItem(DOCK_TOGGLE_PERCUSSION_COMMAND),
         makeMenuItem(OPEN_PLAYBACK_SETUP_COMMAND),
         makeSeparator(),
         makeMenu(TranslatableString("appshell/menu/view", "&Toolbars"), {
@@ -292,9 +273,6 @@ MenuItem* AppMenuModel::makeViewMenu()
             makeMenuItem(DOCK_TOGGLE_NOTEINPUT_COMMAND),
             makeMenuItem(DOCK_TOGGLE_STATUSBAR_COMMAND)
         }, "menu-toolbars"),
-#ifdef MUSE_MODULE_WORKSPACE
-        makeMenu(TranslatableString("appshell/menu/view", "W&orkspaces"), m_workspacesMenuModel->items(), "menu-workspaces"),
-#endif
         makeSeparator(),
         makeMenu(TranslatableString("appshell/menu/view", "&Show"), {
             makeMenuItem(SHOW_INVISIBLE_COMMAND),
@@ -322,8 +300,6 @@ MenuItem* AppMenuModel::makeAddMenu()
         makeMenu(TranslatableString("appshell/menu/add", "&Frames"), makeFramesItems(), "menu-frames"),
         makeMenu(TranslatableString("appshell/menu/add", "&Text"), makeTextItems(), "menu-text"),
         makeMenu(TranslatableString("appshell/menu/add", "&Lines"), makeLinesItems(), "menu-lines"),
-        makeMenu(TranslatableString("appshell/menu/add", "&Chords and fretboard diagrams"),
-                 makeChordAndFretboardDiagramsItems(), "menu-chord-and-frets"),
     };
 
     return makeMenu(TranslatableString("appshell/menu/add", "&Add"), addItems, "menu-add");
@@ -359,9 +335,6 @@ MenuItem* AppMenuModel::makeToolsMenu()
     MenuItemList toolsItems {
         makeMenuItem(OPEN_TRANSPOSE_COMMAND),
         makeSeparator(),
-        makeMenuItem(STAFF_EXPLODE_COMMAND),
-        makeMenuItem(STAFF_IMPLODE_COMMAND),
-        makeMenuItem(OPEN_REALIZECHORDSYMBOLS_COMMAND),
         makeMenu(TranslatableString("appshell/menu/tools", "&Voices"), {
             makeMenuItem(SWAP_VOICE_X12_COMMAND),
             makeMenuItem(SWAP_VOICE_X13_COMMAND),
@@ -375,9 +348,6 @@ MenuItem* AppMenuModel::makeToolsMenu()
             makeMenuItem(JOIN_MEASURES_COMMAND)
         }, "menu-tools-measures"),
         makeMenuItem(REMOVE_SELECTED_RANGE_COMMAND),
-        makeSeparator(),
-        makeMenuItem(SLASH_FILL_COMMAND),
-        makeMenuItem(SLASH_RHYTHM_COMMAND),
         makeSeparator(),
         makeMenuItem(PITCH_SPELL_SHARPS_COMMAND),
         makeMenuItem(PITCH_SPELL_FLATS_COMMAND),
@@ -422,13 +392,22 @@ MenuItem* AppMenuModel::makeHelpMenu(bool addDiagnosticsSubMenu)
 {
     MenuItemList helpItems;
 
-    if (updateConfiguration()->isAppUpdatable()) {
-        helpItems << makeMenuItem(UPDATE_CHECK_COMMAND);
-        helpItems << makeSeparator();
-    }
+    //! NOTE: Reprise keeps these online/update help items VISIBLE but DISABLED
+    //! as a deliberate "revisit later" reminder; they are forced off regardless
+    //! of their command's normal availability.
+    MenuItem* updateCheckItem = makeMenuItem(UPDATE_CHECK_COMMAND);
+    updateCheckItem->setEnabled(false);
+    helpItems << updateCheckItem;
+    helpItems << makeSeparator();
 
-    helpItems << makeMenuItem(APP_ONLINE_HANDBOOK_COMMAND);
-    helpItems << makeMenuItem(APP_ASK_HELP_COMMAND);
+    MenuItem* onlineHandbookItem = makeMenuItem(APP_ONLINE_HANDBOOK_COMMAND);
+    onlineHandbookItem->setEnabled(false);
+    helpItems << onlineHandbookItem;
+
+    MenuItem* askHelpItem = makeMenuItem(APP_ASK_HELP_COMMAND);
+    askHelpItem->setEnabled(false);
+    helpItems << askHelpItem;
+
     helpItems << makeSeparator();
 
     if (addDiagnosticsSubMenu) {
@@ -442,12 +421,10 @@ MenuItem* AppMenuModel::makeHelpMenu(bool addDiagnosticsSubMenu)
     helpItems << makeMenuItem(APP_ACCESSIBILITY_STATEMENT_COMMAND);
     helpItems << makeSeparator();
 
-#if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
-    if (isMuseSamplerModuleAdded()) {
-        helpItems << makeMenuItem(CLEAR_ONLINESOUNDS_CACHE_COMMAND);
-        helpItems << makeSeparator();
-    }
-#endif
+    MenuItem* clearOnlineSoundsCacheItem = makeMenuItem(CLEAR_ONLINESOUNDS_CACHE_COMMAND);
+    clearOnlineSoundsCacheItem->setEnabled(false);
+    helpItems << clearOnlineSoundsCacheItem;
+    helpItems << makeSeparator();
 
     helpItems << makeMenuItem(APP_REVERT_TO_FACTORY_COMMAND);
 
@@ -698,15 +675,10 @@ MenuItemList AppMenuModel::makeTextItems()
         makeMenuItem(ADD_DYNAMIC_COMMAND),
         makeMenuItem(ADD_EXPRESSION_TEXT_COMMAND),
         makeMenuItem(ADD_REHEARSALMARK_TEXT_COMMAND),
-        makeMenuItem(ADD_INSTRUMENT_CHANGE_TEXT_COMMAND),
         makeMenuItem(ADD_FINGERING_TEXT_COMMAND),
         makeSeparator(),
         makeMenuItem(ADD_STICKING_TEXT_COMMAND),
-        makeMenuItem(ADD_CHORD_TEXT_COMMAND),
-        makeMenuItem(ADD_ROMAN_NUMERAL_TEXT_COMMAND),
-        makeMenuItem(ADD_NASHVILLE_NUMBER_TEXT_COMMAND),
         makeMenuItem(ADD_LYRICS_COMMAND),
-        makeMenuItem(ADD_FIGURED_BASS_COMMAND),
         makeMenuItem(ADD_TEMPO_COMMAND)
     };
 
