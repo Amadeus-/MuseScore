@@ -8,6 +8,35 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-11-12
+
+### Changed
+- **Top menu bar stripped down for Reprise**, continuing the 0.4.0 GUI-strip theme:
+  the composition/engraving entries irrelevant to the scan-and-correct workflow are
+  gone. **File** loses **Save selection** and **Open parts**, and the **"Save other"**
+  submenu is flattened to a direct **Save a copy**. **Add ▸ Text** drops the
+  **chord symbol**, **Roman numeral**, **Nashville number**, **figured bass**, and
+  **instrument change** items. The **Help** web and update items are kept visible but
+  grayed out (disabled).
+- **Scans page default view is now List instead of Grid.**
+
+### Removed
+- **View menu**: removed the **Instruments** / **Braille** / **Percussion** panel
+  toggles and the **Workspaces** entry.
+- **Add menu**: removed the **Chords & fretboard diagrams** submenu.
+- **Tools menu**: removed **Explode**, **Implode**, **Realize chord symbols**,
+  **Fill with slashes**, and **Toggle rhythmic slash notation**.
+
+### Added
+- **Build-type chooser** (Release default / Debug / RelWithDebInfo) in the helper
+  build scripts.
+
+### Fixed
+- **Notation MCP query structs decoupled from upstream's renamed field-declaration
+  macro**, fixing a build break after an upstream sync.
+- **+Update now builds before pushing** `reprise-main` (+Build propagates the failure
+  exit code), so a broken tree is no longer pushed.
+
 ## [0.5.0] — 2026-11-12
 
 ### Added
@@ -147,6 +176,7 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.6.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.5.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.4.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.3.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
