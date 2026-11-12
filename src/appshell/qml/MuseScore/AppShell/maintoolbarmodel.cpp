@@ -35,6 +35,7 @@ static const QString TITLE_KEY("title");
 static const QString URI_KEY("uri");
 static const QString IS_TITLE_BOLD_KEY("isTitleBold");
 static const QString IS_CHECKED_KEY("isChecked");
+static const QString IS_ENABLED_KEY("isEnabled");
 
 static bool isNotationPageUri(const QString& uri)
 {
@@ -46,13 +47,14 @@ static bool isItemChecked(const QString& itemUri, const QString& currentUri)
     return itemUri == currentUri || (isNotationPageUri(itemUri) && isNotationPageUri(currentUri));
 }
 
-inline QVariantMap buildItem(const QString& title, const QString& uri, const QString& currentUri)
+inline QVariantMap buildItem(const QString& title, const QString& uri, const QString& currentUri, bool enabled = true)
 {
     QVariantMap item;
     item[TITLE_KEY] = title;
     item[URI_KEY] = uri;
     item[IS_TITLE_BOLD_KEY] = false;
     item[IS_CHECKED_KEY] = isItemChecked(uri, currentUri);
+    item[IS_ENABLED_KEY] = enabled;
 
     return item;
 }
@@ -74,6 +76,7 @@ QVariant MainToolBarModel::data(const QModelIndex& index, int role) const
     case UriRole: return item[URI_KEY];
     case IsTitleBoldRole: return item[IS_TITLE_BOLD_KEY];
     case IsCheckedRole: return item[IS_CHECKED_KEY];
+    case IsEnabledRole: return item[IS_ENABLED_KEY];
     }
 
     return QVariant();
@@ -91,6 +94,7 @@ QHash<int, QByteArray> MainToolBarModel::roleNames() const
         { UriRole, URI_KEY.toUtf8() },
         { IsTitleBoldRole, IS_TITLE_BOLD_KEY.toUtf8() },
         { IsCheckedRole, IS_CHECKED_KEY.toUtf8() },
+        { IsEnabledRole, IS_ENABLED_KEY.toUtf8() },
     };
 
     return roles;
@@ -102,7 +106,8 @@ void MainToolBarModel::load()
 
     m_items.clear();
     m_items << buildItem(muse::qtrc("appshell", "Home"), HOME_PAGE, m_currentUri);
-    m_items << buildItem(muse::qtrc("appshell", "Score"), NOTATION_PAGE, m_currentUri);
+    //! NOTE: Reprise is edit-only - the "Edit" tab is disabled until a scan/score is open to edit
+    m_items << buildItem(muse::qtrc("appshell", "Edit"), NOTATION_PAGE, m_currentUri, context()->project() != nullptr);
 
     if (globalConfiguration()->devModeEnabled()) {
         m_items << buildItem(muse::qtrc("appshell", "DevTools"), DEVTOOLS_PAGE, m_currentUri);
@@ -140,11 +145,13 @@ void MainToolBarModel::updateNotationPageItem()
         QVariantMap& item = m_items[i];
 
         if (isNotationPageUri(item[URI_KEY].toString())) {
+            const bool hasProject = context()->project() != nullptr;
             item[URI_KEY] = QString::fromStdString(openProjectScenario()->resolveNotationPageUri().toString());
-            item[IS_TITLE_BOLD_KEY] = context()->project() != nullptr;
+            item[IS_TITLE_BOLD_KEY] = hasProject;
+            item[IS_ENABLED_KEY] = hasProject;
 
             QModelIndex modelIndex = index(i);
-            emit dataChanged(modelIndex, modelIndex, { UriRole, IsTitleBoldRole });
+            emit dataChanged(modelIndex, modelIndex, { UriRole, IsTitleBoldRole, IsEnabledRole });
 
             break;
         }

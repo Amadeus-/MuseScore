@@ -79,6 +79,7 @@ Item {
         delegate: PageTabButton {
             required property bool isTitleBold
             required property bool isChecked
+            required property bool isEnabled
             required title
             required property string uri
             required property int index
@@ -87,6 +88,9 @@ Item {
 
             spacing: 0
             leftPadding: 12
+
+            enabled: isEnabled
+            opacity: isEnabled ? 1.0 : ui.theme.itemOpacityDisabled
 
             normalStateFont: isTitleBold ? ui.theme.largeBodyBoldFont : ui.theme.largeBodyFont
 
