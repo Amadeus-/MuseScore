@@ -50,6 +50,29 @@ BaseSection {
     signal detectAudiverisRequested()
     signal detectTesseractRequested()
 
+    //! Show a transient recognition status. A success ("Found: ...") message fades out after 2s; a
+    //! "Not detected" message stays persistent. The detected path itself lives in the FilePicker, not here,
+    //! so fading the status never clears the path. Each row owns its own timer + animation (per-row isolation).
+    function showAudiverisStatus(text, isSuccess) {
+        audiverisFadeTimer.stop()
+        audiverisFadeAnimation.stop()
+        root.audiverisStatus = text
+        audiverisStatusLabel.opacity = Boolean(text) ? audiverisStatusLabel.baseOpacity : 0.0
+        if (Boolean(text) && isSuccess) {
+            audiverisFadeTimer.restart()
+        }
+    }
+
+    function showTesseractStatus(text, isSuccess) {
+        tesseractFadeTimer.stop()
+        tesseractFadeAnimation.stop()
+        root.tesseractStatus = text
+        tesseractStatusLabel.opacity = Boolean(text) ? tesseractStatusLabel.baseOpacity : 0.0
+        if (Boolean(text) && isSuccess) {
+            tesseractFadeTimer.restart()
+        }
+    }
+
     Column {
         width: parent.width
         spacing: 6
@@ -101,12 +124,38 @@ BaseSection {
         }
 
         StyledTextLabel {
+            id: audiverisStatusLabel
+
+            readonly property real baseOpacity: 0.6
+
             width: parent.width
             text: root.audiverisStatus
-            visible: Boolean(root.audiverisStatus)
-            opacity: 0.6
+            //! An empty status is hidden; a Column excludes an invisible child from layout AND spacing,
+            //! so the row collapses to zero height and everything below shifts up.
+            visible: root.audiverisStatus !== ""
+            opacity: baseOpacity
             horizontalAlignment: Text.AlignLeft
             wrapMode: Text.WordWrap
+
+            Timer {
+                id: audiverisFadeTimer
+                interval: 2000
+                repeat: false
+                onTriggered: audiverisFadeAnimation.start()
+            }
+
+            NumberAnimation {
+                id: audiverisFadeAnimation
+                target: audiverisStatusLabel
+                property: "opacity"
+                to: 0.0
+                duration: 600
+
+                //! Fade THEN collapse: only once the opacity fade completes naturally do we clear the text,
+                //! which flips visible to false and collapses the row. onFinished fires only on natural
+                //! completion, not on stop(), so a re-detect that interrupts the fade never clears spuriously.
+                onFinished: root.showAudiverisStatus("", false)
+            }
         }
     }
 
@@ -161,12 +210,38 @@ BaseSection {
         }
 
         StyledTextLabel {
+            id: tesseractStatusLabel
+
+            readonly property real baseOpacity: 0.6
+
             width: parent.width
             text: root.tesseractStatus
-            visible: Boolean(root.tesseractStatus)
-            opacity: 0.6
+            //! An empty status is hidden; a Column excludes an invisible child from layout AND spacing,
+            //! so the row collapses to zero height and everything below shifts up.
+            visible: root.tesseractStatus !== ""
+            opacity: baseOpacity
             horizontalAlignment: Text.AlignLeft
             wrapMode: Text.WordWrap
+
+            Timer {
+                id: tesseractFadeTimer
+                interval: 2000
+                repeat: false
+                onTriggered: tesseractFadeAnimation.start()
+            }
+
+            NumberAnimation {
+                id: tesseractFadeAnimation
+                target: tesseractStatusLabel
+                property: "opacity"
+                to: 0.0
+                duration: 600
+
+                //! Fade THEN collapse: only once the opacity fade completes naturally do we clear the text,
+                //! which flips visible to false and collapses the row. onFinished fires only on natural
+                //! completion, not on stop(), so a re-detect that interrupts the fade never clears spuriously.
+                onFinished: root.showTesseractStatus("", false)
+            }
         }
     }
 

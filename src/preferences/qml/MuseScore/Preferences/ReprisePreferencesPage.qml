@@ -38,9 +38,9 @@ PreferencesPage {
             var audiveris = reprisePreferencesModel.detectAudiveris()
             if (Boolean(audiveris)) {
                 reprisePreferencesModel.audiverisPath = audiveris
-                recognitionSection.audiverisStatus = qsTrc("preferences", "Found: %1").arg(audiveris)
+                recognitionSection.showAudiverisStatus(qsTrc("preferences", "Found: %1").arg(audiveris), true)
             } else {
-                recognitionSection.audiverisStatus = qsTrc("preferences", "Not detected. Set the path manually.")
+                recognitionSection.showAudiverisStatus(qsTrc("preferences", "Not detected. Set the path manually."), false)
             }
         }
 
@@ -48,9 +48,9 @@ PreferencesPage {
             var tesseract = reprisePreferencesModel.detectTesseract()
             if (Boolean(tesseract)) {
                 reprisePreferencesModel.tesseractPath = tesseract
-                recognitionSection.tesseractStatus = qsTrc("preferences", "Found: %1").arg(tesseract)
+                recognitionSection.showTesseractStatus(qsTrc("preferences", "Found: %1").arg(tesseract), true)
             } else {
-                recognitionSection.tesseractStatus = qsTrc("preferences", "Not detected. Set the path manually.")
+                recognitionSection.showTesseractStatus(qsTrc("preferences", "Not detected. Set the path manually."), false)
             }
         }
     }
@@ -79,12 +79,12 @@ PreferencesPage {
 
             onAudiverisPathChangeRequested: function(path) {
                 reprisePreferencesModel.audiverisPath = path
-                recognitionSection.audiverisStatus = ""
+                recognitionSection.showAudiverisStatus("", false)
             }
 
             onTesseractPathChangeRequested: function(path) {
                 reprisePreferencesModel.tesseractPath = path
-                recognitionSection.tesseractStatus = ""
+                recognitionSection.showTesseractStatus("", false)
             }
 
             onScanResolutionChangeRequested: function(dpi) {
@@ -99,9 +99,9 @@ PreferencesPage {
                 var found = reprisePreferencesModel.detectAudiveris()
                 if (Boolean(found)) {
                     reprisePreferencesModel.audiverisPath = found
-                    recognitionSection.audiverisStatus = qsTrc("preferences", "Found: %1").arg(found)
+                    recognitionSection.showAudiverisStatus(qsTrc("preferences", "Found: %1").arg(found), true)
                 } else {
-                    recognitionSection.audiverisStatus = qsTrc("preferences", "Audiveris was not found. Set the path manually.")
+                    recognitionSection.showAudiverisStatus(qsTrc("preferences", "Audiveris was not found. Set the path manually."), false)
                 }
             }
 
@@ -109,9 +109,9 @@ PreferencesPage {
                 var found = reprisePreferencesModel.detectTesseract()
                 if (Boolean(found)) {
                     reprisePreferencesModel.tesseractPath = found
-                    recognitionSection.tesseractStatus = qsTrc("preferences", "Found: %1").arg(found)
+                    recognitionSection.showTesseractStatus(qsTrc("preferences", "Found: %1").arg(found), true)
                 } else {
-                    recognitionSection.tesseractStatus = qsTrc("preferences", "Tesseract was not found. Set the path manually.")
+                    recognitionSection.showTesseractStatus(qsTrc("preferences", "Tesseract was not found. Set the path manually."), false)
                 }
             }
 
