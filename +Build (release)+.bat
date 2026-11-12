@@ -56,7 +56,7 @@ if errorlevel 1 (
   echo *** Build FAILED - see the errors above. ***
   echo.
   pause
-  goto :eof
+  exit /b 1
 )
 
 echo.

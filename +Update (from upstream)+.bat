@@ -22,8 +22,12 @@ REM    5. git submodule update --init --recursive
 REM       ^-- CRITICAL: the superproject pins muse (muse_framework) and
 REM           muse_deps; a merge does NOT move the submodule working trees,
 REM           so this re-syncs BOTH. Skipping it = stale framework/deps.
-REM    6. If anything changed: offer to PUSH (origin main + origin reprise-main),
-REM       then offer to BUILD.
+REM    6. If anything changed:
+REM       a. PUSH origin main immediately (pristine mirror, always safe).
+REM       b. Build-verify reprise-main (run the release build) BEFORE pushing it.
+REM          Only on build SUCCESS offer to PUSH origin reprise-main; on build
+REM          FAILURE or decline, SKIP the push (a git-clean but uncompilable
+REM          merge must not reach origin/reprise-main) and print a manual-push note.
 REM ============================================================
 setlocal
 cd /d "C:\Dev\+MuseScore+"
@@ -63,27 +67,52 @@ echo     main:         %MAIN_BEFORE:~0,9%  to  %MAIN_AFTER:~0,9%
 echo     reprise-main: %RM_BEFORE:~0,9%  to  %RM_AFTER:~0,9%
 echo.
 
-set /p "DOPUSH=Push updated main and reprise-main to origin now? [Y/n]: "
+REM --- main is the pristine upstream mirror: always safe to publish now. ---
+set /p "DOPUSH=Push updated main to origin now? [Y/n]: "
 if "%DOPUSH%"=="" set "DOPUSH=Y"
-if /i not "%DOPUSH%"=="Y" goto :skippush
+if /i not "%DOPUSH%"=="Y" goto :skipmainpush
 echo.
 echo === Pushing origin main ===
 git push origin main
-echo === Pushing origin reprise-main ===
-git push origin reprise-main
-:skippush
+:skipmainpush
 
+REM --- reprise-main is NOT pushed until a release build verifies the merge. ---
+REM     A git-clean merge can still fail to compile; building here BEFORE the
+REM     push keeps a broken reprise-main from ever reaching origin.
 echo.
-set /p "DOBUILD=Rebuild now (runs the release build)? [Y/n]: "
+set /p "DOBUILD=Build-verify reprise-main before pushing it (runs the release build)? [Y/n]: "
 if "%DOBUILD%"=="" set "DOBUILD=Y"
-if /i not "%DOBUILD%"=="Y" goto :skipbuild
+if /i not "%DOBUILD%"=="Y" goto :nobuild
 echo.
 call "C:\Dev\+MuseScore+\+Build (release)+.bat"
-goto :eof
-:skipbuild
-
+if errorlevel 1 goto :buildfailed
 echo.
-echo To build later:  "+Build (release)+.bat"
+echo === Build OK - reprise-main is build-verified. ===
+set /p "DOPUSHRM=Push build-verified reprise-main to origin now? [Y/n]: "
+if "%DOPUSHRM%"=="" set "DOPUSHRM=Y"
+if /i not "%DOPUSHRM%"=="Y" goto :skiprmpush
+echo.
+echo === Pushing origin reprise-main ===
+git push origin reprise-main
+:skiprmpush
+echo.
+pause
+goto :eof
+
+:buildfailed
+echo.
+echo *** Build FAILED - reprise-main was NOT pushed: it is not build-verified. ***
+echo *** After fixing and building, push manually with: ***
+echo ***   git push origin reprise-main ***
+echo.
+pause
+goto :eof
+
+:nobuild
+echo.
+echo reprise-main was NOT pushed: it is not build-verified.
+echo After fixing and building, push manually with:
+echo   git push origin reprise-main
 echo.
 pause
 goto :eof
