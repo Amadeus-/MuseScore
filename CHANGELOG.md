@@ -8,6 +8,29 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-11-12
+
+### Added
+- **Agent-testable MCP control surface**: Reprise's built-in MCP server now exposes a
+  focused, agent-facing toolset so the Import-PDF pipeline can be driven and verified
+  headlessly (no GUI clicks).
+  - **Six read-only state queries**: `project.get-state` (whether a scan is open, its
+    name/path, unsaved state), `score.get-counts` (measure / part / instrument / staff /
+    page counts), `score.get-health` (corrupt and irregular measures), `notation.get-editstate`
+    (whether editing is available), and `reprise.get-import-progress` / `reprise.get-import-errors`
+    (live Import-PDF / OMR progress and errors).
+  - **Headlessly-drivable Import PDF**: `reprise.import-pdf` accepts optional `path` / `pages`
+    / `dpi` arguments, so an import can be started directly, skipping the file picker and
+    options dialog.
+- **Separate Release PDB** carried forward from 0.4.0 lets these be developed and crash-debugged
+  with full symbols.
+
+### Changed
+- **Curated MCP toolset**: the MCP tool list is trimmed to the agent-facing set (the six
+  queries above + `reprise.import-pdf` + the core `project.open` / `close` / `save` /
+  `save-as` / `export`). Every other command has only its **MCP** availability bit cleared —
+  the plugin API, menus, keyboard shortcuts, and all in-app behaviour are untouched.
+
 ## [0.4.0] — 2026-11-11
 
 ### Changed
@@ -124,6 +147,7 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.5.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.4.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.3.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.2.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
