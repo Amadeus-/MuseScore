@@ -393,20 +393,25 @@ MenuItem* AppMenuModel::makeHelpMenu(bool addDiagnosticsSubMenu)
     MenuItemList helpItems;
 
     //! NOTE: Reprise keeps these online/update help items VISIBLE but DISABLED
-    //! as a deliberate "revisit later" reminder; they are forced off regardless
-    //! of their command's normal availability.
-    MenuItem* updateCheckItem = makeMenuItem(UPDATE_CHECK_COMMAND);
-    updateCheckItem->setEnabled(false);
-    helpItems << updateCheckItem;
-    helpItems << makeSeparator();
+    //! as a deliberate "revisit later" reminder. Each is null-guarded: a command
+    //! whose module is compiled out of this fork (e.g. update/check with the
+    //! update module OFF) is not registered, so makeMenuItem() returns nullptr
+    //! and that item simply does not appear; the registered ones render disabled.
+    if (MenuItem* updateCheckItem = makeMenuItem(UPDATE_CHECK_COMMAND)) {
+        updateCheckItem->setEnabled(false);
+        helpItems << updateCheckItem;
+        helpItems << makeSeparator();
+    }
 
-    MenuItem* onlineHandbookItem = makeMenuItem(APP_ONLINE_HANDBOOK_COMMAND);
-    onlineHandbookItem->setEnabled(false);
-    helpItems << onlineHandbookItem;
+    if (MenuItem* onlineHandbookItem = makeMenuItem(APP_ONLINE_HANDBOOK_COMMAND)) {
+        onlineHandbookItem->setEnabled(false);
+        helpItems << onlineHandbookItem;
+    }
 
-    MenuItem* askHelpItem = makeMenuItem(APP_ASK_HELP_COMMAND);
-    askHelpItem->setEnabled(false);
-    helpItems << askHelpItem;
+    if (MenuItem* askHelpItem = makeMenuItem(APP_ASK_HELP_COMMAND)) {
+        askHelpItem->setEnabled(false);
+        helpItems << askHelpItem;
+    }
 
     helpItems << makeSeparator();
 
@@ -421,10 +426,11 @@ MenuItem* AppMenuModel::makeHelpMenu(bool addDiagnosticsSubMenu)
     helpItems << makeMenuItem(APP_ACCESSIBILITY_STATEMENT_COMMAND);
     helpItems << makeSeparator();
 
-    MenuItem* clearOnlineSoundsCacheItem = makeMenuItem(CLEAR_ONLINESOUNDS_CACHE_COMMAND);
-    clearOnlineSoundsCacheItem->setEnabled(false);
-    helpItems << clearOnlineSoundsCacheItem;
-    helpItems << makeSeparator();
+    if (MenuItem* clearOnlineSoundsCacheItem = makeMenuItem(CLEAR_ONLINESOUNDS_CACHE_COMMAND)) {
+        clearOnlineSoundsCacheItem->setEnabled(false);
+        helpItems << clearOnlineSoundsCacheItem;
+        helpItems << makeSeparator();
+    }
 
     helpItems << makeMenuItem(APP_REVERT_TO_FACTORY_COMMAND);
 
