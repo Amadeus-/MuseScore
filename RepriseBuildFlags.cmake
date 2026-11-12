@@ -14,4 +14,18 @@
 
 if (MSVC)
     add_compile_options(/external:anglebrackets /external:W0)
+
+    # Emit a SEPARATE .pdb for Release too (symbols live in the .pdb, NOT embedded in the
+    # exe/dll) so any crash can be symbolized. Debug / RelWithDebInfo already produce PDBs;
+    # stock Release does not. Use /Z7 (debug info carried IN the .obj files -- which are
+    # intermediate and never shipped) rather than /Zi: /Zi needs a shared compiler .pdb that
+    # collides with the precompiled headers under the /MP parallel build (error C2859
+    # "pdb ... is not the pdb file that was used when this precompiled header was created").
+    # /DEBUG makes the linker harvest the /Z7 debug info into the final target .pdb; the
+    # shipped exe/dll stays lean. /OPT:REF + /OPT:ICF restore the Release size optimizations
+    # that a bare /DEBUG would otherwise disable.
+    add_compile_options($<$<CONFIG:Release>:/Z7>)
+    add_link_options($<$<CONFIG:Release>:/DEBUG>)
+    add_link_options($<$<CONFIG:Release>:/OPT:REF>)
+    add_link_options($<$<CONFIG:Release>:/OPT:ICF>)
 endif()
