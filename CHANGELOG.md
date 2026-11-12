@@ -8,6 +8,8 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-11-11
+
 ### Added
 - **Auto-detect OMR paths on first Preferences open**: if the Audiveris or Tesseract path has
   never been set, the Reprise page detects it on open and saves it so it stays; if the program
@@ -24,6 +26,13 @@ below `1.0.0` is pre-release.
 - **Tesseract path drives OCR**: when a Tesseract program path is set, `TESSDATA_PREFIX`
   for Audiveris' OCR is derived from it (its sibling `tessdata` folder); otherwise the
   previous automatic detection next to Audiveris is used.
+
+### Changed
+- **Detect status is now transient**: the green **"Found: &lt;path&gt;"** confirmation fades
+  out after 2 seconds and its status row then auto-collapses, so no empty gap is left behind.
+  The detected path itself stays in the field — only the dynamic status line fades.
+- **"Not detected" status stays persistent**: when a program is not found the "Not detected"
+  status remains visible and does not fade, so the row is never ambiguously blank.
 
 ## [0.2.0] — 2026-11-11
 
@@ -98,5 +107,6 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.3.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.2.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.1.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
