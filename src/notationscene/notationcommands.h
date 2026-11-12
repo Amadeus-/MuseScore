@@ -710,11 +710,11 @@ struct RequestNoteInputStateCommand {
 //! NOTE Reprise read-only MCP/API query: element counts of the current score. Returns zeros (not an error)
 //! when no score is open, so an agent can poll it (e.g. during a headless import) and read isScoreOpen.
 struct GetScoreCountsCommand {
-    sci_auto id = Command("command://score/get-counts");
-    sci_auto title = MnemonicString("action", "Get score counts");
-    sci_auto description = TranslatableString("action", "Get score element counts (measures, parts, staves, pages)");
-    sci_auto availabilities = muse::rcommand::Availability::API;
-    sci_auto annotations = muse::rcommand::Annotation::ReadOnly;
+    static const inline auto id = Command("command://score/get-counts");
+    static const inline auto title = MnemonicString("action", "Get score counts");
+    static const inline auto description = TranslatableString("action", "Get score element counts (measures, parts, staves, pages)");
+    static const inline auto availabilities = muse::rcommand::Availability::API;
+    static const inline auto annotations = muse::rcommand::Annotation::ReadOnly;
 
     struct Output {
         bool isScoreOpen = false;
@@ -726,7 +726,7 @@ struct GetScoreCountsCommand {
     };
 
     using O = GetScoreCountsCommand::Output;
-    sci_auto output = std::tuple {
+    static const inline auto output = std::tuple {
         Field{ "isScoreOpen", &O::isScoreOpen, "Whether a score is currently open" },
         Field{ "measureCount", &O::measureCount, "Number of measures in the score" },
         Field{ "partCount", &O::partCount, "Number of parts in the score" },
@@ -739,11 +739,11 @@ struct GetScoreCountsCommand {
 //! NOTE Reprise read-only MCP/API query: score health. Mirrors the diagnostic "check for score corruptions"
 //! action (MasterScore::sanityCheck) but RETURNS the result instead of showing a dialog.
 struct GetScoreHealthCommand {
-    sci_auto id = Command("command://score/get-health");
-    sci_auto title = MnemonicString("action", "Get score health");
-    sci_auto description = TranslatableString("action", "Get score health (corruptions, irregular measures)");
-    sci_auto availabilities = muse::rcommand::Availability::API;
-    sci_auto annotations = muse::rcommand::Annotation::ReadOnly;
+    static const inline auto id = Command("command://score/get-health");
+    static const inline auto title = MnemonicString("action", "Get score health");
+    static const inline auto description = TranslatableString("action", "Get score health (corruptions, irregular measures)");
+    static const inline auto availabilities = muse::rcommand::Availability::API;
+    static const inline auto annotations = muse::rcommand::Annotation::ReadOnly;
 
     struct Output {
         bool isScoreOpen = false;
@@ -754,7 +754,7 @@ struct GetScoreHealthCommand {
     };
 
     using O = GetScoreHealthCommand::Output;
-    sci_auto output = std::tuple {
+    static const inline auto output = std::tuple {
         Field{ "isScoreOpen", &O::isScoreOpen, "Whether a score is currently open" },
         Field{ "sane", &O::sane, "True if MasterScore::sanityCheck reports no corruptions" },
         Field{ "hasCorruptedMeasures", &O::hasCorruptedMeasures, "True if the score is flagged as having corrupted measures" },
@@ -766,11 +766,11 @@ struct GetScoreHealthCommand {
 //! NOTE Reprise read-only MCP/API query: the state the new "Edit" ribbon tab keys off -- whether a project is
 //! open and whether note input / editing is currently available. Always returns a result (never NotSupported).
 struct GetEditStateCommand {
-    sci_auto id = Command("command://notation/get-editstate");
-    sci_auto title = MnemonicString("action", "Get edit state");
-    sci_auto description = TranslatableString("action", "Get whether a project is open and note input/editing is available");
-    sci_auto availabilities = muse::rcommand::Availability::API;
-    sci_auto annotations = muse::rcommand::Annotation::ReadOnly;
+    static const inline auto id = Command("command://notation/get-editstate");
+    static const inline auto title = MnemonicString("action", "Get edit state");
+    static const inline auto description = TranslatableString("action", "Get whether a project is open and note input/editing is available");
+    static const inline auto availabilities = muse::rcommand::Availability::API;
+    static const inline auto annotations = muse::rcommand::Annotation::ReadOnly;
 
     struct Output {
         bool projectOpen = false;
@@ -780,7 +780,7 @@ struct GetEditStateCommand {
     };
 
     using O = GetEditStateCommand::Output;
-    sci_auto output = std::tuple {
+    static const inline auto output = std::tuple {
         Field{ "projectOpen", &O::projectOpen, "Whether a project is currently open" },
         Field{ "editAvailable", &O::editAvailable, "Whether editing (the Edit tab) is available" },
         Field{ "noteInputAvailable", &O::noteInputAvailable, "Whether note input can be started" },
