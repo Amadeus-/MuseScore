@@ -93,7 +93,7 @@ void ProjectConfiguration::init()
     Val preferredScoreCreationMode = Val(PreferredScoreCreationMode::FromInstruments);
     settings()->setDefaultValue(PREFERRED_SCORE_CREATION_MODE_KEY, preferredScoreCreationMode);
 
-    settings()->setDefaultValue(HOME_SCORES_PAGE_VIEW_TYPE, Val(HomeScoresPageViewType::Grid));
+    settings()->setDefaultValue(HOME_SCORES_PAGE_VIEW_TYPE, Val(HomeScoresPageViewType::List));
 
     settings()->setDefaultValue(SHOULD_ASK_SAVE_LOCATION_TYPE, Val(true));
     settings()->setDefaultValue(LAST_USED_SAVE_LOCATION_TYPE, Val(SaveLocationType::Undefined));
