@@ -32,6 +32,8 @@
 #include "internal/importpdfcontroller.h"
 #include "internal/irepriseconfiguration.h"
 #include "internal/repriseconfiguration.h"
+#include "internal/iimportprogresstracker.h"
+#include "internal/importprogresstracker.h"
 
 using namespace mu::reprise;
 using namespace muse;
@@ -48,6 +50,12 @@ void RepriseModule::registerExports()
 {
     m_configuration = std::make_shared<RepriseConfiguration>();
     globalIoc()->registerExport<IRepriseConfiguration>(mname, m_configuration);
+
+    //! NOTE: Persistent Import-PDF progress snapshot, shared between the transient progress popup (writer) and the
+    //! reprise.get-import-progress / reprise.get-import-errors MCP queries (readers). Exported globally so the
+    //! QML-instantiated ImportProgressModel can reach it via GlobalInject.
+    m_importProgressTracker = std::make_shared<ImportProgressTracker>();
+    globalIoc()->registerExport<IImportProgressTracker>(mname, m_importProgressTracker);
 }
 
 void RepriseModule::resolveImports()

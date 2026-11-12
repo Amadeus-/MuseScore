@@ -160,6 +160,9 @@ static const std::vector<CommandInfo> s_commandInfos = {
         InputSchema(),
         Decoration()
     },
+
+    // Reprise read-only MCP/API query
+    makeCommandInfo<GetProjectStateCommand>(),
 };
 
 std::string ProjectCommandsRegister::moduleName() const

@@ -40,19 +40,61 @@ void ImportPdfController::init()
 {
     m_audiverisRunner = std::make_shared<AudiverisRunner>(iocContext());
 
-    commandDispatcher()->onRequest(this, REPRISE_IMPORT_PDF_COMMAND, [this]() { return importPdf(); });
+    commandDispatcher()->onRequest(this, REPRISE_IMPORT_PDF_COMMAND,
+                                   [this](const muse::rcommand::Params& params) { return importPdf(params); });
+
+    //! Read-only MCP/API queries. Always callable (not gated on a running import): they report the latest snapshot.
+    commandDispatcher()->onRequest<GetImportProgressCommand>(this, std::function<muse::RetVal<GetImportProgressCommand::Output>(const GetImportProgressCommand&)>(
+                                                                 [this](const GetImportProgressCommand&) { return getImportProgress(); }));
+    commandDispatcher()->onRequest<GetImportErrorsCommand>(this, std::function<muse::RetVal<GetImportErrorsCommand::Output>(const GetImportErrorsCommand&)>(
+                                                               [this](const GetImportErrorsCommand&) { return getImportErrors(); }));
 }
 
-muse::Ret ImportPdfController::importPdf()
+muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
 {
     //! Reprise has exactly one OMR path: local Audiveris. Verify it is present before asking for a file.
     if (m_audiverisRunner->findAudiveris().empty())
     {
+        //! Headless caller (a "path" was supplied): fail fast without a modal dialog that would block the thread.
+        if (!params.at("path").toString().empty())
+        {
+            return make_ret(Ret::Code::NotSupported, "Audiveris was not found");
+        }
+
         interactive()->warning(muse::trc("reprise", "Audiveris was not found"),
                                muse::trc("reprise", "Install Audiveris or set its path to import PDFs."),
                                { interactive()->buttonData(IInteractive::Button::Ok) });
 
         return make_ret(Ret::Code::NotSupported);
+    }
+
+    //! Headless / scripted path: a "path" arg skips the interactive picker and the options dialog entirely, so an
+    //! MCP/API caller can drive the whole import with no GUI clicks. "pages"/"dpi" default when omitted.
+    const std::string headlessPath = params.at("path").toString();
+    if (!headlessPath.empty())
+    {
+        const io::path_t pdfPath(headlessPath);
+        if (!fileSystem()->exists(pdfPath))
+        {
+            return make_ret(Ret::Code::UnknownError, "PDF not found: " + headlessPath);
+        }
+
+        std::string pages = params.at("pages").toString();
+        if (pages.empty())
+        {
+            pages = "all";
+        }
+
+        int dpi = static_cast<int>(params.at("dpi").toInt());
+        if (dpi <= 0)
+        {
+            dpi = scanResolution();
+        }
+
+        rememberImportPdfDir(pdfPath);
+        setScanResolution(dpi);
+        launchImport(pdfPath, pages, dpi);
+        return make_ok();
     }
 
     const io::path_t pdfPath = interactive()->selectOpeningFileSync(muse::trc("reprise", "Import PDF"), defaultImportPdfDir(),
@@ -88,16 +130,53 @@ muse::Ret ImportPdfController::importPdf()
     //! Remember the chosen resolution so the dialog defaults to it next time.
     setScanResolution(dpi);
 
+    launchImport(pdfPath, pages.toStdString(), dpi);
+
+    return make_ok();
+}
+
+void ImportPdfController::launchImport(const muse::io::path_t& pdfPath, const std::string& pages, int dpi)
+{
+    //! Seed the shared progress tracker up front so an immediate reprise.get-import-progress poll already sees an
+    //! active run (the popup's view-model takes over the detailed progress once it loads).
+    importProgressTracker()->reportStarted(pdfPath.toStdString());
+
     //! Launch the recognition progress popup (non-blocking). Its view-model owns the async Audiveris run, the
     //! import of the produced MusicXML, and the temporary Grand-Piano override. Progress + Cancel live there.
     UriQuery progressQuery("musescore://reprise/importpdf/progress");
     progressQuery.addParam("pdfPath", Val(pdfPath.toQString().toStdString()));
-    progressQuery.addParam("pages", Val(pages.toStdString()));
+    progressQuery.addParam("pages", Val(pages));
     progressQuery.addParam("dpi", Val(dpi));
 
     interactive()->open(progressQuery);
+}
 
-    return make_ok();
+muse::RetVal<GetImportProgressCommand::Output> ImportPdfController::getImportProgress() const
+{
+    GetImportProgressCommand::Output output;
+
+    const ImportProgressSnapshot snap = importProgressTracker()->snapshot();
+    output.active = snap.active;
+    output.status = snap.status;
+    output.phase = snap.phase;
+    output.percent = snap.percent;
+    output.page = snap.page;
+    output.totalPages = snap.totalPages;
+    output.pdfPath = snap.pdfPath;
+
+    return muse::RetVal<GetImportProgressCommand::Output>::make_ok(output);
+}
+
+muse::RetVal<GetImportErrorsCommand::Output> ImportPdfController::getImportErrors() const
+{
+    GetImportErrorsCommand::Output output;
+
+    const ImportProgressSnapshot snap = importProgressTracker()->snapshot();
+    output.hasError = snap.hasError;
+    output.error = snap.error;
+    output.details = snap.details;
+
+    return muse::RetVal<GetImportErrorsCommand::Output>::make_ok(output);
 }
 
 muse::io::path_t ImportPdfController::defaultImportPdfDir() const

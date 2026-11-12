@@ -26,6 +26,7 @@
 #include <QString>
 
 #include "iprojectcommandscontroller.h"
+#include "../projectcommands.h"
 
 #include "modularity/ioc.h"
 #include "interactive/iinteractive.h"
@@ -95,6 +96,8 @@ private:
 
     muse::Ret openProject(const muse::rcommand::Params& params);
     muse::Ret openProject(const muse::io::path_t& path, const QString& displayNameOverride = QString());
+
+    muse::RetVal<GetProjectStateCommand::Output> getProjectState() const;
 
     muse::Ret openPageIfNeed(muse::Uri pageUri);
 

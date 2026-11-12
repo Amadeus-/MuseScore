@@ -649,6 +649,87 @@ struct RequestNoteInputStateCommand {
     };
 };
 
+//! NOTE Reprise read-only MCP/API query: element counts of the current score. Returns zeros (not an error)
+//! when no score is open, so an agent can poll it (e.g. during a headless import) and read isScoreOpen.
+struct GetScoreCountsCommand {
+    sci_auto id = Command("command://score/get-counts");
+    sci_auto title = MnemonicString("action", "Get score counts");
+    sci_auto description = TranslatableString("action", "Get score element counts (measures, parts, staves, pages)");
+    sci_auto availabilities = muse::rcommand::Availability::API;
+    sci_auto annotations = muse::rcommand::Annotation::ReadOnly;
+
+    struct Output {
+        bool isScoreOpen = false;
+        int measureCount = 0;
+        int partCount = 0;
+        int instrumentCount = 0;
+        int staffCount = 0;
+        int pageCount = 0;
+    };
+
+    using O = GetScoreCountsCommand::Output;
+    sce_auto output = std::tuple {
+        Field{ "isScoreOpen", &O::isScoreOpen, "Whether a score is currently open" },
+        Field{ "measureCount", &O::measureCount, "Number of measures in the score" },
+        Field{ "partCount", &O::partCount, "Number of parts in the score" },
+        Field{ "instrumentCount", &O::instrumentCount, "Number of instruments across all parts" },
+        Field{ "staffCount", &O::staffCount, "Number of staves in the score" },
+        Field{ "pageCount", &O::pageCount, "Number of laid-out pages in the score" },
+    };
+};
+
+//! NOTE Reprise read-only MCP/API query: score health. Mirrors the diagnostic "check for score corruptions"
+//! action (MasterScore::sanityCheck) but RETURNS the result instead of showing a dialog.
+struct GetScoreHealthCommand {
+    sci_auto id = Command("command://score/get-health");
+    sci_auto title = MnemonicString("action", "Get score health");
+    sci_auto description = TranslatableString("action", "Get score health (corruptions, irregular measures)");
+    sci_auto availabilities = muse::rcommand::Availability::API;
+    sci_auto annotations = muse::rcommand::Annotation::ReadOnly;
+
+    struct Output {
+        bool isScoreOpen = false;
+        bool sane = true;
+        bool hasCorruptedMeasures = false;
+        int irregularMeasureCount = 0;
+        std::string details;
+    };
+
+    using O = GetScoreHealthCommand::Output;
+    sce_auto output = std::tuple {
+        Field{ "isScoreOpen", &O::isScoreOpen, "Whether a score is currently open" },
+        Field{ "sane", &O::sane, "True if MasterScore::sanityCheck reports no corruptions" },
+        Field{ "hasCorruptedMeasures", &O::hasCorruptedMeasures, "True if the score is flagged as having corrupted measures" },
+        Field{ "irregularMeasureCount", &O::irregularMeasureCount, "Count of measures whose actual duration differs from the nominal time signature" },
+        Field{ "details", &O::details, "Sanity-check detail text when not sane (empty otherwise)" },
+    };
+};
+
+//! NOTE Reprise read-only MCP/API query: the state the new "Edit" ribbon tab keys off -- whether a project is
+//! open and whether note input / editing is currently available. Always returns a result (never NotSupported).
+struct GetEditStateCommand {
+    sci_auto id = Command("command://notation/get-editstate");
+    sci_auto title = MnemonicString("action", "Get edit state");
+    sci_auto description = TranslatableString("action", "Get whether a project is open and note input/editing is available");
+    sci_auto availabilities = muse::rcommand::Availability::API;
+    sci_auto annotations = muse::rcommand::Annotation::ReadOnly;
+
+    struct Output {
+        bool projectOpen = false;
+        bool editAvailable = false;
+        bool noteInputAvailable = false;
+        bool noteInputActive = false;
+    };
+
+    using O = GetEditStateCommand::Output;
+    sce_auto output = std::tuple {
+        Field{ "projectOpen", &O::projectOpen, "Whether a project is currently open" },
+        Field{ "editAvailable", &O::editAvailable, "Whether editing (the Edit tab) is available" },
+        Field{ "noteInputAvailable", &O::noteInputAvailable, "Whether note input can be started" },
+        Field{ "noteInputActive", &O::noteInputActive, "Whether note input mode is currently active" },
+    };
+};
+
 // add note command
 struct AddNoteCommand {
     sci_auto id = muse::rcommand::Command("command://notation/add-note");

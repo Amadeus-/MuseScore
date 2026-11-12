@@ -33,6 +33,8 @@ target_sources(reprise PRIVATE
     internal/audiverisrunner.h
     internal/importpdfcontroller.cpp
     internal/importpdfcontroller.h
+    internal/iimportprogresstracker.h
+    internal/importprogresstracker.h
     internal/irepriseconfiguration.h
     internal/repriseconfiguration.cpp
     internal/repriseconfiguration.h

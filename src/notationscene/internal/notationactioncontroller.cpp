@@ -28,6 +28,8 @@
 
 #include "engraving/dom/harmony.h"
 #include "engraving/dom/masterscore.h"
+#include "engraving/dom/measure.h"
+#include "engraving/dom/part.h"
 #include "engraving/dom/note.h"
 #include "engraving/dom/chord.h"
 #include "engraving/dom/text.h"
@@ -186,6 +188,16 @@ void NotationActionController::init()
     registerCommand<ToggleRestCommand>([this]() { return toggleRest(); });
 
     registerRequestCommand<RequestNoteInputStateCommand>(&Controller::requestNoteInputState);
+
+    //! NOTE Read-only MCP/API queries. Registered directly on the dispatcher (NOT via registerRequestCommand) so
+    //! they bypass the commands-state "enabled" gating and always return a result -- including when no score is
+    //! open (they report isScoreOpen/projectOpen = false rather than NotSupported).
+    commandDispatcher()->onRequest<GetScoreCountsCommand>(this, std::function<muse::RetVal<GetScoreCountsCommand::Output>(const GetScoreCountsCommand&)>(
+                                                              [this](const GetScoreCountsCommand&) { return getScoreCounts(); }));
+    commandDispatcher()->onRequest<GetScoreHealthCommand>(this, std::function<muse::RetVal<GetScoreHealthCommand::Output>(const GetScoreHealthCommand&)>(
+                                                              [this](const GetScoreHealthCommand&) { return getScoreHealth(); }));
+    commandDispatcher()->onRequest<GetEditStateCommand>(this, std::function<muse::RetVal<GetEditStateCommand::Output>(const GetEditStateCommand&)>(
+                                                            [this](const GetEditStateCommand&) { return getEditState(); }));
 
     registerCommand<AddNoteCommand>(&Controller::addNote);
     registerCommand<AddNoteC_ToNextChordCommand>([this]() { return addNote(NoteName::C, NoteAddingMode::NextChord); });
@@ -987,6 +999,80 @@ muse::RetVal<RequestNoteInputStateCommand::Output> NotationActionController::req
     }
 
     return muse::RetVal<RequestNoteInputStateCommand::Output>::make_ok(output);
+}
+
+muse::RetVal<GetScoreCountsCommand::Output> NotationActionController::getScoreCounts() const
+{
+    GetScoreCountsCommand::Output output;
+
+    mu::engraving::Score* score = currentNotationScore();
+    if (!score) {
+        return muse::RetVal<GetScoreCountsCommand::Output>::make_ok(output);
+    }
+
+    output.isScoreOpen = true;
+    output.measureCount = static_cast<int>(score->nmeasures());
+    output.partCount = static_cast<int>(score->parts().size());
+    output.staffCount = static_cast<int>(score->nstaves());
+    output.pageCount = static_cast<int>(score->npages());
+
+    int instrumentCount = 0;
+    for (const mu::engraving::Part* part : score->parts()) {
+        instrumentCount += static_cast<int>(part->instruments().size());
+    }
+    output.instrumentCount = instrumentCount;
+
+    return muse::RetVal<GetScoreCountsCommand::Output>::make_ok(output);
+}
+
+muse::RetVal<GetScoreHealthCommand::Output> NotationActionController::getScoreHealth() const
+{
+    GetScoreHealthCommand::Output output;
+
+    IMasterNotationPtr master = currentMasterNotation();
+    mu::engraving::Score* score = currentNotationScore();
+    if (!master || !score) {
+        return muse::RetVal<GetScoreHealthCommand::Output>::make_ok(output);
+    }
+
+    output.isScoreOpen = true;
+
+    mu::engraving::MasterScore* masterScore = master->masterScore();
+    if (masterScore) {
+        //! NOTE Same source as the "check for score corruptions" diagnostic action.
+        muse::Ret ret = masterScore->sanityCheck();
+        output.sane = ret.success();
+        output.hasCorruptedMeasures = masterScore->hasCorruptedMeasures();
+        if (!output.sane) {
+            output.details = ret.text();
+            //! Keep the surfaced detail bounded; the full text can be very long.
+            if (output.details.size() > 1000) {
+                output.details = output.details.substr(0, 1000) + "...";
+            }
+        }
+    }
+
+    int irregular = 0;
+    for (const mu::engraving::Measure* m = score->firstMeasure(); m; m = m->nextMeasure()) {
+        if (m->ticks() != m->timesig()) {
+            ++irregular;
+        }
+    }
+    output.irregularMeasureCount = irregular;
+
+    return muse::RetVal<GetScoreHealthCommand::Output>::make_ok(output);
+}
+
+muse::RetVal<GetEditStateCommand::Output> NotationActionController::getEditState() const
+{
+    GetEditStateCommand::Output output;
+
+    output.projectOpen = projectSession()->project() != nullptr;
+    output.editAvailable = output.projectOpen;
+    output.noteInputActive = isNoteInputMode();
+    output.noteInputAvailable = output.projectOpen && (isNoteInputMode() || toggleNoteInputAllowed());
+
+    return muse::RetVal<GetEditStateCommand::Output>::make_ok(output);
 }
 
 muse::Ret NotationActionController::flipSelection()

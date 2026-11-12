@@ -22,7 +22,11 @@
 
  #pragma once
 
+#include <string>
+#include <tuple>
+
 #include "rcommand/commandtypes.h"
+#include "rcommand/typedcommand.h"
 
 namespace mu::project {
 inline static const muse::rcommand::Command PROJECT_NEW_COMMAND("command://project/new");
@@ -46,4 +50,33 @@ inline static const muse::rcommand::Command PROJECT_PRINT_COMMAND("command://pro
 inline static const muse::rcommand::Command PROJECT_CLEAR_RECENT_COMMAND("command://project/clear-recent");
 inline static const muse::rcommand::Command PROJECT_CONTINUE_LAST_SESSION_COMMAND("command://project/continue-last-session");
 inline static const muse::rcommand::Command PROJECT_PROPERTIES_COMMAND("command://project/properties");
+
+//! NOTE Reprise read-only MCP/API query: current project state. Registered directly on the dispatcher (no
+//! commands-state gating), so it is always callable and reports isOpen = false when nothing is loaded.
+struct GetProjectStateCommand {
+    static const inline auto id = muse::rcommand::Command("command://project/get-state");
+    static const inline auto title = muse::MnemonicString("project", "Get project state");
+    static const inline auto description = muse::TranslatableString("project", "Get the current project state (open, name, path, dirty, cloud)");
+    static const inline auto availabilities = muse::rcommand::Availability::API;
+    static const inline auto annotations = muse::rcommand::Annotation::ReadOnly;
+
+    struct Output {
+        bool isOpen = false;
+        std::string displayName;
+        std::string path;
+        bool isDirty = false;
+        bool isCloud = false;
+        bool isNewlyCreated = false;
+    };
+
+    using O = GetProjectStateCommand::Output;
+    static constexpr auto output = std::tuple {
+        muse::rcommand::Field{ "isOpen", &O::isOpen, "Whether a project is currently open" },
+        muse::rcommand::Field{ "displayName", &O::displayName, "Display name of the open project" },
+        muse::rcommand::Field{ "path", &O::path, "Filesystem path of the open project (empty if unsaved/new)" },
+        muse::rcommand::Field{ "isDirty", &O::isDirty, "Whether the project has unsaved changes" },
+        muse::rcommand::Field{ "isCloud", &O::isCloud, "Whether the project is a cloud project" },
+        muse::rcommand::Field{ "isNewlyCreated", &O::isNewlyCreated, "Whether the project was newly created and not yet saved" },
+    };
+};
 }

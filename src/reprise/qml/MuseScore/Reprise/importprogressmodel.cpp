@@ -153,6 +153,7 @@ void ImportProgressModel::load(const QString& pdfPath, const QString& pages, int
         setStatus("error");
         m_stageText = muse::qtrc("reprise", "Audiveris was not found.");
         emit progressChanged();
+        importProgressTracker()->reportFinished(false, m_stageText.toStdString(), std::string());
     }
 }
 
@@ -193,6 +194,10 @@ void ImportProgressModel::onRunnerProgress(int percent, int sheet, int total, co
     {
         m_stageText = stageHuman;
     }
+
+    //! Mirror into the app-lifetime tracker so reprise.get-import-progress can report it after this popup is gone.
+    importProgressTracker()->reportProgress(percent, m_currentPage > 0 ? m_currentPage : 0,
+                                            m_totalPages > 0 ? m_totalPages : 0, stageHuman.toStdString());
 
     emit progressChanged();
 }
@@ -295,6 +300,7 @@ void ImportProgressModel::onRunnerFinished(bool ok, const QString& outputPath, c
         m_stageText = error.isEmpty() ? muse::qtrc("reprise", "Audiveris could not recognise this PDF.") : error;
         emit progressChanged();
         setStatus("error");
+        importProgressTracker()->reportFinished(false, m_stageText.toStdString(), tail.toStdString());
         return;
     }
 
@@ -314,6 +320,7 @@ void ImportProgressModel::onRunnerFinished(bool ok, const QString& outputPath, c
     openImported(outputPath);
 
     setStatus("done");
+    importProgressTracker()->reportFinished(true, std::string(), std::string());
 
     if (closePopupOnComplete())
     {

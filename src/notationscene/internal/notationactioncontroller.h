@@ -158,6 +158,10 @@ private:
 
     muse::RetVal<RequestNoteInputStateCommand::Output> requestNoteInputState() const;
 
+    muse::RetVal<GetScoreCountsCommand::Output> getScoreCounts() const;
+    muse::RetVal<GetScoreHealthCommand::Output> getScoreHealth() const;
+    muse::RetVal<GetEditStateCommand::Output> getEditState() const;
+
     muse::Ret addNote(const AddNoteCommand& command);
     muse::Ret addNote(NoteName noteName, NoteAddingMode addingMode);
     muse::Ret addDrumNote(const muse::rcommand::Params& params);

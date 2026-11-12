@@ -205,6 +205,11 @@ static const std::vector<CommandInfo> s_commandInfos = {
 
     makeCommandInfo<RequestNoteInputStateCommand>(),
 
+    // Reprise read-only MCP/API queries
+    makeCommandInfo<GetScoreCountsCommand>(),
+    makeCommandInfo<GetScoreHealthCommand>(),
+    makeCommandInfo<GetEditStateCommand>(),
+
     // note operation
     makeCommandInfo<AddNoteCommand>(),
     makeCommandInfo<AddNoteC_ToNextChordCommand>(),

@@ -36,6 +36,7 @@
 #include "notation/iinstrumentsrepository.h"
 
 #include "internal/irepriseconfiguration.h"
+#include "internal/iimportprogresstracker.h"
 
 namespace mu::reprise {
 class AudiverisRunner;
@@ -71,6 +72,7 @@ class ImportProgressModel : public QObject, public muse::Contextable, public mus
     muse::ContextInject<mu::project::IProjectSession> projectSession = { this };
     muse::GlobalInject<mu::notation::IInstrumentsRepository> instrumentsRepository;
     muse::GlobalInject<mu::reprise::IRepriseConfiguration> repriseConfiguration;
+    muse::GlobalInject<mu::reprise::IImportProgressTracker> importProgressTracker;
 
 public:
     explicit ImportProgressModel(QObject* parent = nullptr);

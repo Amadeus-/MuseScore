@@ -28,6 +28,7 @@
 
 namespace mu::reprise {
 class ImportPdfController;
+class ImportProgressTracker;
 class RepriseConfiguration;
 
 //! NOTE: Reprise fork module. Houses the local-Audiveris "Import PDF" orchestration, kept isolated
@@ -50,6 +51,7 @@ public:
 
 private:
     std::shared_ptr<RepriseConfiguration> m_configuration;
+    std::shared_ptr<ImportProgressTracker> m_importProgressTracker;
 };
 
 class RepriseContext : public muse::modularity::IContextSetup

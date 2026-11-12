@@ -35,7 +35,10 @@
 #include "global/io/path.h"
 
 #include "irepriseconfiguration.h"
+#include "iimportprogresstracker.h"
 #include "audiverisrunner.h"
+
+#include "reprise/reprisecommands.h"
 
 namespace mu::reprise {
 //! Orchestrates Reprise's "Import PDF" flow: pick a PDF -> intake dialog (pages + resolution) -> show the async
@@ -48,6 +51,7 @@ class ImportPdfController : public muse::Contextable, public muse::async::Asynca
     muse::GlobalInject<muse::IGlobalConfiguration> globalConfiguration;
     muse::GlobalInject<muse::io::IFileSystem> fileSystem;
     muse::GlobalInject<mu::reprise::IRepriseConfiguration> repriseConfiguration;
+    muse::GlobalInject<mu::reprise::IImportProgressTracker> importProgressTracker;
 
 public:
     explicit ImportPdfController(const muse::modularity::ContextPtr& iocCtx)
@@ -56,7 +60,16 @@ public:
     void init();
 
 private:
-    muse::Ret importPdf();
+    //! Classic interactive flow (no "path" arg) OR headless flow (a "path" arg skips the picker + options dialog).
+    muse::Ret importPdf(const muse::rcommand::Params& params);
+
+    //! Launch the recognition progress popup for pdfPath with the given page range + resolution (the popup's
+    //! view-model owns the Audiveris run + import). Also seeds the progress tracker so a poll sees it immediately.
+    void launchImport(const muse::io::path_t& pdfPath, const std::string& pages, int dpi);
+
+    //! Read-only MCP/API queries backed by the shared progress tracker.
+    muse::RetVal<GetImportProgressCommand::Output> getImportProgress() const;
+    muse::RetVal<GetImportErrorsCommand::Output> getImportErrors() const;
 
     //! Start folder for the PDF picker: the stored Reprise folder if it still exists, else the Documents folder.
     muse::io::path_t defaultImportPdfDir() const;

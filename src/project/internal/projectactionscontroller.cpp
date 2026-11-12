@@ -80,6 +80,10 @@ void ProjectActionsController::init()
     d->onRequest(this, PROJECT_CONTINUE_LAST_SESSION_COMMAND, [this]() { return continueLastSession(); });
     d->onRequest(this, PROJECT_PROPERTIES_COMMAND, [this]() { return openProjectProperties(); });
 
+    //! NOTE Read-only MCP/API query; no commands-state gating, so always callable (reports isOpen = false when idle).
+    d->onRequest<GetProjectStateCommand>(this, std::function<muse::RetVal<GetProjectStateCommand::Output>(const GetProjectStateCommand&)>(
+                                             [this](const GetProjectStateCommand&) { return getProjectState(); }));
+
     saveProjectScenario()->busyChanged().onNotify(this, [this]() {
         m_busyChanged.notify();
     });
@@ -172,6 +176,25 @@ muse::async::Notification ProjectActionsController::hasSelectionChanged() const
 INotationProjectPtr ProjectActionsController::currentNotationProject() const
 {
     return projectSession()->project();
+}
+
+muse::RetVal<GetProjectStateCommand::Output> ProjectActionsController::getProjectState() const
+{
+    GetProjectStateCommand::Output output;
+
+    INotationProjectPtr project = projectSession()->project();
+    if (!project) {
+        return muse::RetVal<GetProjectStateCommand::Output>::make_ok(output);
+    }
+
+    output.isOpen = true;
+    output.displayName = project->displayName().toStdString();
+    output.path = project->path().toString().toStdString();
+    output.isDirty = project->isNeedSave();
+    output.isCloud = project->isCloudProject();
+    output.isNewlyCreated = project->isNewlyCreated();
+
+    return muse::RetVal<GetProjectStateCommand::Output>::make_ok(output);
 }
 
 IMasterNotationPtr ProjectActionsController::currentMasterNotation() const
