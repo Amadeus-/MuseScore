@@ -25,6 +25,7 @@
 #include <QString>
 
 #include "project/projectcommands.h"
+#include "reprise/reprisecommands.h"
 #include "log.h"
 
 using namespace mu::project;
@@ -36,17 +37,7 @@ ScoresPageModel::ScoresPageModel(QObject* parent)
 
 void ScoresPageModel::createNewScore()
 {
-    commandDispatcher()->dispatch(project::PROJECT_NEW_COMMAND);
-}
-
-void ScoresPageModel::convertFileToScore()
-{
-    commandDispatcher()->dispatch(project::PROJECT_CONVERT_TO_SCORE_COMMAND);
-}
-
-void ScoresPageModel::openOther()
-{
-    commandDispatcher()->dispatch(project::PROJECT_OPEN_COMMAND);
+    commandDispatcher()->dispatch(reprise::REPRISE_IMPORT_PDF_COMMAND);
 }
 
 void ScoresPageModel::openScore(const QString& scorePath, const QString& displayNameOverride)
@@ -90,26 +81,6 @@ void ScoresPageModel::viewOnline(int scoreId)
 void ScoresPageModel::deleteScore(int scoreId, const QString& scoreName)
 {
     deleteCloudScoreScenario()->deleteScore(scoreId, scoreName);
-}
-
-void ScoresPageModel::openScoreManager()
-{
-    platformInteractive()->openUrl(museScoreComService()->scoreManagerUrl());
-}
-
-int ScoresPageModel::tabIndex() const
-{
-    return configuration()->homeScoresPageTabIndex();
-}
-
-void ScoresPageModel::setTabIndex(int index)
-{
-    if (index == tabIndex()) {
-        return;
-    }
-
-    configuration()->setHomeScoresPageTabIndex(index);
-    emit tabIndexChanged();
 }
 
 ScoresPageModel::ViewType ScoresPageModel::viewType() const

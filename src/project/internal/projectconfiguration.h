@@ -95,9 +95,6 @@ public:
     bool shouldWarnBeforeSavingPubliclyToCloud() const override;
     void setShouldWarnBeforeSavingPubliclyToCloud(bool shouldWarn) override;
 
-    int homeScoresPageTabIndex() const override;
-    void setHomeScoresPageTabIndex(int index) override;
-
     HomeScoresPageViewType homeScoresPageViewType() const override;
     void setHomeScoresPageViewType(HomeScoresPageViewType type) override;
 

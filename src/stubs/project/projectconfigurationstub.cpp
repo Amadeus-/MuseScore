@@ -176,15 +176,6 @@ void ProjectConfigurationStub::setShouldWarnBeforeSavingPubliclyToCloud(bool)
 {
 }
 
-int ProjectConfigurationStub::homeScoresPageTabIndex() const
-{
-    return 0;
-}
-
-void ProjectConfigurationStub::setHomeScoresPageTabIndex(int)
-{
-}
-
 IProjectConfiguration::HomeScoresPageViewType ProjectConfigurationStub::homeScoresPageViewType() const
 {
     return IProjectConfiguration::HomeScoresPageViewType::Grid;

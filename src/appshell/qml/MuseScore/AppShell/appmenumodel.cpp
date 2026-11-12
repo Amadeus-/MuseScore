@@ -194,7 +194,7 @@ MenuItem* AppMenuModel::makeFileMenu()
     bool openRecentEnabled = !recentSubMenuItems.isEmpty();
 
     MenuItemList fileItems {
-        makeMenuItem(PROJECT_NEW_COMMAND),
+        makeMenuItem(REPRISE_IMPORT_PDF_COMMAND, TranslatableString("appshell/menu/file", "&New…")),
         makeMenuItem(PROJECT_OPEN_COMMAND),
         makeMenu(TranslatableString("appshell/menu/file", "Open &recent"), recentSubMenuItems, "menu-file-open", openRecentEnabled),
         makeMenuItem(PROJECT_CLOSE_COMMAND),
@@ -211,7 +211,6 @@ MenuItem* AppMenuModel::makeFileMenu()
             makeMenuItem(PROJECT_SHARE_AUDIO_COMMAND),
         }),
         makeSeparator(),
-        makeMenuItem(REPRISE_IMPORT_PDF_COMMAND),
         makeMenuItem(PROJECT_EXPORT_COMMAND),
         makeSeparator(),
         makeMenuItem(PROJECT_PROPERTIES_COMMAND),

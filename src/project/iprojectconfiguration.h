@@ -94,9 +94,6 @@ public:
     virtual bool shouldWarnBeforeSavingPubliclyToCloud() const = 0;
     virtual void setShouldWarnBeforeSavingPubliclyToCloud(bool shouldWarn) = 0;
 
-    virtual int homeScoresPageTabIndex() const = 0;
-    virtual void setHomeScoresPageTabIndex(int index) = 0;
-
     enum class HomeScoresPageViewType {
         Grid,
         List
