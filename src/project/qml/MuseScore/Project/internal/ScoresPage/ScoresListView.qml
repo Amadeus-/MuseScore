@@ -82,7 +82,7 @@ Item {
         id: navPanel
         name: "ScoresListView"
         direction: NavigationPanel.Both
-        accessible.name: qsTrc("project", "Scores list")
+        accessible.name: qsTrc("project", "Scans list")
     }
 
     ColumnLayout {

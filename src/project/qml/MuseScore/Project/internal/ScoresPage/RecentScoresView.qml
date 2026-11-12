@@ -57,7 +57,7 @@ ScoresView {
             navigation.section: root.navigationSection
             navigation.order: root.navigationOrder
             navigation.name: "RecentScoresGrid"
-            navigation.accessible.name: qsTrc("project", "Recent scores grid")
+            navigation.accessible.name: qsTrc("project", "Recent scans grid")
 
             onCreateNewScoreRequested: {
                 root.createNewScoreRequested()
@@ -105,7 +105,7 @@ ScoresView {
             navigation.section: root.navigationSection
             navigation.order: root.navigationOrder
             navigation.name: "RecentScoresList"
-            navigation.accessible.name: qsTrc("project", "Recent scores list")
+            navigation.accessible.name: qsTrc("project", "Recent scans list")
 
             onCreateNewScoreRequested: {
                 root.createNewScoreRequested()

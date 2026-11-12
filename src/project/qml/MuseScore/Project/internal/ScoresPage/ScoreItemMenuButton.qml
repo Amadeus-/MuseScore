@@ -95,7 +95,7 @@ FlatButton {
         }
 
         if (root.isCloud) {
-            result.push({ id: "delete-score", title: qsTrc("project", "Delete score"), icon: IconCode.DELETE_TANK })
+            result.push({ id: "delete-score", title: qsTrc("project", "Delete scan"), icon: IconCode.DELETE_TANK })
         }
 
         return result

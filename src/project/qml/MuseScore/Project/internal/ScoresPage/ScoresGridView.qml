@@ -88,7 +88,7 @@ Item {
         id: navPanel
         name: "ScoresGridView"
         direction: NavigationPanel.Both
-        accessible.name: qsTrc("project", "Scores grid")
+        accessible.name: qsTrc("project", "Scans grid")
     }
 
     GradientRectangle {
