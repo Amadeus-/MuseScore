@@ -108,7 +108,7 @@ Item {
             navigation.column: 0
 
             score: {
-                "name": qsTrc("project", "New score"),
+                "name": qsTrc("project", "New Scan"),
                 "isCreateNew": true
             }
 

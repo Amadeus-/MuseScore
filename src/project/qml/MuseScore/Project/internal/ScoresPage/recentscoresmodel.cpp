@@ -70,7 +70,7 @@ void RecentScoresModel::reloadRecentScores()
     items.reserve(recentScores.size() + 2);
 
     QVariantMap addItem;
-    addItem[NAME_KEY] = muse::qtrc("project", "New score");
+    addItem[NAME_KEY] = muse::qtrc("project", "New Scan");
     addItem[IS_CREATE_NEW_KEY] = true;
     addItem[IS_NO_RESULTS_FOUND_KEY] = false;
     addItem[IS_CLOUD_KEY] = false;
