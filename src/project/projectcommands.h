@@ -70,7 +70,7 @@ struct GetProjectStateCommand {
     };
 
     using O = GetProjectStateCommand::Output;
-    static constexpr auto output = std::tuple {
+    static const inline auto output = std::tuple {
         muse::rcommand::Field{ "isOpen", &O::isOpen, "Whether a project is currently open" },
         muse::rcommand::Field{ "displayName", &O::displayName, "Display name of the open project" },
         muse::rcommand::Field{ "path", &O::path, "Filesystem path of the open project (empty if unsaved/new)" },

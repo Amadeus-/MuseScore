@@ -51,7 +51,7 @@ struct GetImportProgressCommand {
     };
 
     using O = GetImportProgressCommand::Output;
-    static constexpr auto output = std::tuple {
+    static const inline auto output = std::tuple {
         muse::rcommand::Field{ "active", &O::active, "Whether an import is currently running" },
         muse::rcommand::Field{ "status", &O::status, "idle | running | done | error" },
         muse::rcommand::Field{ "phase", &O::phase, "Human-readable current recognition stage" },
@@ -77,7 +77,7 @@ struct GetImportErrorsCommand {
     };
 
     using O = GetImportErrorsCommand::Output;
-    static constexpr auto output = std::tuple {
+    static const inline auto output = std::tuple {
         muse::rcommand::Field{ "hasError", &O::hasError, "Whether the last finished import ended in error" },
         muse::rcommand::Field{ "error", &O::error, "Short error message (empty if none)" },
         muse::rcommand::Field{ "details", &O::details, "A tail of Audiveris output for the error (empty if none)" },

@@ -667,7 +667,7 @@ struct GetScoreCountsCommand {
     };
 
     using O = GetScoreCountsCommand::Output;
-    sce_auto output = std::tuple {
+    sci_auto output = std::tuple {
         Field{ "isScoreOpen", &O::isScoreOpen, "Whether a score is currently open" },
         Field{ "measureCount", &O::measureCount, "Number of measures in the score" },
         Field{ "partCount", &O::partCount, "Number of parts in the score" },
@@ -695,7 +695,7 @@ struct GetScoreHealthCommand {
     };
 
     using O = GetScoreHealthCommand::Output;
-    sce_auto output = std::tuple {
+    sci_auto output = std::tuple {
         Field{ "isScoreOpen", &O::isScoreOpen, "Whether a score is currently open" },
         Field{ "sane", &O::sane, "True if MasterScore::sanityCheck reports no corruptions" },
         Field{ "hasCorruptedMeasures", &O::hasCorruptedMeasures, "True if the score is flagged as having corrupted measures" },
@@ -721,7 +721,7 @@ struct GetEditStateCommand {
     };
 
     using O = GetEditStateCommand::Output;
-    sce_auto output = std::tuple {
+    sci_auto output = std::tuple {
         Field{ "projectOpen", &O::projectOpen, "Whether a project is currently open" },
         Field{ "editAvailable", &O::editAvailable, "Whether editing (the Edit tab) is available" },
         Field{ "noteInputAvailable", &O::noteInputAvailable, "Whether note input can be started" },
