@@ -36,6 +36,8 @@ target_sources(reprise PRIVATE
     internal/iimportprogresstracker.h
     internal/importprogresstracker.h
     internal/mcpcuration.h
+    internal/pdfresolutiondetector.cpp
+    internal/pdfresolutiondetector.h
     internal/irepriseconfiguration.h
     internal/repriseconfiguration.cpp
     internal/repriseconfiguration.h

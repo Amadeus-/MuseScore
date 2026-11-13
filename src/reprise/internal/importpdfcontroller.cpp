@@ -32,6 +32,8 @@
 
 #include "reprise/reprisecommands.h"
 
+#include "pdfresolutiondetector.h"
+
 using namespace mu;
 using namespace mu::reprise;
 using namespace muse;
@@ -85,10 +87,24 @@ muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
             pages = "all";
         }
 
+        //! No (or non-positive) "dpi" arg -> auto-detect from the PDF, same detector the GUI uses. A clean match
+        //! snaps to a tier (200/300/400) so headless and GUI runs land on identical resolutions; a miss falls back
+        //! to the stored scanResolution(). Intentionally NOT clamped to 200-400: an explicit "dpi" arg stays raw
+        //! for headless agents who want a non-tier resolution.
         int dpi = static_cast<int>(params.at("dpi").toInt());
         if (dpi <= 0)
         {
-            dpi = scanResolution();
+            const PdfResolutionResult detected = detectPdfResolution(pdfPath);
+            if (detected.matched)
+            {
+                dpi = snapToTier(detected.dpi);
+                LOGI() << "Reprise PDF detect (headless): native dpi=" << detected.dpi << " -> tier " << dpi;
+            }
+            else
+            {
+                dpi = scanResolution();
+                LOGI() << "Reprise PDF detect (headless): no embedded resolution found -> fallback dpi=" << dpi;
+            }
         }
 
         rememberImportPdfDir(pdfPath);
@@ -107,10 +123,25 @@ muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
     //! Remember the folder on a real pick (never on cancel), independent of MuseScore's File > Open folder.
     rememberImportPdfDir(pdfPath);
 
-    //! Intake dialog: page range (free-form) + resolution (validated 200-400 on OK). Cancel discards the import.
+    //! Auto-detect the PDF's native image resolution BEFORE the dialog opens so we can pre-select a matching quality
+    //! tier. A clean detection pre-selects its snapped tier and flags the "matched to your PDF" badge; a miss falls
+    //! back to the stored scanResolution() (snapped to a tier) with no badge.
+    const PdfResolutionResult detected = detectPdfResolution(pdfPath);
+    const int preselectTier = detected.matched ? snapToTier(detected.dpi) : snapToTier(scanResolution());
+    if (detected.matched)
+    {
+        LOGI() << "Reprise PDF detect: native dpi=" << detected.dpi << " -> tier " << preselectTier << " (matched)";
+    }
+    else
+    {
+        LOGI() << "Reprise PDF detect: no embedded resolution found -> tier " << preselectTier << " (Standard, no badge)";
+    }
+
+    //! Intake dialog: page range (free-form) + a Faster/Standard/Best quality tier. Cancel discards the import.
     UriQuery query("musescore://reprise/importpdf/options");
     query.addParam("pages", Val(std::string("all")));
-    query.addParam("dpi", Val(scanResolution()));
+    query.addParam("tier", Val(preselectTier));
+    query.addParam("matched", Val(detected.matched));
 
     const RetVal<Val> dialog = interactive()->openSync(query);
     if (!dialog.ret)

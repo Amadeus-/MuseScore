@@ -24,15 +24,18 @@ import QtQuick
 import Muse.Ui
 import Muse.UiComponents
 
-//! NOTE: Reprise's Import-PDF intake dialog. Ports the C# PdfResolutionDialog (minus "Read as"):
-//! a free-form page range and a validated-on-OK resolution. Shown after the PDF is picked and
-//! before Audiveris runs. Returns { accepted, pages, dpi } to ImportPdfController via openSync().
+//! NOTE: Reprise's Import-PDF intake dialog. A free-form page range plus a 3-tier "Recognition quality" selector
+//! (Faster/Standard/Best -> Audiveris pdfResolution 200/300/400). Shown after the PDF is picked and before Audiveris
+//! runs. The controller auto-detects the PDF's native resolution and passes in a pre-selected tier + a "matched" flag
+//! (true only when a real embedded-image resolution was found). Returns { accepted, pages, dpi } via openSync().
 StyledDialogView {
     id: root
 
-    //! Set from the opening UriQuery params.
+    //! Set from the opening UriQuery params. "tier" is the controller's pre-selected quality (200/300/400, already
+    //! snapped); "matched" is true when it came from a successful auto-detect (drives the badge).
     property string pages: "all"
-    property int dpi: 300
+    property int tier: 300
+    property bool matched: false
 
     objectName: "ImportPdfOptionsDialog"
 
@@ -44,32 +47,42 @@ StyledDialogView {
 
     modal: true
 
-    //: Shown when the typed resolution is not a whole number
-    readonly property string numberError: qsTrc("reprise", "Please enter a number between 200 and 400.")
-    //: Shown when the typed resolution is a number but outside the 200-400 dpi range
-    readonly property string rangeError: qsTrc("reprise", "You have selected too low or high a resolution for reading music. Please select between 200 & 400 dpi.")
+    //! The quality tier the control is currently on. Seeded by snapping the incoming "tier" (defensive: a stored
+    //! free-form scanResolution like 350 must map to the nearest tier, never be assumed to already be 200/300/400).
+    property int selectedTier: root.snapTier(root.tier)
+
+    //! The tier the auto-detect matched to; the badge is pinned here regardless of what the user later picks.
+    readonly property int detectedTier: root.snapTier(root.tier)
+
+    readonly property var tierOptions: [
+        { "value": 200, "title": qsTrc("reprise", "Faster"), "subtitle": qsTrc("reprise", "Quicker, less detail") },
+        { "value": 300, "title": qsTrc("reprise", "Standard"), "subtitle": qsTrc("reprise", "Recommended for most scores") },
+        { "value": 400, "title": qsTrc("reprise", "Best"), "subtitle": qsTrc("reprise", "Slower, most detail") }
+    ]
+
+    //! Nearest of {200, 300, 400} to an arbitrary value (mirrors the C++ snapToTier()).
+    function snapTier(value) {
+        var tiers = [200, 300, 400]
+        var best = tiers[0]
+        var bestDist = Math.abs(value - best)
+        for (var i = 1; i < tiers.length; ++i) {
+            var dist = Math.abs(value - tiers[i])
+            if (dist < bestDist) {
+                bestDist = dist
+                best = tiers[i]
+            }
+        }
+        return best
+    }
 
     function submit() {
-        var text = resolutionField.currentText.trim()
-        var isInteger = /^[0-9]+$/.test(text)
-        if (!isInteger) {
-            errorLabel.text = root.numberError
-            return
-        }
-
-        var value = parseInt(text, 10)
-        if (value < 200 || value > 400) {
-            errorLabel.text = root.rangeError
-            return
-        }
-
         var typedPages = pagesField.currentText.trim()
         root.ret = {
             errcode: 0,
             value: {
                 "accepted": true,
                 "pages": typedPages.length > 0 ? typedPages : "all",
-                "dpi": value
+                "dpi": root.selectedTier
             }
         }
         root.hide()
@@ -134,57 +147,79 @@ StyledDialogView {
         StyledTextLabel {
             width: parent.width
 
-            text: qsTrc("reprise", "Please select the resolution of the PDF contents:")
+            text: qsTrc("reprise", "Recognition quality")
             horizontalAlignment: Text.AlignLeft
             wrapMode: Text.Wrap
         }
 
-        Row {
+        RadioButtonGroup {
+            id: tierGroup
+
             width: parent.width
-            spacing: 8
+            spacing: 10
+            orientation: ListView.Vertical
 
-            TextInputField {
-                id: resolutionField
+            model: root.tierOptions
 
-                width: 90
+            delegate: Item {
+                id: tierItem
 
-                currentText: String(root.dpi)
+                required property var modelData
+                required property int index
 
-                navigation.panel: navPanel
-                navigation.order: 2
-                navigation.accessible.name: qsTrc("reprise", "Resolution") + " " + resolutionField.currentText
+                width: tierGroup.width
+                height: tierRow.implicitHeight
 
-                onTextChanged: function(newTextValue) {
-                    resolutionField.currentText = newTextValue
-                    errorLabel.text = ""
+                readonly property bool isMatchedTier: root.matched && tierItem.modelData.value === root.detectedTier
+
+                Row {
+                    id: tierRow
+
+                    width: parent.width
+                    spacing: 8
+
+                    RoundedRadioButton {
+                        id: tierRadio
+
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        checked: root.selectedTier === tierItem.modelData.value
+                        text: tierItem.modelData.title
+
+                        navigation.panel: navPanel
+                        navigation.order: 2 + tierItem.index
+                        navigation.accessible.name: tierItem.modelData.title + ". " + tierItem.modelData.subtitle
+                            + (tierItem.isMatchedTier ? ". " + qsTrc("reprise", "Matched to your PDF") : "")
+
+                        onToggled: root.selectedTier = tierItem.modelData.value
+                    }
+
+                    StyledTextLabel {
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        text: tierItem.modelData.subtitle
+                        opacity: 0.6
+                    }
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        visible: tierItem.isMatchedTier
+                        radius: 3
+                        color: ui.theme.accentColor
+                        height: badgeLabel.implicitHeight + 4
+                        width: badgeLabel.implicitWidth + 12
+
+                        StyledTextLabel {
+                            id: badgeLabel
+
+                            anchors.centerIn: parent
+                            text: qsTrc("reprise", "Matched to your PDF")
+                            color: "#FFFFFF"
+                        }
+                    }
                 }
             }
-
-            StyledTextLabel {
-                anchors.verticalCenter: parent.verticalCenter
-                text: qsTrc("reprise", "dpi  (200-400)")
-            }
-        }
-
-        StyledTextLabel {
-            width: parent.width
-
-            text: qsTrc("reprise", "Higher = better for small/dense notation")
-            opacity: 0.6
-            horizontalAlignment: Text.AlignLeft
-            wrapMode: Text.Wrap
-        }
-
-        StyledTextLabel {
-            id: errorLabel
-
-            width: parent.width
-
-            text: ""
-            visible: Boolean(errorLabel.text)
-            color: "#B03020"
-            horizontalAlignment: Text.AlignLeft
-            wrapMode: Text.Wrap
         }
 
         ButtonBox {
