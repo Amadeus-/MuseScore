@@ -393,15 +393,23 @@ MenuItem* AppMenuModel::makeHelpMenu(bool addDiagnosticsSubMenu)
     MenuItemList helpItems;
 
     //! NOTE: Reprise keeps these online/update help items VISIBLE but DISABLED
-    //! as a deliberate "revisit later" reminder. Each is null-guarded: a command
-    //! whose module is compiled out of this fork (e.g. update/check with the
-    //! update module OFF) is not registered, so makeMenuItem() returns nullptr
-    //! and that item simply does not appear; the registered ones render disabled.
-    if (MenuItem* updateCheckItem = makeMenuItem(UPDATE_CHECK_COMMAND)) {
-        updateCheckItem->setEnabled(false);
-        helpItems << updateCheckItem;
-        helpItems << makeSeparator();
-    }
+    //! as a deliberate "revisit later" reminder. The online/ask-help items are
+    //! null-guarded: a command whose module is compiled out of this fork is not
+    //! registered, so makeMenuItem() returns nullptr and that item simply does
+    //! not appear; the registered ones render disabled.
+    //!
+    //! The update module is compiled OUT of this fork, so command://update/check
+    //! is unregistered and cannot back a menu item. We still want the "Check for
+    //! update" reminder visible, so we hand-roll a non-command placeholder: a bare
+    //! MenuItem with a unique id (so the model treats it as a real row and renders
+    //! it) and an empty intent (so a click dispatches nothing and cannot null-deref),
+    //! disabled so it is greyed and inert. Placed where the real item used to be.
+    MenuItem* updateCheckPlaceholder = new MenuItem(this);
+    updateCheckPlaceholder->setId("reprise-update-placeholder");
+    updateCheckPlaceholder->setTitle(TranslatableString("update", "Check for update"));
+    updateCheckPlaceholder->setEnabled(false);
+    helpItems << updateCheckPlaceholder;
+    helpItems << makeSeparator();
 
     if (MenuItem* onlineHandbookItem = makeMenuItem(APP_ONLINE_HANDBOOK_COMMAND)) {
         onlineHandbookItem->setEnabled(false);
