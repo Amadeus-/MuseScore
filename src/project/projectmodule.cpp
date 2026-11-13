@@ -95,7 +95,6 @@ void ProjectModule::resolveImports()
         ir->registerQmlUri(Uri("musescore://project/audiogenerationsettings"), "MuseScore.Project", "AudioGenerationSettingsDialog");
         ir->registerQmlUri(Uri("musescore://project/convert/selectfiles"), "MuseScore.Project", "ConvertFileToScoreDialog");
         ir->registerQmlUri(Uri("musescore://project/convert/processing"), "MuseScore.Project", "ConvertFileProcessingDialog");
-        ir->registerQmlUri(Uri("musescore://project/deletecloudscore"), "MuseScore.Project", "DeleteCloudScoreDialog");
     }
 
     auto cr = globalIoc()->resolve<muse::rcommand::ICommandsRegister>(mname);
