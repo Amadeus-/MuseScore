@@ -8,6 +8,20 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-11-12
+
+### Added
+- **PDF import "Recognition quality" selector** (**Faster** / **Standard** / **Best**)
+  that auto-detects the PDF's native resolution and pre-selects the matching tier, showing
+  a **"Matched to your PDF"** badge when a real embedded-image resolution is detected (and
+  falling back to **Standard** otherwise). The MCP `reprise.import-pdf` shares the same
+  auto-detect when no dpi is given.
+
+### Changed
+- **Import-PDF intake dialog recognition control reworked**: the free-form DPI input box
+  (and its 200–400 range validation) is replaced by the Recognition-quality selector above,
+  and all DPI jargon is removed from that UI.
+
 ## [0.6.0] — 2026-11-12
 
 ### Changed
@@ -176,6 +190,7 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.7.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.6.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.5.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.4.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
