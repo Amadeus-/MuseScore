@@ -48,8 +48,6 @@ qt_add_qml_module(project_qml
         internal/Properties/projectpropertiesmodel.h
         internal/ScoresPage/abstractscoresmodel.cpp
         internal/ScoresPage/abstractscoresmodel.h
-        internal/ScoresPage/cloudscoresmodel.cpp
-        internal/ScoresPage/cloudscoresmodel.h
         internal/ScoresPage/cloudscorestatuswatcher.cpp
         internal/ScoresPage/cloudscorestatuswatcher.h
         internal/ScoresPage/pixmapscorethumbnailview.cpp
@@ -126,9 +124,6 @@ qt_add_qml_module(project_qml
         internal/Properties/PropertyItem.qml
         internal/SaveToCloud/SaveLocationOption.qml
         internal/ScoresPage/CloudScoreIndicatorButton.qml
-        internal/ScoresPage/CloudScoresGridView.qml
-        internal/ScoresPage/CloudScoresListView.qml
-        internal/ScoresPage/CloudScoresView.qml
         internal/ScoresPage/RecentScoresView.qml
         internal/ScoresPage/ScoreGridItem.qml
         internal/ScoresPage/ScoreItemMenuButton.qml

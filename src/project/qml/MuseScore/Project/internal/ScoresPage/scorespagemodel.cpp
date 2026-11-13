@@ -78,11 +78,6 @@ void ScoresPageModel::viewOnline(int scoreId)
     });
 }
 
-void ScoresPageModel::deleteScore(int scoreId, const QString& scoreName)
-{
-    deleteCloudScoreScenario()->deleteScore(scoreId, scoreName);
-}
-
 ScoresPageModel::ViewType ScoresPageModel::viewType() const
 {
     return static_cast<ViewType>(configuration()->homeScoresPageViewType());

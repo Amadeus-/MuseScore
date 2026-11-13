@@ -41,7 +41,6 @@ target_sources(project PRIVATE
     iprojectautosaver.h
     iconvertfiletoscorescenario.h
     iconvertfiletoscoreservice.h
-    ideletecloudscorescenario.h
     iprojectsession.h
     projectcommands.h
 
@@ -77,8 +76,6 @@ target_sources(project PRIVATE
     internal/convertfiletoscoreservice.h
     internal/convertfiletoscorescenario.cpp
     internal/convertfiletoscorescenario.h
-    internal/deletecloudscorescenario.cpp
-    internal/deletecloudscorescenario.h
     internal/iprojectcommandscontroller.h
     internal/projectactionscontroller.cpp
     internal/projectactionscontroller.h

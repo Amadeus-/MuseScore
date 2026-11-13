@@ -31,7 +31,6 @@
 #include "rcommand/icommanddispatcher.h"
 #include "interactive/iplatforminteractive.h"
 #include "cloud/musescorecom/imusescorecomservice.h"
-#include "ideletecloudscorescenario.h"
 
 class QString;
 
@@ -48,7 +47,6 @@ class ScoresPageModel : public QObject, public muse::Contextable, public muse::a
     muse::GlobalInject<muse::cloud::IMuseScoreComService> museScoreComService;
     muse::GlobalInject<muse::IPlatformInteractive> platformInteractive;
     muse::ContextInject<muse::rcommand::ICommandDispatcher> commandDispatcher = { this };
-    muse::ContextInject<IDeleteCloudScoreScenario> deleteCloudScoreScenario = { this };
 
 public:
     explicit ScoresPageModel(QObject* parent = nullptr);
@@ -66,7 +64,6 @@ public:
     Q_INVOKABLE void openScore(const QString& scorePath, const QString& displayNameOverride);
     Q_INVOKABLE void revealInFileBrowser(const QString& scorePath);
     Q_INVOKABLE void viewOnline(int scoreId);
-    Q_INVOKABLE void deleteScore(int scoreId, const QString& scoreName);
 
 signals:
     void viewTypeChanged();

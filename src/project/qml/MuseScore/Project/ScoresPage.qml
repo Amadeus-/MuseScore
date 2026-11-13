@@ -221,10 +221,6 @@ FocusScope {
             onViewOnlineRequested: function(scoreId) {
                 Qt.callLater(scoresPageModel.viewOnline, scoreId)
             }
-
-            onDeleteScoreRequested: function(scoreId, scoreName) {
-                Qt.callLater(scoresPageModel.deleteScore, scoreId, scoreName)
-            }
         }
     }
 
