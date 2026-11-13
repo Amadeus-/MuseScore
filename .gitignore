@@ -102,3 +102,7 @@ compile_commands.json
 !/+Build (release)+.bat
 !/+Deploy (standalone)+.bat
 !/+Run (dev)+.bat
+
+# Local Reprise test PDFs (OMR import fixtures — not tracked)
+/test/Rochut vol 1.pdf
+/test/Saint Saens_Gigout Tollite Hostia. Christmas Oratorio.pdf
