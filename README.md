@@ -11,7 +11,7 @@ of sheet music, runs optical music recognition (OMR) with
 workflow to correct the result and export clean **MusicXML** — or hand the score
 onward to MuseScore to finish.
 
-> **Pre-release (0.1.0) — work in progress.** Reprise is early software under
+> **Pre-release (0.8.0) — work in progress.** Reprise is early software under
 > active development. Expect rough edges and changing behavior.
 
 See [`CHANGELOG.md`](CHANGELOG.md) for the version history.
@@ -35,22 +35,32 @@ compatibility.
 ## Features
 
 **Working now**
-- **Import PDF** — *File ▸ Import PDF* runs Audiveris OMR on a PDF and opens the
-  recognized score. A dialog lets you pick a page range (e.g. `all`, `1-5`,
-  `1,3,8`) and a scan resolution.
-- Everything MuseScore's editor provides — **MusicXML / MIDI import and export**,
-  score editing, and **playback**.
+- **Import PDF** — *File ▸ Import PDF* (or the **New** tile) runs Audiveris OMR on a
+  PDF and opens the recognized score. Pick a page range (`all`, `1-5`, `1,3,8`) and a
+  **Recognition quality** — *Faster / Standard / Best*. Reprise reads the PDF's own
+  resolution and pre-selects the matching quality for you.
+- **Live recognition progress** — a progress window shows each page as Audiveris
+  works, with a recognition log and a cancel option.
+- **Streamlined, correction-focused UI** — the interface is pared down around
+  scanning and correcting: a **Scans** home, a dedicated **Edit** workspace, and
+  menus trimmed to what the workflow needs.
+- **Easy setup** — Preferences auto-detects your Audiveris and Tesseract installs on
+  first run, with manual override.
+- **Fully offline** — no account, sign-in, or network connection required; the
+  online/cloud module is compiled out entirely.
+- **Built on MuseScore's editor** — full score editing, **MusicXML / MIDI import and
+  export**, and **playback**.
 
 **Temporary behavior**
 - Imported scores currently default **every part to Grand Piano**, overriding the
-  instruments the OMR guesses. This is a deliberate stopgap until instrument
-  selection is added to the import flow.
+  instruments the OMR guesses. A deliberate stopgap until instrument selection is
+  added to the import flow.
 
 **Planned**
 - A two-pane **scan ↔ score** correction view — the scanned page shown alongside
   the editable score, kept position-synced.
-- A streamlined, correction-focused interface and richer import/OMR options.
-- More to come *(TBD)*.
+- A **bad-timing navigator** and a correction-focused keypad for fast fixes.
+- Richer import/OMR options and lyric/text OCR.
 
 ## License
 
