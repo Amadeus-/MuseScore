@@ -55,9 +55,9 @@ StyledDialogView {
     readonly property int detectedTier: root.snapTier(root.tier)
 
     readonly property var tierOptions: [
-        { "value": 200, "title": qsTrc("reprise", "Faster"), "subtitle": qsTrc("reprise", "Quicker, less detail") },
-        { "value": 300, "title": qsTrc("reprise", "Standard"), "subtitle": qsTrc("reprise", "Recommended for most scores") },
-        { "value": 400, "title": qsTrc("reprise", "Best"), "subtitle": qsTrc("reprise", "Slower, most detail") }
+        { "value": 200, "title": qsTrc("reprise", "Faster (200 dpi)"), "subtitle": qsTrc("reprise", "Quicker, less detail") },
+        { "value": 300, "title": qsTrc("reprise", "Standard (300 dpi)"), "subtitle": qsTrc("reprise", "Recommended for most scores") },
+        { "value": 400, "title": qsTrc("reprise", "Best (400 dpi)"), "subtitle": qsTrc("reprise", "Slower, most detail") }
     ]
 
     //! Nearest of {200, 300, 400} to an arbitrary value (mirrors the C++ snapToTier()).
