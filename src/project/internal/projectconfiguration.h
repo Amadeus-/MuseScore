@@ -28,7 +28,6 @@
 #include "global/iglobalconfiguration.h"
 #include "io/ifilesystem.h"
 #include "notation/inotationconfiguration.h"
-#include "cloud/icloudconfiguration.h"
 #include "languages/ilanguagesservice.h"
 
 #include "../iprojectconfiguration.h"
@@ -38,7 +37,6 @@ class ProjectConfiguration : public IProjectConfiguration, public muse::Contexta
 {
     muse::GlobalInject<muse::IGlobalConfiguration> globalConfiguration;
     muse::GlobalInject<notation::INotationConfiguration> notationConfiguration;
-    muse::GlobalInject<muse::cloud::ICloudConfiguration> cloudConfiguration;
     muse::GlobalInject<muse::io::IFileSystem> fileSystem;
     muse::GlobalInject<muse::languages::ILanguagesService> languagesService;
 

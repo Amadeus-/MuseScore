@@ -101,11 +101,18 @@ set(MUSE_MODULE_UPDATE OFF CACHE BOOL "Reprise: disable update module (no phone-
 set(MUSE_MODULE_MUSESAMPLER OFF CACHE BOOL "Reprise slim" FORCE)
 set(MUSE_MODULE_AUDIOPLUGINS OFF CACHE BOOL "Reprise slim" FORCE)
 set(MUSE_MODULE_TESTFLOW OFF CACHE BOOL "Reprise slim" FORCE)
+# CLOUD: no online/cloud services in Reprise. OFF swaps in muse's cloud stub, which registers
+# IMuseScoreComService (-> MuseScoreComServiceStub) and IAuthorizationService, and still provides
+# the Muse.Cloud QML (MUSE_MODULE_CLOUD_QML stays ON). The stub does NOT register IAudioComService,
+# so the 2 Audio.com call-site files in src\project are null-guarded. Cloud UI was already deleted
+# in 0.4.0; this compiles the module itself out. (The old "Home SIGSEGVs against the stub" note was
+# pre-IMuseScoreComService-stub; no longer applies -- verified launchable + deep-smoke green.)
+set(MUSE_MODULE_CLOUD OFF CACHE BOOL "Reprise: no online/cloud services" FORCE)
 # NOT disabled, left ON on purpose:
 #  * DIAGNOSTICS   - has no stub and appshell_qml imports muse_diagnostics_qml unconditionally,
 #                    so OFF breaks the configure. The heavy crashpad_handler is separately gated
 #                    on MUSE_MODULE_DIAGNOSTICS_CRASHPAD_CLIENT (OFF for this fork), so it is cheap.
-#  * CLOUD / LEARN / TOURS / EXTENSIONS (muse) and MUSESOUNDS (app) - these DO stub when disabled,
+#  * LEARN / TOURS / EXTENSIONS (muse) and MUSESOUNDS (app) - these DO stub when disabled,
 #                    but the desktop appshell Home page consumes their services and SIGSEGVs at
 #                    startup against the stubs (upstream only ships these stubs in the web build).
 #                    Keeping them ON is required for a launchable build; they are small UI modules.

@@ -311,8 +311,10 @@ QStringList ConvertFileToScoreModel::boldLinkSources() const
         sources << "<b>YouTube</b>";
     }
     if (link.allowedSources.testFlag(cloud::LinkSource::AudioCom)) {
-        const QString url = audioComService()->cloudInfo().url.toString();
-        sources << "<b><a href=\"" + url + "\">Audio.com</a></b>";
+        if (auto service = audioComService()) {
+            const QString url = service->cloudInfo().url.toString();
+            sources << "<b><a href=\"" + url + "\">Audio.com</a></b>";
+        }
     }
 
     return sources;
@@ -342,7 +344,11 @@ QString ConvertFileToScoreModel::audioComUrl() const
         return QString();
     }
 
-    return audioComService()->cloudInfo().url.toString();
+    if (auto service = audioComService()) {
+        return service->cloudInfo().url.toString();
+    }
+
+    return QString();
 }
 
 QString ConvertFileToScoreModel::linkPageHintText() const

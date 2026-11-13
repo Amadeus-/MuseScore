@@ -272,9 +272,14 @@ Promise<Ret> SaveProjectScenario::uploadAudioToAudioCom(const AudioFile& audio, 
                                                         const CloudAudioInfo& info)
 {
     return async::make_promise<Ret>([this, audio, project, info](auto resolve) {
-        m_uploadingAudioProgress = audioComService()->uploadAudio(audio.device, audio.format, info.name,
-                                                                  project->cloudAudioInfo().url, info.visibility,
-                                                                  info.replaceExisting);
+        auto service = audioComService();
+        if (!service) {
+            return resolve(make_ret(Ret::Code::NotSupported));
+        }
+
+        m_uploadingAudioProgress = service->uploadAudio(audio.device, audio.format, info.name,
+                                                        project->cloudAudioInfo().url, info.visibility,
+                                                        info.replaceExisting);
         LOGD() << "Uploading audio started";
         showUploadProgressDialog();
 
@@ -1580,7 +1585,12 @@ Promise<RetVal<CloudProjectInfo> > SaveProjectScenario::askPublishLocation(INota
 
 Promise<RetVal<CloudAudioInfo> > SaveProjectScenario::askShareAudioLocation(INotationProjectPtr project) const
 {
-    return audioComService()->authorization()->checkCloudIsAvailable()
+    auto service = audioComService();
+    if (!service) {
+        return resolvedPromise(RetVal<CloudAudioInfo>(make_ret(Ret::Code::NotSupported)));
+    }
+
+    return service->authorization()->checkCloudIsAvailable()
            .then<RetVal<CloudAudioInfo> >(this, [this, project](const Ret& isCloudAvailable, auto resolve) {
         if (!isCloudAvailable) {
             warnCloudNotAvailableForSharingAudio().onResolve(this, [resolve](const Ret& ret) {
@@ -1922,8 +1932,12 @@ Promise<RetVal<Val> > SaveProjectScenario::ensureAuthorization(const QString& cl
     }
 
     bool isMuseScoreCom = cloudCode == muse::cloud::MUSESCORE_COM_CLOUD_CODE;
-    bool userAuthorized = isMuseScoreCom ? museScoreComService()->authorization()->userAuthorized().val
-                          : audioComService()->authorization()->userAuthorized().val;
+    bool userAuthorized = false;
+    if (isMuseScoreCom) {
+        userAuthorized = museScoreComService()->authorization()->userAuthorized().val;
+    } else if (auto service = audioComService()) {
+        userAuthorized = service->authorization()->userAuthorized().val;
+    }
 
     if (userAuthorized) {
         return resolvedPromise(RetVal<Val>::make_ok(Val()));
