@@ -107,6 +107,13 @@ muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
             }
         }
 
+        //! Agent/headless-driven run (a "path" arg was supplied): mark the session non-restorable so the project this
+        //! import opens never lands in the session-restore list. Otherwise the ~15s job-teardown kill (which never
+        //! reaches SessionsManager::deinit()) would leave a leftover path that pops the "previous session quit
+        //! unexpectedly" prompt on the next USER launch. The normal GUI import path below is untouched, so a genuine
+        //! user quit with a project open still restores as before. Set before the project opens, so ordering is moot.
+        sessionsManager()->setIgnoreSession(true);
+
         rememberImportPdfDir(pdfPath);
         setScanResolution(dpi);
         launchImport(pdfPath, pages, dpi);

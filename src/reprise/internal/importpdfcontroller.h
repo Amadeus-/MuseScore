@@ -34,6 +34,8 @@
 #include "global/io/ifilesystem.h"
 #include "global/io/path.h"
 
+#include "appshell/internal/isessionsmanager.h"
+
 #include "irepriseconfiguration.h"
 #include "iimportprogresstracker.h"
 #include "audiverisrunner.h"
@@ -52,6 +54,7 @@ class ImportPdfController : public muse::Contextable, public muse::async::Asynca
     muse::GlobalInject<muse::io::IFileSystem> fileSystem;
     muse::GlobalInject<mu::reprise::IRepriseConfiguration> repriseConfiguration;
     muse::GlobalInject<mu::reprise::IImportProgressTracker> importProgressTracker;
+    muse::ContextInject<mu::appshell::ISessionsManager> sessionsManager = { this };
 
 public:
     explicit ImportPdfController(const muse::modularity::ContextPtr& iocCtx)

@@ -77,8 +77,27 @@ void SessionsManager::reset()
     configuration()->setSessionProjectsPaths({});
 }
 
+void SessionsManager::setIgnoreSession(bool ignore)
+{
+    m_ignoreSession = ignore;
+
+    if (m_ignoreSession) {
+        //! Clear anything already persisted for this instance and stop tracking, so no later teardown can leave a
+        //! leftover restore path. In the headless import flow this runs before the project opens, so the imported
+        //! project never enters the list in the first place.
+        reset();
+        m_lastOpenedProjectPath = muse::io::path_t();
+    }
+}
+
 void SessionsManager::update()
 {
+    //! Reprise: agent/headless-driven instances never persist the open project (see setIgnoreSession). Checked on
+    //! every update so the imported project is not added regardless of when projectChanged fires.
+    if (m_ignoreSession) {
+        return;
+    }
+
     muse::io::path_t newProjectPath;
 
     if (auto project = projectSession()->project()) {

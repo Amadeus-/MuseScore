@@ -36,6 +36,11 @@ public:
 
     virtual void restore() = 0;
     virtual void reset() = 0;
+
+    //! Reprise: mark this instance as agent/headless-driven so it never persists the open project to the
+    //! session-restore list. Set by the MCP/headless import path so an abrupt job-teardown kill cannot leave a
+    //! leftover path that pops the "previous session quit unexpectedly" prompt on the next user launch.
+    virtual void setIgnoreSession(bool ignore) = 0;
 };
 }
 

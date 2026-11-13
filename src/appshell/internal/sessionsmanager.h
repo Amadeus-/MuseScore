@@ -56,6 +56,8 @@ public:
     void restore() override;
     void reset() override;
 
+    void setIgnoreSession(bool ignore) override;
+
 private:
     void update();
 
@@ -63,6 +65,7 @@ private:
     void addProjectToSession(const muse::io::path_t& projectPath);
 
     muse::io::path_t m_lastOpenedProjectPath;
+    bool m_ignoreSession = false;
 };
 }
 
