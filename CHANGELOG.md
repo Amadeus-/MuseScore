@@ -8,11 +8,22 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-11-13
+
 ### Added
 - Dev MCP tool `reprise.capture-screenshot` (target=window | score) that captures the GUI/rendered score to a PNG and returns its path.
 
 ### Changed
 - **Recognition-quality tier labels now show the dpi** — **Faster (200 dpi)** / **Standard (300 dpi)** / **Best (400 dpi)**; the descriptions after each label and all behavior are unchanged.
+- **Online/cloud module compiled out — Reprise is now an offline-only binary**: the umbrella
+  `MUSE_MODULE_CLOUD` is OFF (the muse framework's cloud module is replaced by a stub), Qt
+  NetworkAuth is no longer linked, and the account / cloud-scores / save-to-cloud surfaces are
+  gone or inert.
+- **Synced with upstream MuseScore `main`** (2026-11-13 merge).
+
+### Fixed
+- **Agent/headless-launched instances now self-clean their session** on exit, so the user no
+  longer gets a spurious "restore previous session?" prompt on the next normal launch.
 
 ## [0.7.0] — 2026-11-12
 
@@ -196,6 +207,7 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.8.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.7.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.6.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.5.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
