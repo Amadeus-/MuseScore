@@ -168,6 +168,13 @@ private:
     void doAddNote(const NoteInputParams& params, const NoteAddingMode& addingMode);
 
     muse::Ret toggleAccidental(const ToggleAccidentalCommand& command);
+    muse::Ret changeVoice(const UseVoiceCommand& command);
+    muse::Ret swapVoices(const SwapVoicesCommand& command);
+
+    muse::Ret putTuplet(const AddTupletCommand& command);
+    muse::Ret openTupletOtherDialog();
+
+    muse::Ret addBoxes(const AddBoxesCommand& command);
 
     muse::Ret flipSelection();
 
@@ -178,17 +185,10 @@ private:
 
     void toggleArticulation(SymbolId articulationSymbolId);
 
-    muse::Ret putTuplet(const muse::rcommand::Params& params);
-    void putTuplet(const TupletOptions& options);
-    void putTuplet(int tupletCount);
-
     muse::Ret moveWithRet(MoveDirection direction, bool quickly = false);
     void move(MoveDirection direction, bool quickly = false);
     void moveInputNotes(bool up, PitchMode mode);
     void movePitchDiatonic(MoveDirection direction, bool);
-
-    void changeVoice(voice_idx_t voiceIndex);
-    void swapVoices(voice_idx_t voiceIndex1, voice_idx_t voiceIndex2);
 
     void cutSelection();
     void repeatSelection();
@@ -210,9 +210,6 @@ private:
     muse::Ret startEditSelectedElement(const muse::rcommand::Params& params);
     muse::Ret startEditSelectedText(const muse::rcommand::Params& params);
 
-    muse::Ret addMeasures(const muse::rcommand::Params& params, AddBoxesTarget target);
-    void addBoxes(BoxType boxType, int count, AddBoxesTarget target);
-
     void addStretch(qreal value);
 
     void unrollRepeats();
@@ -232,7 +229,6 @@ private:
     void openBreaksDialog();
     void openTransposeDialog();
     void openPartsDialog();
-    void openTupletOtherDialog();
     void openStaffTextPropertiesDialog();
     void openMeasurePropertiesDialog();
     void openEditGridSizeDialog();

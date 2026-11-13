@@ -185,10 +185,10 @@ static const std::map<Command, SymId> ADD_ARTICULATION_COMMANDS = {
 };
 
 static const std::map<Command, voice_idx_t> VOICE_COMMANDS = {
-    { USE_VOICE_1_COMMAND, 0 },
-    { USE_VOICE_2_COMMAND, 1 },
-    { USE_VOICE_3_COMMAND, 2 },
-    { USE_VOICE_4_COMMAND, 3 }
+    { UseVoice1Command::id, 0 },
+    { UseVoice2Command::id, 1 },
+    { UseVoice3Command::id, 2 },
+    { UseVoice4Command::id, 3 }
 };
 
 static const std::vector<Command> NOTE_COMMANDS = {
@@ -218,16 +218,16 @@ static const std::vector<Command> NOTE_COMMANDS = {
 };
 
 static const std::vector<Command> TUPLET_COMMANDS = {
-    OPEN_TUPLET_CONFIGURE_COMMAND,
-    ADD_TUPLET_COMMAND,
-    ADD_DUPLET_COMMAND,
-    ADD_TRIPLET_COMMAND,
-    ADD_QUADRUPLET_COMMAND,
-    ADD_QUINTUPLET_COMMAND,
-    ADD_SEXTUPLET_COMMAND,
-    ADD_SEPTUPLET_COMMAND,
-    ADD_OCTUPLET_COMMAND,
-    ADD_NONUPLET_COMMAND,
+    OpenTupletConfigureCommand::id,
+    AddTupletCommand::id,
+    AddDupletCommand::id,
+    AddTripletCommand::id,
+    AddQuadrupletCommand::id,
+    AddQuintupletCommand::id,
+    AddSextupletCommand::id,
+    AddSeptupletCommand::id,
+    AddOctupletCommand::id,
+    AddNonupletCommand::id,
 };
 
 static const std::vector<Command> NOTE_OR_REST_SELECTED_COMMANDS = {

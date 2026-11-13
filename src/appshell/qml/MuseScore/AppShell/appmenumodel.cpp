@@ -336,12 +336,12 @@ MenuItem* AppMenuModel::makeToolsMenu()
         makeMenuItem(OPEN_TRANSPOSE_COMMAND),
         makeSeparator(),
         makeMenu(TranslatableString("appshell/menu/tools", "&Voices"), {
-            makeMenuItem(SWAP_VOICE_X12_COMMAND),
-            makeMenuItem(SWAP_VOICE_X13_COMMAND),
-            makeMenuItem(SWAP_VOICE_X14_COMMAND),
-            makeMenuItem(SWAP_VOICE_X23_COMMAND),
-            makeMenuItem(SWAP_VOICE_X24_COMMAND),
-            makeMenuItem(SWAP_VOICE_X34_COMMAND)
+            makeMenuItem(SwapVoice12Command::id),
+            makeMenuItem(SwapVoice13Command::id),
+            makeMenuItem(SwapVoice14Command::id),
+            makeMenuItem(SwapVoice23Command::id),
+            makeMenuItem(SwapVoice24Command::id),
+            makeMenuItem(SwapVoice34Command::id)
         }, "menu-voices"),
         makeMenu(TranslatableString("appshell/menu/tools", "&Measures"), {
             makeMenuItem(SPLIT_MEASURE_COMMAND),
@@ -626,15 +626,15 @@ MenuItemList AppMenuModel::makeIntervalsItems()
 MenuItemList AppMenuModel::makeTupletsItems()
 {
     MenuItemList items {
-        makeMenuItem(ADD_DUPLET_COMMAND),
-        makeMenuItem(ADD_TRIPLET_COMMAND),
-        makeMenuItem(ADD_QUADRUPLET_COMMAND),
-        makeMenuItem(ADD_QUINTUPLET_COMMAND),
-        makeMenuItem(ADD_SEXTUPLET_COMMAND),
-        makeMenuItem(ADD_SEPTUPLET_COMMAND),
-        makeMenuItem(ADD_OCTUPLET_COMMAND),
-        makeMenuItem(ADD_NONUPLET_COMMAND),
-        makeMenuItem(OPEN_TUPLET_CONFIGURE_COMMAND)
+        makeMenuItem(AddDupletCommand::id),
+        makeMenuItem(AddTripletCommand::id),
+        makeMenuItem(AddQuadrupletCommand::id),
+        makeMenuItem(AddQuintupletCommand::id),
+        makeMenuItem(AddSextupletCommand::id),
+        makeMenuItem(AddSeptupletCommand::id),
+        makeMenuItem(AddOctupletCommand::id),
+        makeMenuItem(AddNonupletCommand::id),
+        makeMenuItem(OpenTupletConfigureCommand::id)
     };
 
     return items;
@@ -643,14 +643,14 @@ MenuItemList AppMenuModel::makeTupletsItems()
 MenuItemList AppMenuModel::makeMeasuresItems()
 {
     MenuItemList items {
-        makeMenuItem(INSERT_MEASURE_COMMAND),
-        makeMenuItem(APPEND_MEASURE_COMMAND),
+        makeMenuItem(InsertMeasureCommand::id),
+        makeMenuItem(AppendMeasureCommand::id),
         makeSeparator(),
-        makeMenuItem(INSERT_MEASURES_COMMAND),
-        makeMenuItem(INSERT_MEASURES_AFTER_SELECTION_COMMAND),
+        makeMenuItem(InsertMeasuresCommand::id),
+        makeMenuItem(InsertMeasuresAfterSelectionCommand::id),
         makeSeparator(),
-        makeMenuItem(INSERT_MEASURES_AT_START_OF_SCORE_COMMAND),
-        makeMenuItem(APPEND_MEASURES_COMMAND)
+        makeMenuItem(InsertMeasuresAtStartOfScoreCommand::id),
+        makeMenuItem(AppendMeasuresCommand::id)
     };
 
     return items;
@@ -659,16 +659,16 @@ MenuItemList AppMenuModel::makeMeasuresItems()
 MenuItemList AppMenuModel::makeFramesItems()
 {
     MenuItemList items {
-        makeMenuItem(INSERT_HBOX_COMMAND),
-        makeMenuItem(INSERT_VBOX_COMMAND),
-        makeMenuItem(INSERT_TEXTFRAME_COMMAND),
-        makeMenuItem(INSERT_FRETFRAME_COMMAND),
+        makeMenuItem(InsertHBoxCommand::id),
+        makeMenuItem(InsertVBoxCommand::id),
+        makeMenuItem(InsertTextFrameCommand::id),
+        makeMenuItem(InsertFretFrameCommand::id),
         makeSeparator(),
         makeMenu(TranslatableString("notation", "Insert at end of score"), {
-            makeMenuItem(APPEND_HBOX_COMMAND),
-            makeMenuItem(APPEND_VBOX_COMMAND),
-            makeMenuItem(APPEND_TEXTFRAME_COMMAND),
-            makeMenuItem(APPEND_FRETFRAME_COMMAND)
+            makeMenuItem(AppendHBoxCommand::id),
+            makeMenuItem(AppendVBoxCommand::id),
+            makeMenuItem(AppendTextFrameCommand::id),
+            makeMenuItem(AppendFretFrameCommand::id)
         })
     };
 

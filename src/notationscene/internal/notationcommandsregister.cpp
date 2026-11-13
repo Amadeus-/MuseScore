@@ -241,6 +241,47 @@ static const std::vector<CommandInfo> s_commandInfos = {
     makeCommandInfo<ToggleSharpCommand>(),
     makeCommandInfo<ToggleSharp2Command>(),
 
+    makeCommandInfo<UseVoiceCommand>(),
+    makeCommandInfo<UseVoice1Command>(),
+    makeCommandInfo<UseVoice2Command>(),
+    makeCommandInfo<UseVoice3Command>(),
+    makeCommandInfo<UseVoice4Command>(),
+
+    makeCommandInfo<SwapVoicesCommand>(),
+    makeCommandInfo<SwapVoice12Command>(),
+    makeCommandInfo<SwapVoice13Command>(),
+    makeCommandInfo<SwapVoice14Command>(),
+    makeCommandInfo<SwapVoice23Command>(),
+    makeCommandInfo<SwapVoice24Command>(),
+    makeCommandInfo<SwapVoice34Command>(),
+
+    makeCommandInfo<AddTupletCommand>(),
+    makeCommandInfo<AddDupletCommand>(),
+    makeCommandInfo<AddTripletCommand>(),
+    makeCommandInfo<AddQuadrupletCommand>(),
+    makeCommandInfo<AddQuintupletCommand>(),
+    makeCommandInfo<AddSextupletCommand>(),
+    makeCommandInfo<AddSeptupletCommand>(),
+    makeCommandInfo<AddOctupletCommand>(),
+    makeCommandInfo<AddNonupletCommand>(),
+    makeCommandInfo<OpenTupletConfigureCommand>(),
+
+    makeCommandInfo<AddBoxesCommand>(),
+    makeCommandInfo<InsertHBoxCommand>(),
+    makeCommandInfo<InsertVBoxCommand>(),
+    makeCommandInfo<InsertTextFrameCommand>(),
+    makeCommandInfo<InsertFretFrameCommand>(),
+    makeCommandInfo<AppendHBoxCommand>(),
+    makeCommandInfo<AppendVBoxCommand>(),
+    makeCommandInfo<AppendTextFrameCommand>(),
+    makeCommandInfo<AppendFretFrameCommand>(),
+    makeCommandInfo<InsertMeasureCommand>(),
+    makeCommandInfo<AppendMeasureCommand>(),
+    makeCommandInfo<InsertMeasuresCommand>(),
+    makeCommandInfo<InsertMeasuresAfterSelectionCommand>(),
+    makeCommandInfo<InsertMeasuresAtStartOfScoreCommand>(),
+    makeCommandInfo<AppendMeasuresCommand>(),
+
     // navigation
     CommandInfo{
         MOVE_RIGHT_COMMAND,
@@ -413,76 +454,6 @@ static const std::vector<CommandInfo> s_commandInfos = {
         InputSchema(),
         Decoration(IconCode::Code::STACCATO)
     },
-    CommandInfo{
-        USE_VOICE_1_COMMAND,
-        TranslatableString("action", "Voice 1"),
-        TranslatableString("action", "Use voice 1"),
-        InputSchema(),
-        Decoration(IconCode::Code::VOICE_1)
-    },
-    CommandInfo{
-        USE_VOICE_2_COMMAND,
-        TranslatableString("action", "Voice 2"),
-        TranslatableString("action", "Use voice 2"),
-        InputSchema(),
-        Decoration(IconCode::Code::VOICE_2)
-    },
-    CommandInfo{
-        USE_VOICE_3_COMMAND,
-        TranslatableString("action", "Voice 3"),
-        TranslatableString("action", "Use voice 3"),
-        InputSchema(),
-        Decoration(IconCode::Code::VOICE_3)
-    },
-    CommandInfo{
-        USE_VOICE_4_COMMAND,
-        TranslatableString("action", "Voice 4"),
-        TranslatableString("action", "Use voice 4"),
-        InputSchema(),
-        Decoration(IconCode::Code::VOICE_4)
-    },
-    CommandInfo{
-        SWAP_VOICE_X12_COMMAND,
-        TranslatableString("action", "Exchange voice &1-2"),
-        TranslatableString("action", "Exchange voice 1-2"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        SWAP_VOICE_X13_COMMAND,
-        TranslatableString("action", "Exchange voice 1-3"),
-        TranslatableString("action", "Exchange voice 1-3"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        SWAP_VOICE_X14_COMMAND,
-        TranslatableString("action", "Exchange voice 1-&4"),
-        TranslatableString("action", "Exchange voice 1-4"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        SWAP_VOICE_X23_COMMAND,
-        TranslatableString("action", "Exchange voice &2-3"),
-        TranslatableString("action", "Exchange voice 2-3"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        SWAP_VOICE_X24_COMMAND,
-        TranslatableString("action", "Exchange voice 2-4"),
-        TranslatableString("action", "Exchange voice 2-4"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        SWAP_VOICE_X34_COMMAND,
-        TranslatableString("action", "Exchange voice &3-4"),
-        TranslatableString("action", "Exchange voice 3-4"),
-        InputSchema(),
-        Decoration()
-    },
 
     CommandInfo{
         VOICE_ASSIGNMENT_ALL_IN_INSTR_COMMAND,
@@ -527,85 +498,6 @@ static const std::vector<CommandInfo> s_commandInfos = {
         Decoration(IconCode::Code::REST)
     },
 
-    // tuplet
-    CommandInfo{
-        OPEN_TUPLET_CONFIGURE_COMMAND,
-        TranslatableString("action", "Othe&r…"),
-        TranslatableString("action", "Show tuplet configure"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        ADD_TUPLET_COMMAND,
-        TranslatableString("action", "Tuplet"),
-        TranslatableString("action", "Enter tuplet"),
-        InputSchema({
-            { "ratio", Arg(DataType::String, u"Tuplet ratio (e.g. 3/2, 4/3, 5/4, 6/5, 7/6, 8/7, 9/8)") },
-            { "number-type", Arg(DataType::String, u"Tuplet number type (number, relation, none)") },
-            { "bracket-type", Arg(DataType::String, u"Tuplet bracket type (auto, show, none)") },
-            { "auto-baselen", Arg(DataType::Bool, u"Auto base length") },
-            { "selected-duration-as", Arg(DataType::String, u"Use selected duration as (subdivision, tuplet-length)") },
-        }),
-        Decoration()
-    },
-    CommandInfo{
-        ADD_DUPLET_COMMAND,
-        TranslatableString("action", "Duplet"),
-        TranslatableString("action", "Enter tuplet: duplet"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        ADD_TRIPLET_COMMAND,
-        TranslatableString("action", "Triplet"),
-        TranslatableString("action", "Enter tuplet: triplet"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        ADD_QUADRUPLET_COMMAND,
-        TranslatableString("action", "Quadruplet"),
-        TranslatableString("action", "Enter tuplet: quadruplet"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        ADD_QUINTUPLET_COMMAND,
-        TranslatableString("action", "Quintuplet"),
-        TranslatableString("action", "Enter tuplet: quintuplet"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        ADD_SEXTUPLET_COMMAND,
-        TranslatableString("action", "Sextuplet"),
-        TranslatableString("action", "Enter tuplet: sextuplet"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        ADD_SEPTUPLET_COMMAND,
-        TranslatableString("action", "Septuplet"),
-        TranslatableString("action", "Enter tuplet: septuplet"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        ADD_OCTUPLET_COMMAND,
-        TranslatableString("action", "Octuplet"),
-        TranslatableString("action", "Enter tuplet: octuplet"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        ADD_NONUPLET_COMMAND,
-        TranslatableString("action", "Nonuplet"),
-        TranslatableString("action", "Enter tuplet: nonuplet"),
-        InputSchema(),
-        Decoration()
-    },
-
-    // text navigation commands
     CommandInfo{
         EDITTEXT_NEXT_WORD_COMMAND,
         TranslatableString("action", "Edit next word"),
@@ -876,112 +768,6 @@ static const std::vector<CommandInfo> s_commandInfos = {
         JOIN_MEASURES_COMMAND,
         TranslatableString("action", "&Join selected measures"),
         TranslatableString("action", "Join selected measures"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        INSERT_MEASURE_COMMAND,
-        TranslatableString("action", "&Insert one measure before selection"),
-        TranslatableString("action", "Insert one measure before selection"),
-        InputSchema(),
-        Decoration(IconCode::Code::INSERT_ONE_MEASURE)
-    },
-    CommandInfo{
-        INSERT_MEASURES_COMMAND,
-        TranslatableString("action", "Insert &before selection…"),
-        TranslatableString("action", "Insert measures before selection"),
-        InputSchema({
-            { "count", Arg(DataType::Int, u"Number of measures to insert") },
-        }),
-        Decoration()
-    },
-    CommandInfo{
-        INSERT_MEASURES_AFTER_SELECTION_COMMAND,
-        TranslatableString("action", "Insert &after selection…"),
-        TranslatableString("action", "Insert measures after selection"),
-        InputSchema({
-            { "count", Arg(DataType::Int, u"Number of measures to insert") },
-        }),
-        Decoration()
-    },
-    CommandInfo{
-        INSERT_MEASURES_AT_START_OF_SCORE_COMMAND,
-        TranslatableString("action", "Insert at &start of score…"),
-        TranslatableString("action", "Insert measures at start of score"),
-        InputSchema({
-            { "count", Arg(DataType::Int, u"Number of measures to insert") },
-        }),
-        Decoration()
-    },
-    CommandInfo{
-        APPEND_MEASURE_COMMAND,
-        TranslatableString("action", "Insert &one measure at end of score"),
-        TranslatableString("action", "Insert one measure at end of score"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        APPEND_MEASURES_COMMAND,
-        TranslatableString("action", "Insert at &end of score…"),
-        TranslatableString("action", "Insert measures at end of score"),
-        InputSchema({
-            { "count", Arg(DataType::Int, u"Number of measures to insert") },
-        }),
-        Decoration()
-    },
-    CommandInfo{
-        INSERT_HBOX_COMMAND,
-        TranslatableString("action", "Insert &horizontal frame"),
-        TranslatableString("action", "Insert horizontal frame"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        INSERT_VBOX_COMMAND,
-        TranslatableString("action", "Insert &vertical frame"),
-        TranslatableString("action", "Insert vertical frame"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        INSERT_TEXTFRAME_COMMAND,
-        TranslatableString("action", "Insert &text frame"),
-        TranslatableString("action", "Insert text frame"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        INSERT_FRETFRAME_COMMAND,
-        TranslatableString("action", "Insert &fretboard diagram legend"),
-        TranslatableString("action", "Insert fretboard diagram legend"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        APPEND_HBOX_COMMAND,
-        TranslatableString("action", "&Horizontal frame"),
-        TranslatableString("action", "Insert horizontal frame at end of score"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        APPEND_VBOX_COMMAND,
-        TranslatableString("action", "&Vertical frame"),
-        TranslatableString("action", "Insert vertical frame at end of score"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        APPEND_TEXTFRAME_COMMAND,
-        TranslatableString("action", "&Text frame"),
-        TranslatableString("action", "Insert text frame at end of score"),
-        InputSchema(),
-        Decoration()
-    },
-    CommandInfo{
-        APPEND_FRETFRAME_COMMAND,
-        TranslatableString("action", "&Fretboard diagram legend"),
-        TranslatableString("action", "Insert fretboard diagram legend at end of score"),
         InputSchema(),
         Decoration()
     },
