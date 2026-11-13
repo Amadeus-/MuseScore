@@ -8,6 +8,9 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+### Added
+- Dev MCP tool `reprise.capture-screenshot` (target=window | score) that captures the GUI/rendered score to a PNG and returns its path.
+
 ### Changed
 - **Recognition-quality tier labels now show the dpi** — **Faster (200 dpi)** / **Standard (300 dpi)** / **Best (400 dpi)**; the descriptions after each label and all behavior are unchanged.
 

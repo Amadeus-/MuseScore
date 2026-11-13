@@ -30,6 +30,7 @@
 #include "internal/reprisecommandsregister.h"
 #include "internal/reprisecommandsstate.h"
 #include "internal/importpdfcontroller.h"
+#include "internal/screenshotcontroller.h"
 #include "internal/irepriseconfiguration.h"
 #include "internal/repriseconfiguration.h"
 #include "internal/iimportprogresstracker.h"
@@ -103,6 +104,7 @@ IContextSetup* RepriseModule::newContext(const ContextPtr& ctx) const
 void RepriseContext::registerExports()
 {
     m_importPdfController = std::make_shared<ImportPdfController>(iocContext());
+    m_screenshotController = std::make_shared<ScreenshotController>(iocContext());
 }
 
 void RepriseContext::resolveImports()
@@ -124,4 +126,5 @@ void RepriseContext::onInit(const IApplication::RunMode& mode)
     }
 
     m_importPdfController->init();
+    m_screenshotController->init();
 }

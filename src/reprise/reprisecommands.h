@@ -83,4 +83,48 @@ struct GetImportErrorsCommand {
         muse::rcommand::Field{ "details", &O::details, "A tail of Audiveris output for the error (empty if none)" },
     };
 };
+
+//! NOTE Reprise dev MCP/API tool: capture the running GUI to a PNG and return its absolute path. target="window"
+//! (the default) grabs the whole main application window; target="score" renders the current score's page (0-based,
+//! default page 0) through the registered "png" notation writer. The handler runs synchronously on the Qt GUI thread
+//! (the same dispatch path score.get-counts uses), so QQuickWindow::grabWindow() + the PNG writer are called directly
+//! -- no cross-thread marshalling. An optional "path" overrides the per-target fixed overwrite filename; "page"
+//! applies only to the score target. Failures carry ok=false + an error string (the call itself still succeeds) so a
+//! headless agent always receives structured output with ok/path/error.
+struct CaptureScreenshotCommand {
+    static const inline auto id = muse::rcommand::Command("command://reprise/capture-screenshot");
+    static const inline auto title = muse::MnemonicString("reprise", "Capture screenshot");
+    static const inline auto description
+        = muse::TranslatableString("reprise", "Capture the GUI window or current score to a PNG and return its path");
+    static const inline auto availabilities = muse::rcommand::Availability::API;
+    static const inline auto annotations = muse::rcommand::Annotation::ReadOnly;
+
+    std::string target;    // "window" (default when empty) | "score"
+    std::string path;      // optional absolute output path override
+    int page = 0;          // score target only: 0-based page to render
+
+    static const inline auto input = std::tuple {
+        muse::rcommand::Field{ "target", &CaptureScreenshotCommand::target,
+                               "What to capture: 'window' (default) or 'score'", muse::rcommand::Presence::Optional },
+        muse::rcommand::Field{ "path", &CaptureScreenshotCommand::path,
+                               "Absolute output PNG path (optional; default is a per-target overwrite file)",
+                               muse::rcommand::Presence::Optional },
+        muse::rcommand::Field{ "page", &CaptureScreenshotCommand::page,
+                               "Score page to render, 0-based (score target only; default 0)",
+                               muse::rcommand::Presence::Optional },
+    };
+
+    struct Output {
+        bool ok = false;
+        std::string path;
+        std::string error;
+    };
+
+    using O = CaptureScreenshotCommand::Output;
+    static const inline auto output = std::tuple {
+        muse::rcommand::Field{ "ok", &O::ok, "Whether the capture succeeded" },
+        muse::rcommand::Field{ "path", &O::path, "Absolute path of the written PNG (empty on failure)" },
+        muse::rcommand::Field{ "error", &O::error, "Error message (empty on success)" },
+    };
+};
 }

@@ -28,6 +28,7 @@
 
 namespace mu::reprise {
 class ImportPdfController;
+class ScreenshotController;
 class ImportProgressTracker;
 class RepriseConfiguration;
 
@@ -70,5 +71,6 @@ public:
 
 private:
     std::shared_ptr<ImportPdfController> m_importPdfController;
+    std::shared_ptr<ScreenshotController> m_screenshotController;
 };
 }

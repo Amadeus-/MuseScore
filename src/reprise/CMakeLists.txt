@@ -33,6 +33,8 @@ target_sources(reprise PRIVATE
     internal/audiverisrunner.h
     internal/importpdfcontroller.cpp
     internal/importpdfcontroller.h
+    internal/screenshotcontroller.cpp
+    internal/screenshotcontroller.h
     internal/iimportprogresstracker.h
     internal/importprogresstracker.h
     internal/mcpcuration.h
@@ -46,6 +48,10 @@ target_sources(reprise PRIVATE
 #! NOTE: Reprise's Import-PDF flow reaches into project (IProjectSession, PROJECT_OPEN_COMMAND) and into
 #! notation/engraving (instruments repository + Part/Instrument API) to default imported parts to Grand Piano.
 target_link_libraries(reprise PRIVATE project notation engraving)
+
+#! NOTE: reprise.capture-screenshot grabs the main QQuickWindow (QQuickWindow::grabWindow). muse_global links
+#! Qt::Quick only PRIVATEly, so the main reprise target must link it explicitly (the qml sub-target links it too).
+target_link_libraries(reprise PRIVATE Qt::Quick)
 
 if (MUE_BUILD_PROJECT_QML)
     add_subdirectory(qml/MuseScore/Reprise)

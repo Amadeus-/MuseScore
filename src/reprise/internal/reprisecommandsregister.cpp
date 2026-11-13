@@ -48,6 +48,9 @@ static const std::vector<CommandInfo> s_commandInfos = {
     // Reprise read-only MCP/API queries
     makeCommandInfo<GetImportProgressCommand>(),
     makeCommandInfo<GetImportErrorsCommand>(),
+
+    // Reprise dev MCP/API tool: capture the GUI window or current score to a PNG
+    makeCommandInfo<CaptureScreenshotCommand>(),
 };
 
 std::string RepriseCommandsRegister::moduleName() const

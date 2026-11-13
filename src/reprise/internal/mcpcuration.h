@@ -60,6 +60,8 @@ inline const std::set<std::string>& mcpAllowlistPaths()
         "reprise/get-import-errors",
         // the OMR entry point (drivable headlessly with a "path" arg)
         "reprise/import-pdf",
+        // dev screenshot tool (captures the GUI window or current score to a PNG)
+        "reprise/capture-screenshot",
         // a minimal, safe set of project-level ops for headless testing
         "project/open",
         "project/close",
