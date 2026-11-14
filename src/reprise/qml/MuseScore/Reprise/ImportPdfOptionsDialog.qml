@@ -59,15 +59,17 @@ StyledDialogView {
     property bool pdfConfident: false
 
     //! Native pixel dimensions of an image input (0 for a PDF or when the dimensions could not be read), plus the
-    //! embedded DPI when the image file actually carries resolution metadata (0 == none measured). embeddedDpi > 0 is a
-    //! genuine measurement; when it is 0 the resolution line still shows a value using the labelled default (never a
-    //! silently-invented measurement). The resolution line is shown for ANY image (single or multi-frame), never a PDF.
+    //! embedded DPI when the image file actually carries resolution metadata (0 == none present). embeddedDpi > 0 is a
+    //! genuine value read from the file's bytes (PNG pHYs / JPEG JFIF-EXIF / TIFF IFD / BMP DIB); when it is 0 the
+    //! resolution line still shows a value using the labelled "assumed" default (never a silently-invented measurement).
+    //! The resolution line is shown for ANY image (single or multi-frame), never a PDF.
     property int imageWidth: 0
     property int imageHeight: 0
     property int embeddedDpi: 0
 
-    //! DPI shown (labelled "default") when an image carries no real resolution metadata. Mirrors the C++ DEFAULT_IMAGE_DPI;
-    //! the user prefers a shown default over a blank, and for images DPI is informational (Audiveris uses native pixels).
+    //! DPI shown (labelled "assumed") when an image carries no real resolution metadata, for EVERY image type. Mirrors the
+    //! C++ DEFAULT_IMAGE_DPI; the user prefers a shown value over a blank, and for images DPI is informational (Audiveris
+    //! uses native pixels). "assumed" is deliberately distinct from the PDF path's "default" (a real applied tier setting).
     readonly property int defaultDpi: 300
 
     //! The PDF's detected native resolution (raw, un-snapped) that drove the tier match; shown in the "why" caption
@@ -104,14 +106,15 @@ StyledDialogView {
     }
 
     //! The resolution line text: native pixel dimensions, always followed by a dpi value for consistency across every
-    //! file type. A measured dpi (embeddedDpi > 0) shows plainly; when none was measured, the labelled default makes clear
-    //! it is a default, not a measurement. Identical treatment for PNG/JPG/TIFF/BMP/GIF.
+    //! file type. A measured dpi (embeddedDpi > 0) shows plainly as the file's true embedded value (NOT snapped to a
+    //! 200/300/400 tier -- images are not tiered); when none is present, the labelled "assumed" default makes clear it is
+    //! a guess, not a measurement. Identical treatment for PNG/JPG/TIFF/BMP/GIF.
     readonly property string resolutionText: {
         var base = qsTrc("reprise", "%1 x %2 px (native)").arg(root.imageWidth).arg(root.imageHeight)
         if (root.embeddedDpi > 0) {
             base += " " + qsTrc("reprise", "(~%1 dpi)").arg(root.embeddedDpi)
         } else {
-            base += " " + qsTrc("reprise", "(~%1 dpi, default)").arg(root.defaultDpi)
+            base += " " + qsTrc("reprise", "(~%1 dpi, assumed)").arg(root.defaultDpi)
         }
         return base
     }

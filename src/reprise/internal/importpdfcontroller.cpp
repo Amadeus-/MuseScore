@@ -56,9 +56,12 @@ using namespace muse;
 //! so Reprise can block an oversized image BEFORE launching Audiveris.
 static constexpr qint64 AUDIVERIS_MAX_PIXELS = 20000000;
 
-//! Default DPI shown (clearly labelled "(default)") on the intake dialog's Resolution line when an image carries no real
-//! resolution metadata. The user prefers a shown default over a blank; for images DPI is informational anyway (Audiveris
-//! recognizes at native pixel resolution). The QML dialog uses this same value for the "(~N dpi, default)" suffix.
+//! DPI shown (clearly labelled "(assumed)") on the intake dialog's Resolution line when an image carries no real
+//! resolution metadata. The user prefers a shown value over a blank; for images DPI is informational anyway (Audiveris
+//! recognizes at native pixel resolution). The QML dialog uses this same value for the "(~N dpi, assumed)" suffix. This
+//! applies to EVERY image type (PNG/JPG/TIFF/BMP/GIF) whose metadata is truly absent -- including a no-pHYs PNG, which
+//! must read "~300 dpi, assumed", never Qt's back-filled 96. "assumed" is the right word for an image (an informational
+//! guess); the PDF path's separate "(..., default)" wording means a real applied rasterization tier and is left alone.
 static constexpr int DEFAULT_IMAGE_DPI = 300;
 
 namespace {
@@ -66,6 +69,11 @@ namespace {
 //! sit near the end of the file; a TIFF larger than this can't be walked safely, so the inspector reports failure and
 //! the caller shows the page range (never hides pages).
 static constexpr qint64 TIFF_MAX_READ_BYTES = 128LL * 1024 * 1024;
+
+//! Read cap for the PNG/JPEG/BMP metadata byte-scan. Resolution metadata lives in the file HEADER -- a PNG pHYs chunk
+//! precedes the first IDAT, a JPEG JFIF/EXIF segment sits in the leading APPn markers, a BMP DIB header is at the very
+//! start -- so a few MB always contains it when present; a real scan's pixel data (tens of MB) need never be read.
+static constexpr qint64 IMAGE_META_READ_BYTES = 4LL * 1024 * 1024;
 
 //! Little/big-endian 16- and 32-bit readers for the TIFF byte-scan. Callers guarantee the bounds.
 static uint32_t rdU16(const QByteArray& d, int64_t pos, bool le)
@@ -273,6 +281,298 @@ static bool readTiffInfo(const QByteArray& d, int& outFrames, int& outWidth, int
     outDpi = dpi;
 
     return true;
+}
+
+//! In-house PNG resolution reader: byte-scan the chunk stream for the pHYs chunk. A pHYs chunk with unit specifier == 1
+//! (metres) and a nonzero pixels-per-unit-X yields the real DPI (round(ppuX * 0.0254)); pHYs absent, or unit == 0
+//! (aspect-ratio only, no physical resolution), returns 0 (truly absent). We deliberately do NOT trust
+//! QImage::dotsPerMeterX(): this Qt kit BACK-FILLS 96 dpi for a metadata-less PNG, so it cannot tell "measured 96" from
+//! "no metadata". pHYs always precedes IDAT, so a small header read contains it whenever it is present.
+static int readPngDpi(const QByteArray& d)
+{
+    static const unsigned char kSig[8] = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+    if (d.size() < 8)
+    {
+        return 0;
+    }
+
+    for (int i = 0; i < 8; ++i)
+    {
+        if (static_cast<uint8_t>(d.at(i)) != kSig[i])
+        {
+            return 0;
+        }
+    }
+
+    int64_t pos = 8;
+    while (pos + 8 <= d.size())
+    {
+        const uint32_t len = rdU32(d, pos, false);
+        const int64_t typePos = pos + 4;
+        const char t0 = d.at(static_cast<int>(typePos));
+        const char t1 = d.at(static_cast<int>(typePos + 1));
+        const char t2 = d.at(static_cast<int>(typePos + 2));
+        const char t3 = d.at(static_cast<int>(typePos + 3));
+        const int64_t dataPos = typePos + 4;
+
+        if (t0 == 'p' && t1 == 'H' && t2 == 'Y' && t3 == 's')
+        {
+            if (dataPos + 9 > d.size())
+            {
+                return 0;
+            }
+
+            const uint32_t ppuX = rdU32(d, dataPos, false);
+            const uint8_t unit = static_cast<uint8_t>(d.at(static_cast<int>(dataPos + 8)));
+            if (unit == 1 && ppuX > 0)
+            {
+                return static_cast<int>(static_cast<double>(ppuX) * 0.0254 + 0.5);
+            }
+
+            return 0;   // unit 0 == aspect ratio only (no physical DPI)
+        }
+
+        if (t0 == 'I' && t1 == 'D' && t2 == 'A' && t3 == 'T')
+        {
+            return 0;   // reached image data without a pHYs chunk -> no metadata
+        }
+
+        //! Advance to the next chunk: 4 (length) + 4 (type) + len (data) + 4 (CRC).
+        pos = dataPos + static_cast<int64_t>(len) + 4;
+    }
+
+    return 0;
+}
+
+//! Parse a mini-TIFF block (the payload of a JPEG EXIF APP1 segment) for IFD0's XResolution (tag 282) + ResolutionUnit
+//! (tag 296), returning the resolved DPI or 0 when absent/unparseable. tiffStart points at the "II"/"MM" byte-order mark;
+//! all offsets inside the block are relative to it. Only inch (unit 2) and cm (unit 3) yield a value (cm -> inch x 2.54).
+static int parseExifDpi(const QByteArray& d, int64_t tiffStart)
+{
+    if (tiffStart < 0 || tiffStart + 8 > d.size())
+    {
+        return 0;
+    }
+
+    const QByteArray bo = d.mid(static_cast<int>(tiffStart), 2);
+    bool le = false;
+    if (bo == "II")
+    {
+        le = true;
+    }
+    else if (bo == "MM")
+    {
+        le = false;
+    }
+    else
+    {
+        return 0;
+    }
+
+    if (rdU16(d, tiffStart + 2, le) != 42)
+    {
+        return 0;
+    }
+
+    const int64_t ifdOff = tiffStart + static_cast<int64_t>(rdU32(d, tiffStart + 4, le));
+    if (ifdOff < 0 || ifdOff + 2 > d.size())
+    {
+        return 0;
+    }
+
+    const uint32_t entries = rdU16(d, ifdOff, le);
+    uint32_t xNum = 0;
+    uint32_t xDen = 0;
+    uint32_t unit = 0;
+    for (uint32_t i = 0; i < entries; ++i)
+    {
+        const int64_t eo = ifdOff + 2 + static_cast<int64_t>(i) * 12;
+        if (eo + 12 > d.size())
+        {
+            break;
+        }
+
+        const uint32_t tag = rdU16(d, eo, le);
+        const uint32_t typ = rdU16(d, eo + 2, le);
+        if (tag == 282 && typ == 5)            // XResolution (RATIONAL): value field is an offset to num/den
+        {
+            const int64_t ro = tiffStart + static_cast<int64_t>(rdU32(d, eo + 8, le));
+            if (ro >= 0 && ro + 8 <= d.size())
+            {
+                xNum = rdU32(d, ro, le);
+                xDen = rdU32(d, ro + 4, le);
+            }
+        }
+        else if (tag == 296 && typ == 3)       // ResolutionUnit (SHORT): 1=none, 2=inch, 3=cm (inline)
+        {
+            unit = rdU16(d, eo + 8, le);
+        }
+    }
+
+    if ((unit == 2 || unit == 3) && xNum != 0 && xDen != 0)
+    {
+        const double perUnit = static_cast<double>(xNum) / static_cast<double>(xDen);
+        const double perInch = (unit == 3) ? (perUnit * 2.54) : perUnit;
+        return static_cast<int>(perInch + 0.5);
+    }
+
+    return 0;
+}
+
+//! In-house JPEG resolution reader: scan the APPn marker segments (up to SOS) for a real physical resolution. Primary
+//! source is the JFIF APP0 density (units 1=dpi / 2=dpcm with a nonzero X density); fallback is the EXIF APP1
+//! XResolution/ResolutionUnit. Returns the resolved DPI, or 0 when neither carries one (JFIF units 0 == aspect-ratio
+//! only). Standalone markers (SOI/EOI/RSTn/TEM) have no length segment; everything else does (big-endian, includes the
+//! 2 length bytes). Matches the TIFF philosophy: a value here is genuinely measured, never Qt's back-filled guess.
+static int readJpegDpi(const QByteArray& d)
+{
+    const int64_t n = d.size();
+    if (n < 4)
+    {
+        return 0;
+    }
+
+    if (static_cast<uint8_t>(d.at(0)) != 0xFF || static_cast<uint8_t>(d.at(1)) != 0xD8)
+    {
+        return 0;
+    }
+
+    int exifDpi = 0;
+    int64_t pos = 2;
+    while (pos + 2 <= n)
+    {
+        if (static_cast<uint8_t>(d.at(static_cast<int>(pos))) != 0xFF)
+        {
+            break;
+        }
+
+        uint8_t marker = static_cast<uint8_t>(d.at(static_cast<int>(pos + 1)));
+        pos += 2;
+
+        //! Skip any fill 0xFF bytes between a marker's prefix and its code.
+        while (marker == 0xFF && pos < n)
+        {
+            marker = static_cast<uint8_t>(d.at(static_cast<int>(pos)));
+            ++pos;
+        }
+
+        //! Standalone markers (no length segment): SOI/EOI, RST0-7, TEM.
+        if (marker == 0xD8 || marker == 0xD9 || (marker >= 0xD0 && marker <= 0xD7) || marker == 0x01)
+        {
+            continue;
+        }
+
+        if (marker == 0xDA)   // SOS: entropy-coded data follows; stop header scan
+        {
+            break;
+        }
+
+        if (pos + 2 > n)
+        {
+            break;
+        }
+
+        const int segLen = static_cast<int>(rdU16(d, pos, false));
+        if (segLen < 2)
+        {
+            break;
+        }
+
+        const int64_t dataPos = pos + 2;
+        const int64_t dataLen = static_cast<int64_t>(segLen) - 2;
+
+        if (marker == 0xE0 && dataPos + 12 <= n)   // APP0 (JFIF)
+        {
+            if (d.at(static_cast<int>(dataPos)) == 'J' && d.at(static_cast<int>(dataPos + 1)) == 'F'
+                && d.at(static_cast<int>(dataPos + 2)) == 'I' && d.at(static_cast<int>(dataPos + 3)) == 'F'
+                && d.at(static_cast<int>(dataPos + 4)) == '\0')
+            {
+                const uint8_t units = static_cast<uint8_t>(d.at(static_cast<int>(dataPos + 7)));
+                const uint32_t xden = rdU16(d, dataPos + 8, false);
+                if (units == 1 && xden > 0)
+                {
+                    return static_cast<int>(xden);
+                }
+
+                if (units == 2 && xden > 0)
+                {
+                    return static_cast<int>(static_cast<double>(xden) * 2.54 + 0.5);
+                }
+
+                //! units == 0 -> aspect ratio only; keep scanning for an EXIF APP1 that may carry a real resolution.
+            }
+        }
+        else if (marker == 0xE1 && dataPos + 6 <= n)   // APP1 (EXIF)
+        {
+            if (d.at(static_cast<int>(dataPos)) == 'E' && d.at(static_cast<int>(dataPos + 1)) == 'x'
+                && d.at(static_cast<int>(dataPos + 2)) == 'i' && d.at(static_cast<int>(dataPos + 3)) == 'f'
+                && d.at(static_cast<int>(dataPos + 4)) == '\0' && d.at(static_cast<int>(dataPos + 5)) == '\0')
+            {
+                const int found = parseExifDpi(d, dataPos + 6);
+                if (found > 0 && exifDpi == 0)
+                {
+                    exifDpi = found;
+                }
+            }
+        }
+
+        pos = dataPos + dataLen;
+    }
+
+    return exifDpi;
+}
+
+//! In-house BMP resolution reader: the DIB header's biXPelsPerMeter (pixels per metre, little-endian signed LONG at byte
+//! offset 38, present from BITMAPINFOHEADER onward). Nonzero -> real DPI (round(xppm * 0.0254)); zero/absent, or a core
+//! header too short to carry it, returns 0 (absent).
+static int readBmpDpi(const QByteArray& d)
+{
+    if (d.size() < 42)
+    {
+        return 0;
+    }
+
+    if (d.at(0) != 'B' || d.at(1) != 'M')
+    {
+        return 0;
+    }
+
+    const uint32_t dibSize = rdU32(d, 14, true);
+    if (dibSize < 40)
+    {
+        return 0;   // BITMAPCOREHEADER (12) has no pixels-per-metre fields
+    }
+
+    const int32_t xppm = static_cast<int32_t>(rdU32(d, 38, true));
+    if (xppm > 0)
+    {
+        return static_cast<int>(static_cast<double>(xppm) * 0.0254 + 0.5);
+    }
+
+    return 0;
+}
+
+//! Dispatch a non-TIFF image's bytes to the matching in-house resolution reader. Returns the genuinely-measured embedded
+//! DPI, or 0 when the file carries none (GIF -- and any unrecognised suffix -- has no physical-resolution concept). TIFF
+//! is handled separately by readTiffInfo (the kit ships no TIFF plugin). suffix is io::suffix (lower-cased, no dot).
+static int readImageDpi(const QByteArray& d, const std::string& suffix)
+{
+    if (suffix == "png")
+    {
+        return readPngDpi(d);
+    }
+
+    if (suffix == "jpg" || suffix == "jpeg")
+    {
+        return readJpegDpi(d);
+    }
+
+    if (suffix == "bmp")
+    {
+        return readBmpDpi(d);
+    }
+
+    return 0;
 }
 }
 
@@ -659,20 +959,25 @@ ImportPdfController::ImageInfo ImportPdfController::inspectImage(const muse::io:
     info.width = qtWidth > 0 ? qtWidth : (tiffOk ? tiffWidth : 0);
     info.height = qtHeight > 0 ? qtHeight : (tiffOk ? tiffHeight : 0);
 
-    //! Embedded DPI for the header's resolution line. For non-TIFF images, QImage::dotsPerMeterX() is 0 when the file
-    //! carries NO resolution metadata (the Qt default), and non-zero only when the format actually stored one (a PNG
-    //! pHYs chunk, a JPEG JFIF/EXIF density) -- so a value > 0 is real, measured metadata converted to dpi. For TIFF (no
-    //! Qt plugin), the in-house IFD walk reads the RATIONAL resolution tags (282/283/296). In BOTH cases embeddedDpi stays
-    //! 0 when no real metadata is present; the dialog then shows a clearly-labelled default (never a silently-invented
-    //! measurement). embeddedDpi > 0 therefore always means a genuinely measured value.
+    //! Embedded DPI for the header's resolution line, determined by PARSING THE FILE BYTES -- not by trusting Qt. For a
+    //! non-TIFF image we byte-scan for real resolution metadata (PNG pHYs chunk, JPEG JFIF/EXIF density, BMP
+    //! biXPelsPerMeter; GIF has none). We deliberately do NOT use QImage::dotsPerMeterX(): this Qt kit BACK-FILLS 96 dpi
+    //! for a PNG with no pHYs chunk, so dotsPerMeterX() cannot distinguish "measured 96" from "no metadata" and would
+    //! show a bogus (~96 dpi) as if measured. For TIFF (no Qt plugin) the in-house IFD walk reads the RATIONAL tags
+    //! (282/283/296). In BOTH cases embeddedDpi stays 0 when no real metadata is present; the dialog then shows the
+    //! clearly-labelled "assumed" default (never a silently-invented measurement). embeddedDpi > 0 always means a value
+    //! genuinely read from the file.
     if (!isTiff)
     {
-        const QImage probe(path.toQString());
-        const int dpmX = probe.dotsPerMeterX();
-        if (dpmX > 0)
+        QByteArray imgData;
+        QFile imgFile(path.toQString());
+        if (imgFile.open(QIODevice::ReadOnly))
         {
-            info.embeddedDpi = qRound(dpmX * 0.0254);
+            imgData = imgFile.read(IMAGE_META_READ_BYTES);
+            imgFile.close();
         }
+
+        info.embeddedDpi = readImageDpi(imgData, suffix);
     }
     else if (tiffOk && tiffDpi > 0)
     {
@@ -693,7 +998,8 @@ ImportPdfController::ImageInfo ImportPdfController::inspectImage(const muse::io:
     }
 
     //! Resolved DPI the dialog's Resolution line will show: the measured embeddedDpi when present, else the labelled
-    //! default. dpiSource proves (headlessly, from the log) which path fired -- measured via metadata/IFD tags vs default.
+    //! "assumed" default (300, uniform across every image type). dpiSource proves (headlessly, from the log) which path
+    //! fired -- measured (real metadata found in the file) vs assumed (none present). For images it is measured|assumed.
     const bool dpiMeasured = info.embeddedDpi > 0;
     const int resolvedDpi = dpiMeasured ? info.embeddedDpi : DEFAULT_IMAGE_DPI;
 
@@ -705,7 +1011,7 @@ ImportPdfController::ImageInfo ImportPdfController::inspectImage(const muse::io:
            << " resolution=" << info.width << "x" << info.height
            << " embeddedDpi=" << info.embeddedDpi
            << " resolvedDpi=" << resolvedDpi
-           << " dpiSource=" << (dpiMeasured ? "measured" : "default");
+           << " dpiSource=" << (dpiMeasured ? "measured" : "assumed");
 
     return info;
 }
