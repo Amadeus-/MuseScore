@@ -22,6 +22,8 @@
 
 #include "importpdfcontroller.h"
 
+#include <QImageReader>
+#include <QSize>
 #include <QString>
 #include <QVariant>
 #include <QVariantMap>
@@ -37,6 +39,12 @@
 using namespace mu;
 using namespace mu::reprise;
 using namespace muse;
+
+//! Audiveris (org.audiveris.omr.sheet.SheetStub, constant maxPixelCount) rejects any sheet whose pixel count exceeds
+//! this cap and aborts the whole run with "Too large image: N pixels (vs 20,000,000 max)". Confirmed empirically
+//! against Audiveris 5.11.0 (a 6000x6000 = 36,000,000-pixel image produced exactly that log line). We mirror the cap
+//! so Reprise can block an oversized image BEFORE launching Audiveris.
+static constexpr qint64 AUDIVERIS_MAX_PIXELS = 20000000;
 
 void ImportPdfController::init()
 {
@@ -79,6 +87,17 @@ muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
         if (!fileSystem()->exists(pdfPath))
         {
             return make_ret(Ret::Code::UnknownError, "Scan not found: " + headlessPath);
+        }
+
+        //! Oversized-image pre-flight (image inputs only). Block up front so the MCP/API caller gets a clean error
+        //! rather than a raw Audiveris exit code. Also mirror it into the progress tracker so reprise.get-import-errors
+        //! surfaces it, since this early return never reaches the popup view-model that normally reports failures.
+        const muse::Ret sizeRet = preflightImageSize(pdfPath);
+        if (!sizeRet)
+        {
+            importProgressTracker()->reportStarted(pdfPath.toStdString());
+            importProgressTracker()->reportFinished(false, sizeRet.text(), std::string());
+            return sizeRet;
         }
 
         std::string pages = params.at("pages").toString();
@@ -144,9 +163,33 @@ muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
         LOGI() << "Reprise PDF detect: no embedded resolution found -> tier " << preselectTier << " (Standard, no badge)";
     }
 
-    //! A single image (png/jpg/tif/...) has no page range and no PDF-resolution tier to pick, so the intake dialog
-    //! hides those controls. Derive from the picked file's extension (io::suffix is lower-cased, no dot).
+    //! A single image (png/jpg/tif/...) has no PDF-resolution tier to pick, so the intake dialog hides that control.
+    //! Derive from the picked file's extension (io::suffix is lower-cased, no dot).
     const bool isImage = io::suffix(pdfPath) != "pdf";
+
+    //! Oversized-image pre-flight (image inputs only; PDFs are skipped inside the helper). Block up front with a clear
+    //! dialog instead of showing the options dialog and then letting Audiveris abort mid-run with a raw exit code.
+    const muse::Ret sizeRet = preflightImageSize(pdfPath);
+    if (!sizeRet)
+    {
+        interactive()->warning(muse::trc("reprise", "Scan too large"), sizeRet.text(),
+                               { interactive()->buttonData(IInteractive::Button::Ok) });
+        return make_ret(Ret::Code::Cancel);
+    }
+
+    //! How many sheets this input has: a PDF's page range always applies; an image is normally a single sheet, EXCEPT
+    //! a multi-frame TIFF, which Audiveris treats as multiple sheets. imageCount() reports the frame count (>=1 after
+    //! the clamp). The dialog shows the page-range field when !isImage (PDF) OR the image has more than one frame.
+    int imagePageCount = 0;
+    if (isImage)
+    {
+        QImageReader reader(pdfPath.toQString());
+        imagePageCount = reader.imageCount();
+        if (imagePageCount < 1)
+        {
+            imagePageCount = 1;
+        }
+    }
 
     //! Intake dialog: page range (free-form) + a Faster/Standard/Best quality tier. Cancel discards the import.
     UriQuery query("musescore://reprise/importpdf/options");
@@ -154,6 +197,7 @@ muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
     query.addParam("tier", Val(preselectTier));
     query.addParam("matched", Val(detected.matched));
     query.addParam("isImage", Val(isImage));
+    query.addParam("imagePageCount", Val(imagePageCount));
 
     const RetVal<Val> dialog = interactive()->openSync(query);
     if (!dialog.ret)
@@ -192,6 +236,54 @@ void ImportPdfController::launchImport(const muse::io::path_t& pdfPath, const st
     progressQuery.addParam("dpi", Val(dpi));
 
     interactive()->open(progressQuery);
+}
+
+muse::Ret ImportPdfController::preflightImageSize(const muse::io::path_t& path) const
+{
+    //! PDFs are rasterised by Audiveris at a chosen DPI (the quality tier), so their on-disk content has no fixed
+    //! pixel count to pre-flight here. Only direct image inputs have fixed pixel dimensions.
+    if (io::suffix(path) == "pdf")
+    {
+        return make_ok();
+    }
+
+    //! A multi-frame TIFF is several sheets, each of which Audiveris checks independently; iterate the frames and let
+    //! the largest decide. size() reads the dimensions from the header without decoding the pixels (so this stays cheap
+    //! and never has to load the very image we are trying to reject). A frame whose size can't be read is skipped.
+    QImageReader reader(path.toQString());
+    int frames = reader.imageCount();
+    if (frames < 1)
+    {
+        frames = 1;
+    }
+
+    qint64 maxPixels = 0;
+    for (int i = 0; i < frames; ++i)
+    {
+        reader.jumpToImage(i);
+        const QSize size = reader.size();
+        if (size.isValid())
+        {
+            const qint64 pixels = static_cast<qint64>(size.width()) * static_cast<qint64>(size.height());
+            if (pixels > maxPixels)
+            {
+                maxPixels = pixels;
+            }
+        }
+    }
+
+    if (maxPixels > AUDIVERIS_MAX_PIXELS)
+    {
+        const QString message = muse::qtrc("reprise",
+                                           "This scan is too large to recognize (%1 megapixels). The maximum is "
+                                           "20 megapixels (20,000,000 pixels). Please use a lower-resolution scan.")
+                                .arg(QString::number(double(maxPixels) / 1000000.0, 'f', 1));
+        LOGW() << "Reprise: image pre-flight blocked oversized scan: " << maxPixels << " pixels (vs "
+               << AUDIVERIS_MAX_PIXELS << " max): " << path.toQString();
+        return make_ret(Ret::Code::UnknownError, message.toStdString());
+    }
+
+    return make_ok();
 }
 
 muse::RetVal<GetImportProgressCommand::Output> ImportPdfController::getImportProgress() const

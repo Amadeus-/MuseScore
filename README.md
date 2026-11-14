@@ -11,7 +11,7 @@ of sheet music, runs optical music recognition (OMR) with
 workflow to correct the result and export clean **MusicXML** — or hand the score
 onward to MuseScore to finish.
 
-> **Pre-release (0.8.0) — work in progress.** Reprise is early software under
+> **Pre-release (0.9.0) — work in progress.** Reprise is early software under
 > active development. Expect rough edges and changing behavior.
 
 See [`CHANGELOG.md`](CHANGELOG.md) for the version history.
@@ -35,10 +35,11 @@ compatibility.
 ## Features
 
 **Working now**
-- **Import PDF** — *File ▸ Import PDF* (or the **New** tile) runs Audiveris OMR on a
-  PDF and opens the recognized score. Pick a page range (`all`, `1-5`, `1,3,8`) and a
-  **Recognition quality** — *Faster / Standard / Best*. Reprise reads the PDF's own
-  resolution and pre-selects the matching quality for you.
+- **Import a PDF or image** — *File ▸ Import Scan* (or the **New** tile) runs Audiveris
+  OMR on a PDF or a scan image (PNG/JPG/JPEG/TIFF/BMP/GIF) and opens the recognized score.
+  Pick a page range (`all`, `1-5`, `1,3,8`) and a **Recognition quality** — *Faster /
+  Standard / Best*. Reprise reads the PDF's own resolution and pre-selects the matching
+  quality for you.
 - **Live recognition progress** — a progress window shows each page as Audiveris
   works, with a recognition log and a cancel option.
 - **Streamlined, correction-focused UI** — the interface is pared down around

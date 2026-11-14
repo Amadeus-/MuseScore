@@ -70,6 +70,13 @@ private:
     //! view-model owns the Audiveris run + import). Also seeds the progress tracker so a poll sees it immediately.
     void launchImport(const muse::io::path_t& pdfPath, const std::string& pages, int dpi);
 
+    //! Pre-flight the pixel size of an IMAGE input (PDFs are skipped -- Audiveris rasterises them at a chosen DPI, so
+    //! there is no fixed pixel count to check). Mirrors Audiveris' SheetStub maxPixelCount cap (default 20,000,000):
+    //! a multi-frame TIFF is multiple sheets, so every frame is checked and the largest decides. Returns an error Ret
+    //! (with a clear message) when a sheet exceeds the cap, so BOTH the interactive dialog and the headless/MCP caller
+    //! can block the run up front instead of letting Audiveris abort mid-run with a raw non-zero exit code.
+    muse::Ret preflightImageSize(const muse::io::path_t& path) const;
+
     //! Read-only MCP/API queries backed by the shared progress tracker.
     muse::RetVal<GetImportProgressCommand::Output> getImportProgress() const;
     muse::RetVal<GetImportErrorsCommand::Output> getImportErrors() const;

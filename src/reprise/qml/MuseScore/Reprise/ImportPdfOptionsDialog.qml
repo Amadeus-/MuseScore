@@ -37,10 +37,18 @@ StyledDialogView {
     property int tier: 300
     property bool matched: false
 
-    //! True when the picked file is a single image (not a PDF): the controller derives this from the file extension.
-    //! When set, the page-range and recognition-quality controls are hidden (an image is a single sheet with no
-    //! PDF resolution to pick); submit() still returns the seeded defaults (pages "all", tier 300).
+    //! True when the picked file is an image (not a PDF): the controller derives this from the file extension. When set,
+    //! the recognition-quality tier is always hidden (an image has no PDF resolution to pick); submit() keeps the
+    //! seeded default tier 300.
     property bool isImage: false
+
+    //! Frame count of an image input (0/irrelevant for a PDF). A single image is one sheet, but a multi-frame TIFF is
+    //! several, so the page-range field is shown when !isImage (PDF) OR the image has more than one frame; it is hidden
+    //! only for a genuine single-page image, in which case submit() defaults pages to "all".
+    property int imagePageCount: 0
+
+    //! Whether the page-range controls (the instruction label + the "Pages:" row) are shown. See imagePageCount.
+    readonly property bool showPageRange: !root.isImage || root.imagePageCount > 1
 
     objectName: "ImportPdfOptionsDialog"
 
@@ -111,8 +119,8 @@ StyledDialogView {
         StyledTextLabel {
             width: parent.width
 
-            //! Page-range instruction: a single image is one sheet, so this (and the Pages row below) is PDF-only.
-            visible: !root.isImage
+            //! Page-range instruction: shown for a PDF or a multi-frame TIFF; hidden for a single-page image.
+            visible: root.showPageRange
 
             text: qsTrc("reprise", "Please enter the range of pages to open from this scan.")
             horizontalAlignment: Text.AlignLeft
@@ -123,8 +131,9 @@ StyledDialogView {
             width: parent.width
             spacing: 8
 
-            //! Page-range picker: hidden for a single image (treated as one page; submit() defaults pages to "all").
-            visible: !root.isImage
+            //! Page-range picker: shown for a PDF or a multi-frame TIFF; hidden for a single-page image (treated as one
+            //! page; submit() defaults pages to "all").
+            visible: root.showPageRange
 
             StyledTextLabel {
                 anchors.verticalCenter: parent.verticalCenter

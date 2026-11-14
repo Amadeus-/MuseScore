@@ -8,6 +8,23 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-11-13
+
+### Added
+- **Import image files (PNG / JPG / JPEG / TIFF / BMP / GIF) alongside PDF** via Open, New,
+  and the MCP `reprise.import-pdf` tool — the same Audiveris recognition path now accepts a
+  plain scan image, not just a PDF.
+- **Multi-page TIFF page selection**: a multi-frame TIFF is treated as multiple sheets, and the
+  page-range field appears for it just as it does for a PDF (single-page images skip it).
+- **Oversized-image pre-flight**: an image whose pixel count exceeds the recognizer's limit
+  (20 megapixels) is now blocked up front with a clear message, in both the dialog and the MCP
+  tool, instead of failing mid-recognition with a raw Audiveris exit code.
+
+### Changed
+- **"Import PDF" renamed to "Import Scan"** throughout the intake flow.
+- **The recognition-quality tier and the page-range field are hidden for single-image inputs**
+  (an image has no PDF resolution to pick and is a single sheet).
+
 ## [0.8.0] — 2026-11-13
 
 ### Added
@@ -207,6 +224,7 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.9.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.8.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.7.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.6.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
