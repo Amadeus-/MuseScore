@@ -111,3 +111,5 @@ compile_commands.json
 /test/rochut-1page.pdf
 /test/rochut-oversized.png
 /test/reprise-oversized.tif
+/test/rochut-nodpi.png
+/test/rochut-tagged300.tif
