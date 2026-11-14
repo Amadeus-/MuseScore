@@ -334,13 +334,14 @@ StyledDialogView {
             width: parent.width
 
             //! "Why" caption for the tier match: PDF-only. When the detect matched, it names the detected native dpi
-            //! that drove the pre-selected tier; otherwise it explains the Standard fallback. Muted (secondary color).
+            //! that drove the pre-selected tier; otherwise it explains the Standard fallback. On the PRIMARY fontColor so
+            //! it stays legible in both themes (it was formerly on the nearly-invisible fontSecondaryColor).
             visible: !root.isImage
 
             text: root.matched
                   ? qsTrc("reprise", "Matched to your scan - this PDF is about %1 dpi.").arg(root.detectedDpi)
                   : qsTrc("reprise", "No scan resolution detected in this PDF - using Standard.")
-            color: ui.theme.fontSecondaryColor
+            color: ui.theme.fontColor
             horizontalAlignment: Text.AlignLeft
             wrapMode: Text.Wrap
         }

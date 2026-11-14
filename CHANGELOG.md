@@ -8,6 +8,15 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.9.5] — 2026-11-13
+
+### Fixed
+- **Import Scan dialog "why" caption is now legible**: the PDF matched-resolution caption
+  (and its "No scan resolution detected" sibling) was the last text in the dialog still drawn
+  in a secondary font color that rendered nearly invisible in this theme. It now uses the
+  primary font color, so every line in the Import Scan dialog reads clearly in both light and
+  dark themes.
+
 ## [0.9.4] — 2026-11-13
 
 ### Fixed
@@ -280,6 +289,7 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.9.5]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.4]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.3]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.2]: https://github.com/Amadeus-/Reprise/tree/reprise-main
