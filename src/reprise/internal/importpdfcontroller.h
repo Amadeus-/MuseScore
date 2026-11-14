@@ -77,6 +77,27 @@ private:
     //! can block the run up front instead of letting Audiveris abort mid-run with a raw non-zero exit code.
     muse::Ret preflightImageSize(const muse::io::path_t& path) const;
 
+    //! Everything the intake dialog needs to decide what to show, computed ONCE in C++ so the decision is a single
+    //! source of truth that is also logged (see inspectImage). pageCount is the reliable multi-frame count for an image
+    //! (QImageReader::imageCount() under-reports some TIFFs) or the PDF page count (0 == unknown). width/height are the
+    //! image's native pixel dimensions (0 for a PDF). showPageRange is the final decision: show the page-range field.
+    struct ImageInfo
+    {
+        bool isImage = false;
+        int pageCount = 1;
+        bool pdfConfident = false;
+        int width = 0;
+        int height = 0;
+        bool showPageRange = true;
+    };
+
+    //! Inspect the picked input and LOG the intake-dialog decision values, so a HEADLESS/MCP import makes the dialog's
+    //! show/hide logic observable in the log without a GUI. For an image: reliable frame count + native resolution ->
+    //! showPageRange = (frames > 1). For a PDF: in-house page count -> showPageRange = NOT (confidently a single page),
+    //! so an uncertain count still shows the range and never silently drops pages. Called by BOTH the interactive and
+    //! headless paths.
+    ImageInfo inspectImage(const muse::io::path_t& path, bool isImage) const;
+
     //! Read-only MCP/API queries backed by the shared progress tracker.
     muse::RetVal<GetImportProgressCommand::Output> getImportProgress() const;
     muse::RetVal<GetImportErrorsCommand::Output> getImportErrors() const;

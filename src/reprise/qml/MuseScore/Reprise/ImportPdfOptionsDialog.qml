@@ -39,16 +39,22 @@ StyledDialogView {
 
     //! True when the picked file is an image (not a PDF): the controller derives this from the file extension. When set,
     //! the recognition-quality tier is always hidden (an image has no PDF resolution to pick); submit() keeps the
-    //! seeded default tier 300.
+    //! seeded default tier 300. The tier is shown for ALL PDFs (it drives PDF rasterization).
     property bool isImage: false
 
-    //! Frame count of an image input (0/irrelevant for a PDF). A single image is one sheet, but a multi-frame TIFF is
-    //! several, so the page-range field is shown when !isImage (PDF) OR the image has more than one frame; it is hidden
-    //! only for a genuine single-page image, in which case submit() defaults pages to "all".
-    property int imagePageCount: 0
+    //! Whether the page-range controls (the instruction label + the "Pages:" row) are shown. The controller decides this
+    //! (single source of truth, also logged): shown for a multi-page PDF or a multi-frame TIFF; HIDDEN for a single image
+    //! and for a confidently-single-page PDF. When hidden, submit() defaults pages to "all".
+    property bool showPageRange: true
 
-    //! Whether the page-range controls (the instruction label + the "Pages:" row) are shown. See imagePageCount.
-    readonly property bool showPageRange: !root.isImage || root.imagePageCount > 1
+    //! Native pixel dimensions of a single-image input, passed by the controller for the read-only resolution info line
+    //! (0 for a PDF or when the dimensions could not be read).
+    property int imageWidth: 0
+    property int imageHeight: 0
+
+    //! The read-only resolution info line is shown only for a SINGLE image (an image with the page range hidden): a
+    //! multi-frame TIFF shows the page range instead, and a PDF shows the quality tier.
+    readonly property bool showImageInfo: root.isImage && !root.showPageRange && root.imageWidth > 0 && root.imageHeight > 0
 
     objectName: "ImportPdfOptionsDialog"
 
@@ -162,6 +168,18 @@ StyledDialogView {
                 text: qsTrc("reprise", "(e.g. all, 1-5, 1,3,8)")
                 opacity: 0.6
             }
+        }
+
+        StyledTextLabel {
+            width: parent.width
+
+            //! Read-only scan-resolution info for a single image (an image has no quality tier to pick, so this reports
+            //! the scan's native pixel dimensions instead). Display-only: submit() returns pages "all" + the default tier.
+            visible: root.showImageInfo
+
+            text: qsTrc("reprise", "Scan: %1 x %2 px (native resolution)").arg(root.imageWidth).arg(root.imageHeight)
+            horizontalAlignment: Text.AlignLeft
+            wrapMode: Text.Wrap
         }
 
         StyledTextLabel {

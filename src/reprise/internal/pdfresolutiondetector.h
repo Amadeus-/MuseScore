@@ -43,4 +43,20 @@ PdfResolutionResult detectPdfResolution(const muse::io::path_t& pdfPath);
 
 //! Snap an arbitrary dpi to the nearest recognition tier: one of 200 (Faster) / 300 (Standard) / 400 (Best).
 int32_t snapToTier(int32_t dpi);
+
+//! Result of counting a PDF's pages by an in-house byte-scan (no QtPdf in the kit). confident == true ONLY when the
+//! whole file was read, no compressed object streams were present, and at least one page LEAF object was cleanly
+//! found; in that case pageCount is the number of page objects. Any uncertainty (file larger than the read cap, an
+//! /ObjStm compressed object stream, or no page objects found) returns confident == false, pageCount == 0. The caller
+//! must SHOW the page range whenever confident is false, so pages are never silently dropped.
+struct PdfPageCountResult
+{
+    int32_t pageCount = 0;
+    bool confident = false;
+};
+
+//! Count a PDF's pages by scanning for "/Type /Page" leaf objects (deliberately NOT "/Type /Pages", the page-tree
+//! node). Reliable for simple, uncompressed PDFs; a PDF-1.5 compressed object stream (/ObjStm) hides page objects from
+//! a naive scan, so that case returns confident == false. See PdfPageCountResult for the full confidence contract.
+PdfPageCountResult detectPdfPageCount(const muse::io::path_t& pdfPath);
 }

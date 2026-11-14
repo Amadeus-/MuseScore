@@ -40,6 +40,20 @@ static constexpr int32_t MAX_SANE_DPI = 1200;
 //! Window (bytes) searched around a "/Subtype /Image" marker for that image dict's /Width and /Height.
 static constexpr int64_t IMAGE_DICT_WINDOW = 4096;
 
+//! Read cap for page counting: large enough to cover a whole typical scanned PDF so an uncompressed "/Type /Page" scan
+//! is complete. A file bigger than this cannot be counted confidently (a page object could live past the cap), so the
+//! page counter reports not-confident and the caller shows the page range.
+static constexpr int64_t MAX_PAGECOUNT_READ_BYTES = 64 * 1024 * 1024;
+
+//! True for PDF whitespace or any PDF delimiter -- used as a token boundary so "/Page" is not matched inside "/PageX"
+//! and "/Pages" is told apart from "/Page".
+static bool isPdfDelimiterOrWs(char c)
+{
+    return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f' || c == '\0'
+           || c == '/' || c == '<' || c == '>' || c == '[' || c == ']' || c == '(' || c == ')'
+           || c == '{' || c == '}' || c == '%';
+}
+
 //! Skip PDF whitespace (incl. NUL and form-feed) forward from pos.
 static int64_t skipWs(const QByteArray& data, int64_t pos)
 {
@@ -258,4 +272,82 @@ int32_t mu::reprise::snapToTier(int32_t dpi)
     }
 
     return best;
+}
+
+PdfPageCountResult mu::reprise::detectPdfPageCount(const muse::io::path_t& pdfPath)
+{
+    PdfPageCountResult result;   // pageCount = 0, confident = false
+
+    QFile file(pdfPath.toQString());
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        return result;
+    }
+
+    const int64_t fileSize = file.size();
+    const QByteArray data = file.read(MAX_PAGECOUNT_READ_BYTES);
+    file.close();
+    if (data.isEmpty())
+    {
+        return result;
+    }
+
+    //! File larger than our read cap: a page object could live past what we read, so we cannot be sure it is a single
+    //! page. Stay unconfident -> the caller shows the page range (safe: never hides pages).
+    if (fileSize > static_cast<int64_t>(data.size()))
+    {
+        return result;
+    }
+
+    //! Compressed object streams (PDF 1.5+) hide page objects from a naive byte scan, so we cannot count reliably.
+    if (data.indexOf("/ObjStm") >= 0)
+    {
+        return result;
+    }
+
+    //! Count page LEAF objects: a "/Type" whose next token is exactly "/Page" (NOT "/Pages", the page-tree node). A
+    //! token boundary after "Page" / "Pages" guards against "/PageLabels"-style false matches.
+    int32_t pageObjs = 0;
+    int from = 0;
+    while (true)
+    {
+        const int idx = data.indexOf("/Type", from);
+        if (idx < 0)
+        {
+            break;
+        }
+
+        from = idx + 5;   // 5 == len("/Type")
+        const int64_t tok = skipWs(data, idx + 5);
+
+        //! "/Pages" (tree node) -> not a page. Checked first so the "/Page" test below never swallows it.
+        if (tok + 6 <= data.size() && QByteArray(data.constData() + tok, 6) == "/Pages")
+        {
+            const char after = tok + 6 < data.size() ? data.at(static_cast<int>(tok + 6)) : ' ';
+            if (isPdfDelimiterOrWs(after))
+            {
+                continue;
+            }
+        }
+
+        if (tok + 5 <= data.size() && QByteArray(data.constData() + tok, 5) == "/Page")
+        {
+            const char after = tok + 5 < data.size() ? data.at(static_cast<int>(tok + 5)) : ' ';
+            if (isPdfDelimiterOrWs(after))
+            {
+                ++pageObjs;
+            }
+        }
+    }
+
+    //! No countable page objects (could be compressed / unusual structure) -> unconfident; caller shows the range.
+    if (pageObjs < 1)
+    {
+        return result;
+    }
+
+    result.pageCount = pageObjs;
+    result.confident = true;
+
+    return result;
 }

@@ -22,6 +22,10 @@
 
 #include "importpdfcontroller.h"
 
+#include <cstdint>
+
+#include <QByteArray>
+#include <QFile>
 #include <QImageReader>
 #include <QSize>
 #include <QString>
@@ -45,6 +49,139 @@ using namespace muse;
 //! against Audiveris 5.11.0 (a 6000x6000 = 36,000,000-pixel image produced exactly that log line). We mirror the cap
 //! so Reprise can block an oversized image BEFORE launching Audiveris.
 static constexpr qint64 AUDIVERIS_MAX_PIXELS = 20000000;
+
+namespace {
+//! Read cap for the in-house TIFF inspector. Large enough to cover a multi-frame scan whose image file directories may
+//! sit near the end of the file; a TIFF larger than this can't be walked safely, so the inspector reports failure and
+//! the caller shows the page range (never hides pages).
+static constexpr qint64 TIFF_MAX_READ_BYTES = 128LL * 1024 * 1024;
+
+//! Little/big-endian 16- and 32-bit readers for the TIFF byte-scan. Callers guarantee the bounds.
+static uint32_t rdU16(const QByteArray& d, int64_t pos, bool le)
+{
+    const uint8_t a = static_cast<uint8_t>(d.at(static_cast<int>(pos)));
+    const uint8_t b = static_cast<uint8_t>(d.at(static_cast<int>(pos + 1)));
+    return le ? (static_cast<uint32_t>(a) | (static_cast<uint32_t>(b) << 8))
+              : (static_cast<uint32_t>(b) | (static_cast<uint32_t>(a) << 8));
+}
+
+static uint32_t rdU32(const QByteArray& d, int64_t pos, bool le)
+{
+    const uint8_t a = static_cast<uint8_t>(d.at(static_cast<int>(pos)));
+    const uint8_t b = static_cast<uint8_t>(d.at(static_cast<int>(pos + 1)));
+    const uint8_t c = static_cast<uint8_t>(d.at(static_cast<int>(pos + 2)));
+    const uint8_t e = static_cast<uint8_t>(d.at(static_cast<int>(pos + 3)));
+    return le ? (static_cast<uint32_t>(a) | (static_cast<uint32_t>(b) << 8)
+                 | (static_cast<uint32_t>(c) << 16) | (static_cast<uint32_t>(e) << 24))
+              : ((static_cast<uint32_t>(a) << 24) | (static_cast<uint32_t>(b) << 16)
+                 | (static_cast<uint32_t>(c) << 8) | static_cast<uint32_t>(e));
+}
+
+//! In-house TIFF inspector: count frames (image file directories) by walking the IFD chain, and read the first frame's
+//! pixel width/height (tags 256/257). This Qt kit ships NO TIFF image plugin, so QImageReader cannot read a TIFF at all
+//! -- hence this plugin-independent fallback. Classic TIFF only (BigTIFF magic 43 -> false). Returns false on any parse
+//! failure (not a classic TIFF, truncated, offset out of range) so the caller treats the frame count as unknown.
+static bool readTiffInfo(const QByteArray& d, int& outFrames, int& outWidth, int& outHeight)
+{
+    if (d.size() < 8)
+    {
+        return false;
+    }
+
+    const QByteArray bo = d.left(2);
+    bool le = false;
+    if (bo == "II")
+    {
+        le = true;
+    }
+    else if (bo == "MM")
+    {
+        le = false;
+    }
+    else
+    {
+        return false;
+    }
+
+    if (rdU16(d, 2, le) != 42)   // 43 == BigTIFF, not handled here
+    {
+        return false;
+    }
+
+    int64_t off = rdU32(d, 4, le);
+    int frames = 0;
+    int width = 0;
+    int height = 0;
+
+    //! Guard caps the walk so a malformed / looping IFD chain can never spin forever.
+    for (int guard = 0; guard < 100000 && off != 0; ++guard)
+    {
+        if (off < 0 || off + 2 > d.size())
+        {
+            return false;
+        }
+
+        const uint32_t entries = rdU16(d, off, le);
+
+        //! First frame only: read ImageWidth (256) / ImageLength (257) for the single-image resolution info line.
+        if (frames == 0)
+        {
+            for (uint32_t i = 0; i < entries; ++i)
+            {
+                const int64_t eo = off + 2 + static_cast<int64_t>(i) * 12;
+                if (eo + 12 > d.size())
+                {
+                    break;
+                }
+
+                const uint32_t tag = rdU16(d, eo, le);
+                const uint32_t typ = rdU16(d, eo + 2, le);
+                if (tag == 256 || tag == 257)
+                {
+                    uint32_t val = 0;
+                    if (typ == 3)
+                    {
+                        val = rdU16(d, eo + 8, le);        // SHORT
+                    }
+                    else if (typ == 4)
+                    {
+                        val = rdU32(d, eo + 8, le);        // LONG
+                    }
+
+                    if (tag == 256)
+                    {
+                        width = static_cast<int>(val);
+                    }
+                    else
+                    {
+                        height = static_cast<int>(val);
+                    }
+                }
+            }
+        }
+
+        const int64_t nextPos = off + 2 + static_cast<int64_t>(entries) * 12;
+        if (nextPos + 4 > d.size())
+        {
+            return false;
+        }
+
+        off = rdU32(d, nextPos, le);
+        ++frames;
+    }
+
+    if (frames < 1)
+    {
+        return false;
+    }
+
+    outFrames = frames;
+    outWidth = width;
+    outHeight = height;
+
+    return true;
+}
+}
 
 void ImportPdfController::init()
 {
@@ -99,6 +236,11 @@ muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
             importProgressTracker()->reportFinished(false, sizeRet.text(), std::string());
             return sizeRet;
         }
+
+        //! Make the intake-dialog show/hide decision observable on the HEADLESS path too (no GUI): this logs the same
+        //! derived values the interactive dialog-prep logs -- pageCount / isMultiPage / willShowPageRange / resolution
+        //! for an image, or pdfPageCount / confident / willShowPageRange for a PDF. The return value is unused here.
+        inspectImage(pdfPath, io::suffix(pdfPath) != "pdf");
 
         std::string pages = params.at("pages").toString();
         if (pages.empty())
@@ -177,27 +319,22 @@ muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
         return make_ret(Ret::Code::Cancel);
     }
 
-    //! How many sheets this input has: a PDF's page range always applies; an image is normally a single sheet, EXCEPT
-    //! a multi-frame TIFF, which Audiveris treats as multiple sheets. imageCount() reports the frame count (>=1 after
-    //! the clamp). The dialog shows the page-range field when !isImage (PDF) OR the image has more than one frame.
-    int imagePageCount = 0;
-    if (isImage)
-    {
-        QImageReader reader(pdfPath.toQString());
-        imagePageCount = reader.imageCount();
-        if (imagePageCount < 1)
-        {
-            imagePageCount = 1;
-        }
-    }
+    //! Inspect the input ONCE (also logs the decision for headless parity): a multi-frame TIFF is multiple sheets, and a
+    //! multi-page PDF needs the page range, but a single image and a confidently-single-page PDF do not. inspectImage
+    //! returns the final showPageRange decision plus the image's native resolution for the single-image info line.
+    const ImageInfo imageInfo = inspectImage(pdfPath, isImage);
 
-    //! Intake dialog: page range (free-form) + a Faster/Standard/Best quality tier. Cancel discards the import.
+    //! Intake dialog: page range (free-form) + a Faster/Standard/Best quality tier. Cancel discards the import. The
+    //! controller passes the already-decided showPageRange (single source of truth) plus the image resolution so the
+    //! dialog only renders what applies: tier for any PDF, page range per showPageRange, info line for a single image.
     UriQuery query("musescore://reprise/importpdf/options");
     query.addParam("pages", Val(std::string("all")));
     query.addParam("tier", Val(preselectTier));
     query.addParam("matched", Val(detected.matched));
     query.addParam("isImage", Val(isImage));
-    query.addParam("imagePageCount", Val(imagePageCount));
+    query.addParam("showPageRange", Val(imageInfo.showPageRange));
+    query.addParam("imageWidth", Val(imageInfo.width));
+    query.addParam("imageHeight", Val(imageInfo.height));
 
     const RetVal<Val> dialog = interactive()->openSync(query);
     if (!dialog.ret)
@@ -284,6 +421,121 @@ muse::Ret ImportPdfController::preflightImageSize(const muse::io::path_t& path) 
     }
 
     return make_ok();
+}
+
+ImportPdfController::ImageInfo ImportPdfController::inspectImage(const muse::io::path_t& path, bool isImage) const
+{
+    ImageInfo info;
+    info.isImage = isImage;
+
+    if (!isImage)
+    {
+        //! PDF: count pages via the in-house byte-scan (no QtPdf in the kit). Show the page range UNLESS we can
+        //! CONFIDENTLY determine a single page; any uncertainty (compressed object streams, file past the read cap,
+        //! no page objects found) keeps it shown so pages are never silently dropped.
+        const PdfPageCountResult pc = detectPdfPageCount(path);
+        info.pageCount = pc.pageCount;
+        info.pdfConfident = pc.confident;
+        const bool confidentSinglePage = pc.confident && pc.pageCount == 1;
+        info.showPageRange = !confidentSinglePage;
+
+        LOGI() << "Reprise intake inspect: input=PDF pdfPageCount=" << pc.pageCount
+               << " confident=" << (pc.confident ? "true" : "false")
+               << " willShowPageRange=" << (info.showPageRange ? "true" : "false");
+
+        return info;
+    }
+
+    //! Image frame count + native resolution. CRITICAL: this Qt kit ships NO TIFF image plugin, so QImageReader cannot
+    //! read a TIFF at all (imageCount() == -1, size() invalid) -- that is the real cause of a multi-page TIFF showing no
+    //! page selector, not an imageCount() quirk. We therefore count frames two ways and take the larger: QImageReader's
+    //! jumpToNextImage() (works for the formats that DO have a plugin: PNG/JPG/GIF/...), and an in-house TIFF IFD-chain
+    //! walk (plugin-independent). jumpToImage() is deliberately NOT used: in Qt 6 it returns false even for frame 0 of a
+    //! perfectly readable image, so it always under-counts.
+    int rawImageCount = 0;
+    int qtWidth = 0;
+    int qtHeight = 0;
+    {
+        QImageReader reader(path.toQString());
+        rawImageCount = reader.imageCount();
+        const QSize size = reader.size();
+        if (size.isValid())
+        {
+            qtWidth = size.width();
+            qtHeight = size.height();
+        }
+    }
+
+    int nextCount = 0;
+    {
+        QImageReader reader(path.toQString());
+        if (reader.canRead())
+        {
+            nextCount = 1;
+            while (reader.jumpToNextImage())
+            {
+                ++nextCount;
+            }
+        }
+    }
+
+    //! In-house TIFF fallback (no Qt TIFF plugin): walk the IFD chain for the real frame count + first-frame dimensions.
+    const std::string suffix = io::suffix(path);
+    const bool isTiff = suffix == "tif" || suffix == "tiff";
+    int tiffFrames = 0;
+    int tiffWidth = 0;
+    int tiffHeight = 0;
+    bool tiffOk = false;
+    if (isTiff)
+    {
+        QByteArray tiffData;
+        QFile file(path.toQString());
+        if (file.open(QIODevice::ReadOnly))
+        {
+            tiffData = file.read(TIFF_MAX_READ_BYTES);
+            file.close();
+        }
+
+        tiffOk = readTiffInfo(tiffData, tiffFrames, tiffWidth, tiffHeight);
+    }
+
+    //! Did EITHER method actually read this image? A TIFF with no plugin AND a failed byte-scan is genuinely unknown.
+    const bool frameCountKnown = nextCount >= 1 || tiffOk;
+
+    int reliable = nextCount;
+    if (tiffFrames > reliable)
+    {
+        reliable = tiffFrames;
+    }
+    if (reliable < 1)
+    {
+        reliable = 1;
+    }
+
+    info.width = qtWidth > 0 ? qtWidth : (tiffOk ? tiffWidth : 0);
+    info.height = qtHeight > 0 ? qtHeight : (tiffOk ? tiffHeight : 0);
+
+    if (isTiff && !frameCountKnown)
+    {
+        //! Could not determine the TIFF frame count by either method -> SHOW the page range (safe: never hide pages),
+        //! mirroring the PDF "uncertain -> show" fallback. pageCount 0 == unknown.
+        info.pageCount = 0;
+        info.showPageRange = true;
+    }
+    else
+    {
+        info.pageCount = reliable;
+        info.showPageRange = reliable > 1;
+    }
+
+    LOGI() << "Reprise intake inspect: input=image rawImageCount=" << rawImageCount
+           << " nextCount=" << nextCount << " tiffOk=" << (tiffOk ? "true" : "false")
+           << " tiffFrames=" << tiffFrames
+           << " pageCount=" << info.pageCount << " isMultiPage=" << (info.pageCount > 1 ? "true" : "false")
+           << " willShowPageRange=" << (info.showPageRange ? "true" : "false")
+           << " resolution=" << info.width << "x" << info.height;
+
+    return info;
 }
 
 muse::RetVal<GetImportProgressCommand::Output> ImportPdfController::getImportProgress() const

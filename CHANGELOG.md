@@ -8,6 +8,24 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.9.1] — 2026-11-13
+
+### Fixed
+- **Multi-page TIFF page selection**: the intake dialog now shows the page range for a
+  multi-page (multi-frame) TIFF. The page count is read by an in-house walk of the TIFF
+  frame directories, because this build's Qt ships no TIFF image plugin — so `QImageReader`
+  could not read a TIFF at all and the field was wrongly hidden.
+
+### Added
+- **Single-image intake shows the scan's native resolution**: for a single image, the
+  quality tier (which does not apply to an image) is replaced by a read-only line reading
+  e.g. **Scan: 2581 x 3495 px (native resolution)**.
+
+### Changed
+- **Page range hidden for single-page PDFs too** (consistent with single images), with a
+  safe-fallback to **shown** whenever the page count is uncertain (a compressed
+  object-stream PDF, or any ambiguity) so pages are never silently dropped.
+
 ## [0.9.0] — 2026-11-13
 
 ### Added
@@ -224,6 +242,7 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.9.1]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.8.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.7.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
