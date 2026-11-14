@@ -297,7 +297,7 @@ void ImportProgressModel::onRunnerFinished(bool ok, const QString& outputPath, c
     {
         //! Surface the message plus a tail of Audiveris output so the user has something actionable.
         m_errorDetails = tail;
-        m_stageText = error.isEmpty() ? muse::qtrc("reprise", "Audiveris could not recognise this PDF.") : error;
+        m_stageText = error.isEmpty() ? muse::qtrc("reprise", "Audiveris could not recognise this scan.") : error;
         emit progressChanged();
         setStatus("error");
         importProgressTracker()->reportFinished(false, m_stageText.toStdString(), tail.toStdString());

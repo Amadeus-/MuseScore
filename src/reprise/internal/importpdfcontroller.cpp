@@ -64,7 +64,7 @@ muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
         }
 
         interactive()->warning(muse::trc("reprise", "Audiveris was not found"),
-                               muse::trc("reprise", "Install Audiveris or set its path to import PDFs."),
+                               muse::trc("reprise", "Install Audiveris or set its path to import scans."),
                                { interactive()->buttonData(IInteractive::Button::Ok) });
 
         return make_ret(Ret::Code::NotSupported);
@@ -78,7 +78,7 @@ muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
         const io::path_t pdfPath(headlessPath);
         if (!fileSystem()->exists(pdfPath))
         {
-            return make_ret(Ret::Code::UnknownError, "PDF not found: " + headlessPath);
+            return make_ret(Ret::Code::UnknownError, "Scan not found: " + headlessPath);
         }
 
         std::string pages = params.at("pages").toString();
@@ -120,7 +120,7 @@ muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
         return make_ok();
     }
 
-    const io::path_t pdfPath = interactive()->selectOpeningFileSync(muse::trc("reprise", "Import PDF"), defaultImportPdfDir(),
+    const io::path_t pdfPath = interactive()->selectOpeningFileSync(muse::trc("reprise", "Import Scan"), defaultImportPdfDir(),
                                                                     { muse::trc("reprise", "Scans") + " (*.pdf *.png *.jpg *.jpeg *.tif *.tiff *.bmp *.gif)" });
     if (pdfPath.empty())
     {
@@ -144,11 +144,16 @@ muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
         LOGI() << "Reprise PDF detect: no embedded resolution found -> tier " << preselectTier << " (Standard, no badge)";
     }
 
+    //! A single image (png/jpg/tif/...) has no page range and no PDF-resolution tier to pick, so the intake dialog
+    //! hides those controls. Derive from the picked file's extension (io::suffix is lower-cased, no dot).
+    const bool isImage = io::suffix(pdfPath) != "pdf";
+
     //! Intake dialog: page range (free-form) + a Faster/Standard/Best quality tier. Cancel discards the import.
     UriQuery query("musescore://reprise/importpdf/options");
     query.addParam("pages", Val(std::string("all")));
     query.addParam("tier", Val(preselectTier));
     query.addParam("matched", Val(detected.matched));
+    query.addParam("isImage", Val(isImage));
 
     const RetVal<Val> dialog = interactive()->openSync(query);
     if (!dialog.ret)

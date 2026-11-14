@@ -32,8 +32,8 @@ using namespace mu::reprise;
 static const std::vector<CommandInfo> s_commandInfos = {
     CommandInfo{
         REPRISE_IMPORT_PDF_COMMAND,
-        TranslatableString("reprise", "Import &PDF…"),
-        TranslatableString("reprise", "Import a PDF and recognise it as a score (Audiveris)"),
+        TranslatableString("reprise", "Import &Scan…"),
+        TranslatableString("reprise", "Import a scan and recognise it as a score (Audiveris)"),
         //! NOTE When "path" is supplied (e.g. from an MCP/API caller) the interactive file picker and options dialog
         //! are skipped and the import runs headlessly with the given page range + resolution. With no "path" the
         //! classic interactive flow (file picker + options dialog) runs.

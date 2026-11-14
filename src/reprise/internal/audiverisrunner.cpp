@@ -559,7 +559,7 @@ void AudiverisRunner::onFinished(int exitCode)
     {
         LOGE() << "Reprise: Audiveris exited with code " << exitCode;
         emit finished(false, QString(),
-                      muse::qtrc("reprise", "Audiveris failed to recognise the PDF (exit code %1).").arg(exitCode), tail);
+                      muse::qtrc("reprise", "Audiveris failed to recognise the scan (exit code %1).").arg(exitCode), tail);
         return;
     }
 

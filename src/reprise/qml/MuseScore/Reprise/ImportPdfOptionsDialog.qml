@@ -37,9 +37,14 @@ StyledDialogView {
     property int tier: 300
     property bool matched: false
 
+    //! True when the picked file is a single image (not a PDF): the controller derives this from the file extension.
+    //! When set, the page-range and recognition-quality controls are hidden (an image is a single sheet with no
+    //! PDF resolution to pick); submit() still returns the seeded defaults (pages "all", tier 300).
+    property bool isImage: false
+
     objectName: "ImportPdfOptionsDialog"
 
-    title: qsTrc("reprise", "Import PDF")
+    title: qsTrc("reprise", "Import Scan")
 
     contentWidth: 440
     contentHeight: content.implicitHeight
@@ -106,7 +111,10 @@ StyledDialogView {
         StyledTextLabel {
             width: parent.width
 
-            text: qsTrc("reprise", "Please enter the range of pages to open from this PDF.")
+            //! Page-range instruction: a single image is one sheet, so this (and the Pages row below) is PDF-only.
+            visible: !root.isImage
+
+            text: qsTrc("reprise", "Please enter the range of pages to open from this scan.")
             horizontalAlignment: Text.AlignLeft
             wrapMode: Text.Wrap
         }
@@ -114,6 +122,9 @@ StyledDialogView {
         Row {
             width: parent.width
             spacing: 8
+
+            //! Page-range picker: hidden for a single image (treated as one page; submit() defaults pages to "all").
+            visible: !root.isImage
 
             StyledTextLabel {
                 anchors.verticalCenter: parent.verticalCenter
@@ -147,6 +158,9 @@ StyledDialogView {
         StyledTextLabel {
             width: parent.width
 
+            //! Recognition-quality label: PDF-only (an image has no PDF resolution to pick). Hidden for an image.
+            visible: !root.isImage
+
             text: qsTrc("reprise", "Recognition quality")
             horizontalAlignment: Text.AlignLeft
             wrapMode: Text.Wrap
@@ -154,6 +168,9 @@ StyledDialogView {
 
         RadioButtonGroup {
             id: tierGroup
+
+            //! Recognition-quality tier picker: PDF-only; hidden for a single image (submit() keeps the default 300).
+            visible: !root.isImage
 
             width: parent.width
             spacing: 10
@@ -189,7 +206,7 @@ StyledDialogView {
                         navigation.panel: navPanel
                         navigation.order: 2 + tierItem.index
                         navigation.accessible.name: tierItem.modelData.title + ". " + tierItem.modelData.subtitle
-                            + (tierItem.isMatchedTier ? ". " + qsTrc("reprise", "Matched to your PDF") : "")
+                            + (tierItem.isMatchedTier ? ". " + qsTrc("reprise", "Matched to your scan") : "")
 
                         onToggled: root.selectedTier = tierItem.modelData.value
                     }
@@ -214,7 +231,7 @@ StyledDialogView {
                             id: badgeLabel
 
                             anchors.centerIn: parent
-                            text: qsTrc("reprise", "Matched to your PDF")
+                            text: qsTrc("reprise", "Matched to your scan")
                             color: "#FFFFFF"
                         }
                     }
