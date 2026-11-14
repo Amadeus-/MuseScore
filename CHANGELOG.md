@@ -8,6 +8,21 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.9.3] — 2026-11-13
+
+### Changed
+- **Import Scan dialog redesigned with a read-only header**: every import now shows a muted
+  header with the file name, the page count, and — for images — the native resolution
+  (e.g. **2581 x 3495 px (native)**, with a **(~300 dpi)** suffix only when the image file
+  actually carries resolution metadata). The settable controls sit below it: a PDF keeps the
+  recognition-quality tier (with a caption naming the detected dpi that drove the match) and
+  the page range; a single-page image shows no settable control, just a one-line note; a
+  multi-page TIFF keeps the page range.
+
+### Fixed
+- **Resolution line restored on multi-page TIFF**: the native resolution now appears for all
+  images in the header, including multi-frame TIFFs (previously only single images showed it).
+
 ## [0.9.2] — 2026-11-13
 
 ### Fixed
@@ -251,6 +266,7 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.9.3]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.2]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.1]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main

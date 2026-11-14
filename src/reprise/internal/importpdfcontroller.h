@@ -88,6 +88,7 @@ private:
         bool pdfConfident = false;
         int width = 0;
         int height = 0;
+        int embeddedDpi = 0;
         bool showPageRange = true;
     };
 

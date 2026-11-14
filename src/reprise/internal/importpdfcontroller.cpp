@@ -26,6 +26,7 @@
 
 #include <QByteArray>
 #include <QFile>
+#include <QImage>
 #include <QImageReader>
 #include <QSize>
 #include <QString>
@@ -345,6 +346,16 @@ muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
     query.addParam("imageWidth", Val(imageInfo.width));
     query.addParam("imageHeight", Val(imageInfo.height));
 
+    //! Read-only muted-header fields + the "why" caption data. fileName is the picked file's basename; pageCount +
+    //! pdfConfident drive the "Pages:" line (a non-confident PDF shows "multiple", never a guess); embeddedDpi is the
+    //! image's real resolution metadata if any (0 == omit the dpi suffix); detectedDpi is the PDF's raw detected native
+    //! resolution shown in the "why" caption when matched.
+    query.addParam("fileName", Val(io::filename(pdfPath).toStdString()));
+    query.addParam("pageCount", Val(imageInfo.pageCount));
+    query.addParam("pdfConfident", Val(imageInfo.pdfConfident));
+    query.addParam("embeddedDpi", Val(imageInfo.embeddedDpi));
+    query.addParam("detectedDpi", Val(detected.dpi));
+
     const RetVal<Val> dialog = interactive()->openSync(query);
     if (!dialog.ret)
     {
@@ -559,6 +570,21 @@ ImportPdfController::ImageInfo ImportPdfController::inspectImage(const muse::io:
     info.width = qtWidth > 0 ? qtWidth : (tiffOk ? tiffWidth : 0);
     info.height = qtHeight > 0 ? qtHeight : (tiffOk ? tiffHeight : 0);
 
+    //! Embedded DPI for the header's resolution line (non-TIFF images only). QImage::dotsPerMeterX() is 0 when the file
+    //! carries NO resolution metadata (the Qt default), and non-zero only when the format actually stored one (a PNG
+    //! pHYs chunk, a JPEG JFIF/EXIF density) -- so a value > 0 is treated as real metadata and converted to dpi, while 0
+    //! omits the dpi suffix (never invented). TIFF is skipped: this kit has no Qt TIFF plugin and the in-house IFD walk
+    //! deliberately does not parse the RATIONAL resolution tags, so a TIFF simply shows pixel dimensions with no dpi.
+    if (!isTiff)
+    {
+        const QImage probe(path.toQString());
+        const int dpmX = probe.dotsPerMeterX();
+        if (dpmX > 0)
+        {
+            info.embeddedDpi = qRound(dpmX * 0.0254);
+        }
+    }
+
     if (isTiff && !frameCountKnown)
     {
         //! Could not determine the TIFF frame count by either method -> SHOW the page range (safe: never hide pages),
@@ -577,7 +603,8 @@ ImportPdfController::ImageInfo ImportPdfController::inspectImage(const muse::io:
            << " tiffFrames=" << tiffFrames
            << " pageCount=" << info.pageCount << " isMultiPage=" << (info.pageCount > 1 ? "true" : "false")
            << " willShowPageRange=" << (info.showPageRange ? "true" : "false")
-           << " resolution=" << info.width << "x" << info.height;
+           << " resolution=" << info.width << "x" << info.height
+           << " embeddedDpi=" << info.embeddedDpi;
 
     return info;
 }

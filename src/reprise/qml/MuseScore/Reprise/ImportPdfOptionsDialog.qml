@@ -24,15 +24,17 @@ import QtQuick
 import Muse.Ui
 import Muse.UiComponents
 
-//! NOTE: Reprise's Import-PDF intake dialog. A free-form page range plus a 3-tier "Recognition quality" selector
-//! (Faster/Standard/Best -> Audiveris pdfResolution 200/300/400). Shown after the PDF is picked and before Audiveris
-//! runs. The controller auto-detects the PDF's native resolution and passes in a pre-selected tier + a "matched" flag
-//! (true only when a real embedded-image resolution was found). Returns { accepted, pages, dpi } via openSync().
+//! NOTE: Reprise's Import-Scan intake dialog. A read-only MUTED header (file name, page count, and -- for images --
+//! native resolution) appears on every import, above the settable controls. The settable controls below it depend on
+//! the input type: a PDF gets the 3-tier "Recognition quality" selector (Faster/Standard/Best -> Audiveris
+//! pdfResolution 200/300/400) with a matched badge + a "why" caption naming the detected dpi; a multi-page input (PDF
+//! or multi-frame TIFF) also gets the page-range field; a single-page image has NO settable control, just a one-line
+//! note. Shown after the file is picked and before Audiveris runs. Returns { accepted, pages, dpi } via openSync().
 StyledDialogView {
     id: root
 
     //! Set from the opening UriQuery params. "tier" is the controller's pre-selected quality (200/300/400, already
-    //! snapped); "matched" is true when it came from a successful auto-detect (drives the badge).
+    //! snapped); "matched" is true when it came from a successful auto-detect (drives the badge + the "why" caption).
     property string pages: "all"
     property int tier: 300
     property bool matched: false
@@ -47,14 +49,24 @@ StyledDialogView {
     //! and for a confidently-single-page PDF. When hidden, submit() defaults pages to "all".
     property bool showPageRange: true
 
-    //! Native pixel dimensions of a single-image input, passed by the controller for the read-only resolution info line
-    //! (0 for a PDF or when the dimensions could not be read).
+    //! Read-only header fields, all passed by the controller. fileName is the picked file's basename (with extension).
+    //! pageCount is the frame count for an image, or the byte-scan page count for a PDF (0 == unknown). pdfConfident is
+    //! true only when the PDF page count was determined with certainty -- when false the header shows "multiple" rather
+    //! than a guessed number, so a wrong count is never displayed.
+    property string fileName: ""
+    property int pageCount: 0
+    property bool pdfConfident: false
+
+    //! Native pixel dimensions of an image input (0 for a PDF or when the dimensions could not be read), plus the
+    //! embedded DPI if the image file actually carries resolution metadata (0 == none, so the dpi suffix is omitted;
+    //! never invented). The resolution line is shown for ANY image (single or multi-frame), never for a PDF.
     property int imageWidth: 0
     property int imageHeight: 0
+    property int embeddedDpi: 0
 
-    //! The read-only resolution info line is shown only for a SINGLE image (an image with the page range hidden): a
-    //! multi-frame TIFF shows the page range instead, and a PDF shows the quality tier.
-    readonly property bool showImageInfo: root.isImage && !root.showPageRange && root.imageWidth > 0 && root.imageHeight > 0
+    //! The PDF's detected native resolution (raw, un-snapped) that drove the tier match; shown in the "why" caption
+    //! when matched. 0/absent for an image or when nothing was detected.
+    property int detectedDpi: 0
 
     objectName: "ImportPdfOptionsDialog"
 
@@ -72,6 +84,27 @@ StyledDialogView {
 
     //! The tier the auto-detect matched to; the badge is pinned here regardless of what the user later picks.
     readonly property int detectedTier: root.snapTier(root.tier)
+
+    //! The resolution line is shown for any image whose native pixel dimensions were read; never for a PDF.
+    readonly property bool showResolution: root.isImage && root.imageWidth > 0 && root.imageHeight > 0
+
+    //! The page-count value for the header. Never a guessed number: an image with an unknown frame count, or a PDF whose
+    //! count is not confident, reads "multiple".
+    readonly property string pagesText: {
+        if (root.isImage) {
+            return root.pageCount >= 1 ? root.pageCount.toString() : qsTrc("reprise", "multiple")
+        }
+        return (root.pdfConfident && root.pageCount >= 1) ? root.pageCount.toString() : qsTrc("reprise", "multiple")
+    }
+
+    //! The resolution line text: native pixel dimensions, plus the embedded dpi only when the file actually carries it.
+    readonly property string resolutionText: {
+        var base = qsTrc("reprise", "%1 x %2 px (native)").arg(root.imageWidth).arg(root.imageHeight)
+        if (root.embeddedDpi > 0) {
+            base += " " + qsTrc("reprise", "(~%1 dpi)").arg(root.embeddedDpi)
+        }
+        return base
+    }
 
     readonly property var tierOptions: [
         { "value": 200, "title": qsTrc("reprise", "Faster (200 dpi)"), "subtitle": qsTrc("reprise", "Quicker, less detail") },
@@ -121,6 +154,46 @@ StyledDialogView {
 
         width: parent.width
         spacing: 12
+
+        //! Read-only MUTED header, shown on every import (file name, page count, and -- for images -- native
+        //! resolution). Muted via ui.theme.fontSecondaryColor, the Muse theme's secondary font-color token (defined
+        //! per-theme, so it reads correctly in both light and dark), rather than a hardcoded gray.
+        Column {
+            id: header
+
+            width: parent.width
+            spacing: 2
+
+            StyledTextLabel {
+                width: parent.width
+
+                text: qsTrc("reprise", "File: %1").arg(root.fileName)
+                color: ui.theme.fontSecondaryColor
+                horizontalAlignment: Text.AlignLeft
+                wrapMode: Text.Wrap
+            }
+
+            StyledTextLabel {
+                width: parent.width
+
+                text: qsTrc("reprise", "Pages: %1").arg(root.pagesText)
+                color: ui.theme.fontSecondaryColor
+                horizontalAlignment: Text.AlignLeft
+            }
+
+            StyledTextLabel {
+                width: parent.width
+
+                visible: root.showResolution
+
+                text: qsTrc("reprise", "Resolution: %1").arg(root.resolutionText)
+                color: ui.theme.fontSecondaryColor
+                horizontalAlignment: Text.AlignLeft
+                wrapMode: Text.Wrap
+            }
+        }
+
+        SeparatorLine {}
 
         StyledTextLabel {
             width: parent.width
@@ -173,18 +246,6 @@ StyledDialogView {
         StyledTextLabel {
             width: parent.width
 
-            //! Read-only scan-resolution info for a single image (an image has no quality tier to pick, so this reports
-            //! the scan's native pixel dimensions instead). Display-only: submit() returns pages "all" + the default tier.
-            visible: root.showImageInfo
-
-            text: qsTrc("reprise", "Scan: %1 x %2 px (native resolution)").arg(root.imageWidth).arg(root.imageHeight)
-            horizontalAlignment: Text.AlignLeft
-            wrapMode: Text.Wrap
-        }
-
-        StyledTextLabel {
-            width: parent.width
-
             //! Recognition-quality label: PDF-only (an image has no PDF resolution to pick). Hidden for an image.
             visible: !root.isImage
 
@@ -196,7 +257,7 @@ StyledDialogView {
         RadioButtonGroup {
             id: tierGroup
 
-            //! Recognition-quality tier picker: PDF-only; hidden for a single image (submit() keeps the default 300).
+            //! Recognition-quality tier picker: PDF-only; hidden for any image (submit() keeps the default 300).
             visible: !root.isImage
 
             width: parent.width
@@ -264,6 +325,34 @@ StyledDialogView {
                     }
                 }
             }
+        }
+
+        StyledTextLabel {
+            width: parent.width
+
+            //! "Why" caption for the tier match: PDF-only. When the detect matched, it names the detected native dpi
+            //! that drove the pre-selected tier; otherwise it explains the Standard fallback. Muted (secondary color).
+            visible: !root.isImage
+
+            text: root.matched
+                  ? qsTrc("reprise", "Matched to your scan - this PDF is about %1 dpi.").arg(root.detectedDpi)
+                  : qsTrc("reprise", "No scan resolution detected in this PDF - using Standard.")
+            color: ui.theme.fontSecondaryColor
+            horizontalAlignment: Text.AlignLeft
+            wrapMode: Text.Wrap
+        }
+
+        StyledTextLabel {
+            width: parent.width
+
+            //! Single-page image: there is no settable control (no tier, no page range), so a one-line muted note
+            //! explains why. Shown only for a single image (an image with the page range hidden).
+            visible: root.isImage && !root.showPageRange
+
+            text: qsTrc("reprise", "Quality tiers apply to PDF imports; images are recognized at their native resolution.")
+            color: ui.theme.fontSecondaryColor
+            horizontalAlignment: Text.AlignLeft
+            wrapMode: Text.Wrap
         }
 
         ButtonBox {
