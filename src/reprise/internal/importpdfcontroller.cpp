@@ -25,13 +25,18 @@
 #include <cstdint>
 
 #include <QByteArray>
+#include <QEventLoop>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QImage>
 #include <QImageReader>
+#include <QQuickWindow>
 #include <QSize>
 #include <QString>
+#include <QTimer>
 #include <QVariant>
 #include <QVariantMap>
+#include <QWindow>
 
 #include "global/translation.h"
 #include "global/log.h"
@@ -205,6 +210,10 @@ void ImportPdfController::init()
                                                                  [this](const GetImportProgressCommand&) { return getImportProgress(); }));
     commandDispatcher()->onRequest<GetImportErrorsCommand>(this, std::function<muse::RetVal<GetImportErrorsCommand::Output>(const GetImportErrorsCommand&)>(
                                                                [this](const GetImportErrorsCommand&) { return getImportErrors(); }));
+
+    //! Dev tool: open + capture the intake dialog to a PNG (headless verification of the modal dialog).
+    commandDispatcher()->onRequest<CaptureImportDialogCommand>(this, std::function<muse::RetVal<CaptureImportDialogCommand::Output>(const CaptureImportDialogCommand&)>(
+                                                                   [this](const CaptureImportDialogCommand& c) { return captureImportDialog(c); }));
 }
 
 muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
@@ -635,6 +644,143 @@ muse::RetVal<GetImportErrorsCommand::Output> ImportPdfController::getImportError
     output.details = snap.details;
 
     return muse::RetVal<GetImportErrorsCommand::Output>::make_ok(output);
+}
+
+muse::RetVal<CaptureImportDialogCommand::Output> ImportPdfController::captureImportDialog(const CaptureImportDialogCommand& cmd)
+{
+    using RV = muse::RetVal<CaptureImportDialogCommand::Output>;
+
+    CaptureImportDialogCommand::Output out;
+
+    if (cmd.path.empty())
+    {
+        out.error = "no path given";
+        return RV::make_ok(out);
+    }
+
+    const io::path_t filePath(cmd.path);
+    if (!fileSystem()->exists(filePath))
+    {
+        out.error = "scan not found: " + cmd.path;
+        return RV::make_ok(out);
+    }
+
+    //! Writable Reprise screenshots dir: <userAppDataPath>/screenshots (same convention + fixed overwrite file as the
+    //! reprise.capture-screenshot tool), with an optional per-call override.
+    const io::path_t dir = globalConfiguration()->userAppDataPath() + "/screenshots";
+    fileSystem()->makePath(dir);
+    const io::path_t absPath = cmd.outPath.empty() ? (dir + "/mcp-import-dialog.png") : io::path_t(cmd.outPath);
+
+    //! An oversized image never reaches the intake dialog in the interactive flow (it is blocked up front), so there is
+    //! nothing to capture -- report the same reason rather than render a dialog the user would never see.
+    const muse::Ret sizeRet = preflightImageSize(filePath);
+    if (!sizeRet)
+    {
+        out.error = "scan too large: " + sizeRet.text();
+        return RV::make_ok(out);
+    }
+
+    //! Run the SAME dialog-prep the interactive path uses so the rendered dialog is identical to what a user sees.
+    const bool isImage = io::suffix(filePath) != "pdf";
+    const PdfResolutionResult detected = detectPdfResolution(filePath);
+    const int preselectTier = detected.matched ? snapToTier(detected.dpi) : snapToTier(scanResolution());
+    const ImageInfo imageInfo = inspectImage(filePath, isImage);
+
+    //! Build the identical UriQuery the interactive path passes to openSync (see importPdf()).
+    UriQuery query("musescore://reprise/importpdf/options");
+    query.addParam("pages", Val(std::string("all")));
+    query.addParam("tier", Val(preselectTier));
+    query.addParam("matched", Val(detected.matched));
+    query.addParam("isImage", Val(isImage));
+    query.addParam("showPageRange", Val(imageInfo.showPageRange));
+    query.addParam("imageWidth", Val(imageInfo.width));
+    query.addParam("imageHeight", Val(imageInfo.height));
+    query.addParam("fileName", Val(io::filename(filePath).toStdString()));
+    query.addParam("pageCount", Val(imageInfo.pageCount));
+    query.addParam("pdfConfident", Val(imageInfo.pdfConfident));
+    query.addParam("embeddedDpi", Val(imageInfo.embeddedDpi));
+    query.addParam("detectedDpi", Val(detected.dpi));
+
+    //! Open the dialog ASYNC (never openSync): openSync would block this GUI-thread handler inside the dialog's nested
+    //! modal loop. The async open returns immediately; we drive our OWN nested event loop below to let the dialog window
+    //! be created, exposed and rendered -- then grab it. The returned promise is intentionally discarded (fire-and-forget,
+    //! same pattern as launchImport): we force-close the dialog ourselves, so its accept/cancel result is never needed.
+    interactive()->open(query);
+
+    //! Local nested-event-loop pump. Qt supports nested processEvents/exec; this lets the posted QML-open + expose events
+    //! run without returning control all the way out of the handler.
+    auto spin = [](int ms)
+    {
+        QEventLoop loop;
+        QTimer timer;
+        timer.setSingleShot(true);
+        QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+        timer.start(ms);
+        loop.exec();
+    };
+
+    //! Wait (bounded) for the dialog's QQuickWindow to exist, be the top window, and be exposed (so grabWindow() renders
+    //! real content). isOpened(query) confirms OUR dialog is on the interactive stack, so topWindow() returns it.
+    QQuickWindow* dlg = nullptr;
+    QElapsedTimer timer;
+    timer.start();
+    const int timeoutMs = 5000;
+    while (timer.elapsed() < timeoutMs)
+    {
+        spin(60);
+
+        if (!interactive()->isOpened(query).val)
+        {
+            continue;
+        }
+
+        QWindow* tw = interactive()->topWindow();
+        QQuickWindow* qw = qobject_cast<QQuickWindow*>(tw);
+        if (qw && qw->isVisible())
+        {
+            qw->raise();
+            qw->requestActivate();
+            if (qw->isExposed())
+            {
+                dlg = qw;
+                break;
+            }
+        }
+    }
+
+    if (!dlg)
+    {
+        //! Never exposed in time -- close whatever may have opened and report, so the caller gets a clean failure.
+        interactive()->close(query);
+        spin(200);
+        out.error = "import dialog did not become visible in time";
+        return RV::make_ok(out);
+    }
+
+    //! A couple more pumps so the first frame is fully rendered before the grab.
+    spin(120);
+
+    QImage img = dlg->grabWindow();
+
+    //! Close the dialog before returning (fire-and-forget + a short pump to let it tear down).
+    interactive()->close(query);
+    spin(200);
+
+    if (img.isNull())
+    {
+        out.error = "grab failed (dialog window not renderable?)";
+        return RV::make_ok(out);
+    }
+
+    if (!img.save(absPath.toQString(), "PNG"))
+    {
+        out.error = "failed to save PNG to " + absPath.toStdString();
+        return RV::make_ok(out);
+    }
+
+    out.ok = true;
+    out.path = absPath.toStdString();
+    return RV::make_ok(out);
 }
 
 muse::io::path_t ImportPdfController::defaultImportPdfDir() const

@@ -8,6 +8,20 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.9.4] — 2026-11-13
+
+### Fixed
+- **Import Scan dialog header is now legible**: the read-only header (file name, page count,
+  and — for images — native resolution) and the single-image note were drawn in a secondary
+  font color that rendered nearly invisible in this theme. They now use the primary font color,
+  so they read clearly in both light and dark themes; the read-only signal still comes from the
+  layout (no input control + the separator).
+
+### Added
+- **Dev capture of the import dialog**: a new `reprise.capture-import-dialog` MCP/API tool opens
+  the Import-Scan intake dialog for a given scan (PDF or image) and grabs it to a PNG, so the
+  modal intake dialog — otherwise unreachable headlessly — can be verified without a live picker.
+
 ## [0.9.3] — 2026-11-13
 
 ### Changed
@@ -266,6 +280,7 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.9.4]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.3]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.2]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.1]: https://github.com/Amadeus-/Reprise/tree/reprise-main

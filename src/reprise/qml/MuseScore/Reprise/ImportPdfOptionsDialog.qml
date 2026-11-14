@@ -24,8 +24,9 @@ import QtQuick
 import Muse.Ui
 import Muse.UiComponents
 
-//! NOTE: Reprise's Import-Scan intake dialog. A read-only MUTED header (file name, page count, and -- for images --
-//! native resolution) appears on every import, above the settable controls. The settable controls below it depend on
+//! NOTE: Reprise's Import-Scan intake dialog. A read-only header (file name, page count, and -- for images -- native
+//! resolution), on the primary font color for legibility, appears on every import, above the settable controls. The
+//! read-only signal comes from the layout (no input control + a separator). The settable controls below it depend on
 //! the input type: a PDF gets the 3-tier "Recognition quality" selector (Faster/Standard/Best -> Audiveris
 //! pdfResolution 200/300/400) with a matched badge + a "why" caption naming the detected dpi; a multi-page input (PDF
 //! or multi-frame TIFF) also gets the page-range field; a single-page image has NO settable control, just a one-line
@@ -155,9 +156,11 @@ StyledDialogView {
         width: parent.width
         spacing: 12
 
-        //! Read-only MUTED header, shown on every import (file name, page count, and -- for images -- native
-        //! resolution). Muted via ui.theme.fontSecondaryColor, the Muse theme's secondary font-color token (defined
-        //! per-theme, so it reads correctly in both light and dark), rather than a hardcoded gray.
+        //! Read-only header, shown on every import (file name, page count, and -- for images -- native resolution).
+        //! The whole line uses ui.theme.fontColor (the theme's PRIMARY font-color token) so it is clearly legible in
+        //! BOTH light and dark themes; an earlier build muted it with fontSecondaryColor, which rendered nearly
+        //! invisible in this theme. The read-only signal still comes from the layout (no input control + the separator
+        //! below), so legibility of these values wins over a subtle muted treatment.
         Column {
             id: header
 
@@ -168,7 +171,7 @@ StyledDialogView {
                 width: parent.width
 
                 text: qsTrc("reprise", "File: %1").arg(root.fileName)
-                color: ui.theme.fontSecondaryColor
+                color: ui.theme.fontColor
                 horizontalAlignment: Text.AlignLeft
                 wrapMode: Text.Wrap
             }
@@ -177,7 +180,7 @@ StyledDialogView {
                 width: parent.width
 
                 text: qsTrc("reprise", "Pages: %1").arg(root.pagesText)
-                color: ui.theme.fontSecondaryColor
+                color: ui.theme.fontColor
                 horizontalAlignment: Text.AlignLeft
             }
 
@@ -187,7 +190,7 @@ StyledDialogView {
                 visible: root.showResolution
 
                 text: qsTrc("reprise", "Resolution: %1").arg(root.resolutionText)
-                color: ui.theme.fontSecondaryColor
+                color: ui.theme.fontColor
                 horizontalAlignment: Text.AlignLeft
                 wrapMode: Text.Wrap
             }
@@ -345,12 +348,13 @@ StyledDialogView {
         StyledTextLabel {
             width: parent.width
 
-            //! Single-page image: there is no settable control (no tier, no page range), so a one-line muted note
-            //! explains why. Shown only for a single image (an image with the page range hidden).
+            //! Single-page image: there is no settable control (no tier, no page range), so a one-line note explains
+            //! why. Shown only for a single image (an image with the page range hidden). On the PRIMARY fontColor so it
+            //! stays legible in both themes (it was formerly on the nearly-invisible fontSecondaryColor).
             visible: root.isImage && !root.showPageRange
 
             text: qsTrc("reprise", "Quality tiers apply to PDF imports; images are recognized at their native resolution.")
-            color: ui.theme.fontSecondaryColor
+            color: ui.theme.fontColor
             horizontalAlignment: Text.AlignLeft
             wrapMode: Text.Wrap
         }

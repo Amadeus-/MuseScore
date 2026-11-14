@@ -51,6 +51,9 @@ static const std::vector<CommandInfo> s_commandInfos = {
 
     // Reprise dev MCP/API tool: capture the GUI window or current score to a PNG
     makeCommandInfo<CaptureScreenshotCommand>(),
+
+    // Reprise dev MCP/API tool: open the Import-Scan intake dialog for a file and capture it to a PNG
+    makeCommandInfo<CaptureImportDialogCommand>(),
 };
 
 std::string RepriseCommandsRegister::moduleName() const

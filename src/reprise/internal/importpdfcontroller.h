@@ -103,6 +103,14 @@ private:
     muse::RetVal<GetImportProgressCommand::Output> getImportProgress() const;
     muse::RetVal<GetImportErrorsCommand::Output> getImportErrors() const;
 
+    //! Dev MCP/API tool: open the Import-Scan intake dialog (ImportPdfOptionsDialog) for a given file and grab it to a
+    //! PNG, so the modal intake dialog -- unreachable headlessly via the normal import flow -- can be verified. Runs the
+    //! SAME dialog-prep the interactive path uses (detectPdfResolution / inspectImage / preflightImageSize) to pass
+    //! identical params, opens the dialog ASYNC (never openSync, so there is no blocking nested modal loop), spins the
+    //! GUI event loop until the dialog window is exposed, QQuickWindow::grabWindow()s it, then closes the dialog. All on
+    //! the Qt GUI thread (the same synchronous dispatch path as the other reprise queries). ok=false + error on failure.
+    muse::RetVal<CaptureImportDialogCommand::Output> captureImportDialog(const CaptureImportDialogCommand& cmd);
+
     //! Start folder for the PDF picker: the stored Reprise folder if it still exists, else the Documents folder.
     muse::io::path_t defaultImportPdfDir() const;
     //! Persist the folder of the picked PDF (Reprise-private, independent of File > Open). Non-empty picks only.

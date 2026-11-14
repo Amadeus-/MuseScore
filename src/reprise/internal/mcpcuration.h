@@ -62,6 +62,8 @@ inline const std::set<std::string>& mcpAllowlistPaths()
         "reprise/import-pdf",
         // dev screenshot tool (captures the GUI window or current score to a PNG)
         "reprise/capture-screenshot",
+        // dev tool: open the Import-Scan intake dialog for a file and capture it to a PNG
+        "reprise/capture-import-dialog",
         // a minimal, safe set of project-level ops for headless testing
         "project/open",
         "project/close",

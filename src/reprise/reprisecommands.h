@@ -127,4 +127,47 @@ struct CaptureScreenshotCommand {
         muse::rcommand::Field{ "error", &O::error, "Error message (empty on success)" },
     };
 };
+
+//! NOTE Reprise dev MCP/API tool: open the Import-Scan intake dialog (ImportPdfOptionsDialog) for a given file and
+//! capture it to a PNG, so the modal intake dialog can be verified headlessly (it is never reachable via the normal
+//! import flow headlessly, since that path skips the picker + the dialog). "path" is the scan (PDF or image) whose
+//! intake dialog to render; the handler runs the SAME dialog-prep the interactive flow uses (resolution auto-detect,
+//! page-count/frame inspection, image pre-flight) to pass identical params, then opens the dialog ASYNC (NOT openSync,
+//! so there is no blocking nested modal loop), spins the GUI event loop until the dialog's QQuickWindow is exposed,
+//! grabWindow()s it to a PNG, and closes the dialog again -- all on the Qt GUI thread. "outPath" optionally overrides
+//! the default <userAppDataPath>/screenshots/mcp-import-dialog.png. Failures carry ok=false + an error string (the
+//! call itself still succeeds) so a headless agent always receives structured ok/path/error output.
+struct CaptureImportDialogCommand {
+    static const inline auto id = muse::rcommand::Command("command://reprise/capture-import-dialog");
+    static const inline auto title = muse::MnemonicString("reprise", "Capture import dialog");
+    static const inline auto description
+        = muse::TranslatableString("reprise", "Open the Import-Scan intake dialog for a file and capture it to a PNG");
+    static const inline auto availabilities = muse::rcommand::Availability::API;
+    static const inline auto annotations = muse::rcommand::Annotation::ReadOnly;
+
+    std::string path;      // required: absolute path of the scan (PDF or image) whose intake dialog to render
+    std::string outPath;   // optional absolute output PNG path override
+
+    static const inline auto input = std::tuple {
+        muse::rcommand::Field{ "path", &CaptureImportDialogCommand::path,
+                               "Absolute path of the scan (PDF or image) whose intake dialog to render",
+                               muse::rcommand::Presence::Required },
+        muse::rcommand::Field{ "outPath", &CaptureImportDialogCommand::outPath,
+                               "Absolute output PNG path (optional; default is a fixed overwrite file)",
+                               muse::rcommand::Presence::Optional },
+    };
+
+    struct Output {
+        bool ok = false;
+        std::string path;
+        std::string error;
+    };
+
+    using O = CaptureImportDialogCommand::Output;
+    static const inline auto output = std::tuple {
+        muse::rcommand::Field{ "ok", &O::ok, "Whether the dialog capture succeeded" },
+        muse::rcommand::Field{ "path", &O::path, "Absolute path of the written PNG (empty on failure)" },
+        muse::rcommand::Field{ "error", &O::error, "Error message (empty on success)" },
+    };
+};
 }
