@@ -121,7 +121,7 @@ muse::Ret ImportPdfController::importPdf(const muse::rcommand::Params& params)
     }
 
     const io::path_t pdfPath = interactive()->selectOpeningFileSync(muse::trc("reprise", "Import PDF"), defaultImportPdfDir(),
-                                                                    { muse::trc("reprise", "PDF files") + " (*.pdf)" });
+                                                                    { muse::trc("reprise", "Scans") + " (*.pdf *.png *.jpg *.jpeg *.tif *.tiff *.bmp *.gif)" });
     if (pdfPath.empty())
     {
         return make_ret(Ret::Code::Cancel);

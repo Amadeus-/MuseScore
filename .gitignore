@@ -106,3 +106,4 @@ compile_commands.json
 # Local Reprise test PDFs (OMR import fixtures — not tracked)
 /test/Rochut vol 1.pdf
 /test/Saint Saens_Gigout Tollite Hostia. Christmas Oratorio.pdf
+/test/rochut-p5-300dpi.png
