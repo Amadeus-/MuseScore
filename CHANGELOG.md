@@ -8,6 +8,25 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.9.6] — 2026-11-13
+
+### Fixed
+- **TIFF scans now show a DPI on the Import Scan Resolution line**: a PNG/JPG showed its
+  resolution (e.g. **(~300 dpi)**) but a TIFF showed only pixel dimensions, because this build's
+  Qt ships no TIFF plugin and the in-house TIFF reader did not parse the resolution tags. The
+  reader now reads the TIFF IFD resolution tags (XResolution/YResolution/ResolutionUnit, honoring
+  the file's byte order and converting cm → inch) from the reported (largest) frame.
+
+### Changed
+- **The Resolution line always shows a DPI, for every image type**: when a scan carries no
+  resolution metadata (no PNG/JPG density, or a TIFF with ResolutionUnit = none / absent tags) the
+  line now shows the default, clearly labelled — **(~300 dpi, default)** — instead of omitting it,
+  so PNG / JPG / TIFF / BMP / GIF all read consistently (DPI is informational for images, which
+  Audiveris recognizes at their native pixel resolution).
+- **Escape now cancels the Import Scan dialog**: pressing Escape does exactly what clicking Cancel
+  does (dismiss with no import), including when focus is in the Pages field (where the text input
+  previously swallowed the key).
+
 ## [0.9.5] — 2026-11-13
 
 ### Fixed
@@ -289,6 +308,7 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.9.6]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.5]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.4]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.3]: https://github.com/Amadeus-/Reprise/tree/reprise-main
