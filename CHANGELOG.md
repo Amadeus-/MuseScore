@@ -8,6 +8,15 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.9.2] — 2026-11-13
+
+### Fixed
+- **Oversized-image pre-flight now covers TIFF files**: a too-large TIFF was silently
+  bypassing the 20-megapixel guard because this build's Qt ships no TIFF image plugin, so
+  `QImageReader` reported it as 0×0 and the check passed. The pre-flight now reads TIFF
+  dimensions with the in-house TIFF reader (the largest frame, since Audiveris caps
+  resolution per sheet) and blocks an oversized TIFF up front, matching the other images.
+
 ## [0.9.1] — 2026-11-13
 
 ### Fixed
@@ -242,6 +251,7 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.9.2]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.1]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.8.0]: https://github.com/Amadeus-/Reprise/tree/reprise-main

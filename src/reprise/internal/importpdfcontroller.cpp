@@ -77,10 +77,12 @@ static uint32_t rdU32(const QByteArray& d, int64_t pos, bool le)
                  | (static_cast<uint32_t>(c) << 8) | static_cast<uint32_t>(e));
 }
 
-//! In-house TIFF inspector: count frames (image file directories) by walking the IFD chain, and read the first frame's
-//! pixel width/height (tags 256/257). This Qt kit ships NO TIFF image plugin, so QImageReader cannot read a TIFF at all
-//! -- hence this plugin-independent fallback. Classic TIFF only (BigTIFF magic 43 -> false). Returns false on any parse
-//! failure (not a classic TIFF, truncated, offset out of range) so the caller treats the frame count as unknown.
+//! In-house TIFF inspector: count frames (image file directories) by walking the IFD chain, and read the LARGEST
+//! frame's pixel width/height (tags 256/257, max by pixel count across all frames). This Qt kit ships NO TIFF image
+//! plugin, so QImageReader cannot read a TIFF at all -- hence this plugin-independent fallback, used both for the page
+//! count/resolution info line and for the oversized-image pre-flight (whose Audiveris cap is per-SHEET, i.e. per frame,
+//! so the biggest frame is what must be judged). Classic TIFF only (BigTIFF magic 43 -> false). Returns false on any
+//! parse failure (not a classic TIFF, truncated, offset out of range) so the caller treats the frame count as unknown.
 static bool readTiffInfo(const QByteArray& d, int& outFrames, int& outWidth, int& outHeight)
 {
     if (d.size() < 8)
@@ -123,41 +125,48 @@ static bool readTiffInfo(const QByteArray& d, int& outFrames, int& outWidth, int
 
         const uint32_t entries = rdU16(d, off, le);
 
-        //! First frame only: read ImageWidth (256) / ImageLength (257) for the single-image resolution info line.
-        if (frames == 0)
+        //! Read ImageWidth (256) / ImageLength (257) for THIS frame, then keep the dimensions of the LARGEST frame
+        //! (by pixel count). Audiveris caps resolution per SHEET (per frame), so the biggest frame is what the oversized
+        //! pre-flight must judge -- not merely the first.
+        int fw = 0;
+        int fh = 0;
+        for (uint32_t i = 0; i < entries; ++i)
         {
-            for (uint32_t i = 0; i < entries; ++i)
+            const int64_t eo = off + 2 + static_cast<int64_t>(i) * 12;
+            if (eo + 12 > d.size())
             {
-                const int64_t eo = off + 2 + static_cast<int64_t>(i) * 12;
-                if (eo + 12 > d.size())
+                break;
+            }
+
+            const uint32_t tag = rdU16(d, eo, le);
+            const uint32_t typ = rdU16(d, eo + 2, le);
+            if (tag == 256 || tag == 257)
+            {
+                uint32_t val = 0;
+                if (typ == 3)
                 {
-                    break;
+                    val = rdU16(d, eo + 8, le);        // SHORT
+                }
+                else if (typ == 4)
+                {
+                    val = rdU32(d, eo + 8, le);        // LONG
                 }
 
-                const uint32_t tag = rdU16(d, eo, le);
-                const uint32_t typ = rdU16(d, eo + 2, le);
-                if (tag == 256 || tag == 257)
+                if (tag == 256)
                 {
-                    uint32_t val = 0;
-                    if (typ == 3)
-                    {
-                        val = rdU16(d, eo + 8, le);        // SHORT
-                    }
-                    else if (typ == 4)
-                    {
-                        val = rdU32(d, eo + 8, le);        // LONG
-                    }
-
-                    if (tag == 256)
-                    {
-                        width = static_cast<int>(val);
-                    }
-                    else
-                    {
-                        height = static_cast<int>(val);
-                    }
+                    fw = static_cast<int>(val);
+                }
+                else
+                {
+                    fh = static_cast<int>(val);
                 }
             }
+        }
+
+        if (static_cast<int64_t>(fw) * static_cast<int64_t>(fh) > static_cast<int64_t>(width) * static_cast<int64_t>(height))
+        {
+            width = fw;
+            height = fh;
         }
 
         const int64_t nextPos = off + 2 + static_cast<int64_t>(entries) * 12;
@@ -384,27 +393,62 @@ muse::Ret ImportPdfController::preflightImageSize(const muse::io::path_t& path) 
         return make_ok();
     }
 
-    //! A multi-frame TIFF is several sheets, each of which Audiveris checks independently; iterate the frames and let
-    //! the largest decide. size() reads the dimensions from the header without decoding the pixels (so this stays cheap
-    //! and never has to load the very image we are trying to reject). A frame whose size can't be read is skipped.
-    QImageReader reader(path.toQString());
-    int frames = reader.imageCount();
-    if (frames < 1)
-    {
-        frames = 1;
-    }
-
     qint64 maxPixels = 0;
-    for (int i = 0; i < frames; ++i)
+
+    //! This Qt kit ships NO TIFF image plugin, so QImageReader reads a TIFF as 0 frames / 0x0 -- the oversized check
+    //! would then see 0 pixels and SILENTLY PASS an oversized TIFF, which Audiveris later rejects per-sheet at its own
+    //! 20 MP cap (cryptically). So read TIFF dimensions with the in-house, plugin-independent IFD walk, which reports
+    //! the LARGEST frame's pixel count (Audiveris's cap is per-sheet / per-frame).
+    const std::string suffix = io::suffix(path);
+    const bool isTiff = suffix == "tif" || suffix == "tiff";
+    if (isTiff)
     {
-        reader.jumpToImage(i);
-        const QSize size = reader.size();
-        if (size.isValid())
+        QByteArray tiffData;
+        QFile file(path.toQString());
+        if (file.open(QIODevice::ReadOnly))
         {
-            const qint64 pixels = static_cast<qint64>(size.width()) * static_cast<qint64>(size.height());
-            if (pixels > maxPixels)
+            tiffData = file.read(TIFF_MAX_READ_BYTES);
+            file.close();
+        }
+
+        int tiffFrames = 0;
+        int tiffWidth = 0;
+        int tiffHeight = 0;
+        const bool tiffOk = readTiffInfo(tiffData, tiffFrames, tiffWidth, tiffHeight);
+        if (tiffOk)
+        {
+            maxPixels = static_cast<qint64>(tiffWidth) * static_cast<qint64>(tiffHeight);
+        }
+
+        LOGI() << "Reprise: image pre-flight (TIFF) largest frame " << tiffWidth << "x" << tiffHeight << " = "
+               << maxPixels << " pixels, frames=" << tiffFrames << ", tiffOk=" << (tiffOk ? "true" : "false")
+               << (maxPixels > AUDIVERIS_MAX_PIXELS ? " -> blocked oversized" : " -> passed") << ": "
+               << path.toQString();
+    }
+    else
+    {
+        //! Non-TIFF image: these formats DO have a Qt plugin, so read dimensions via QImageReader. A multi-frame image
+        //! is several sheets, each of which Audiveris checks independently; iterate the frames and let the largest
+        //! decide. size() reads the dimensions from the header without decoding the pixels (so this stays cheap and
+        //! never has to load the very image we are trying to reject). A frame whose size can't be read is skipped.
+        QImageReader reader(path.toQString());
+        int frames = reader.imageCount();
+        if (frames < 1)
+        {
+            frames = 1;
+        }
+
+        for (int i = 0; i < frames; ++i)
+        {
+            reader.jumpToImage(i);
+            const QSize size = reader.size();
+            if (size.isValid())
             {
-                maxPixels = pixels;
+                const qint64 pixels = static_cast<qint64>(size.width()) * static_cast<qint64>(size.height());
+                if (pixels > maxPixels)
+                {
+                    maxPixels = pixels;
+                }
             }
         }
     }
