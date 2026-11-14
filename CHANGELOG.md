@@ -8,6 +8,20 @@ below `1.0.0` is pre-release.
 
 ## [Unreleased]
 
+## [0.9.7] — 2026-11-14
+
+### Fixed
+- **Import Scan images now show their true embedded DPI, or `~300 dpi, assumed`, never Qt's
+  back-filled 96**: the Resolution line's DPI is now decided by parsing the scan file's own bytes
+  for real resolution metadata (PNG **pHYs** chunk, JPEG **JFIF/EXIF** density, TIFF **IFD**
+  resolution tags, BMP **biXPelsPerMeter**; GIF has none) instead of trusting
+  `QImage::dotsPerMeterX()`, which silently reports 96 dpi for a PNG that carries no `pHYs` chunk.
+  When real metadata is present the line shows the file's true value (**(~N dpi)**, not snapped to
+  a tier); when it is truly absent the line now reads **(~300 dpi, assumed)** for every image type
+  — so a no-`pHYs` PNG that previously read a bogus **(~96 dpi)** now correctly reads
+  **(~300 dpi, assumed)**. The PDF rasterization-tier wording (**(…, default)**) is unchanged — it
+  means a real applied setting, not an informational guess.
+
 ## [0.9.6] — 2026-11-13
 
 ### Fixed
@@ -308,6 +322,7 @@ with the first slice of the PDF scan-and-correct workflow.
   instruments OMR guesses — a deliberate stopgap until instrument selection is
   added to the import flow.
 
+[0.9.7]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.6]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.5]: https://github.com/Amadeus-/Reprise/tree/reprise-main
 [0.9.4]: https://github.com/Amadeus-/Reprise/tree/reprise-main
