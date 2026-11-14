@@ -56,6 +56,11 @@ using namespace muse;
 //! so Reprise can block an oversized image BEFORE launching Audiveris.
 static constexpr qint64 AUDIVERIS_MAX_PIXELS = 20000000;
 
+//! Default DPI shown (clearly labelled "(default)") on the intake dialog's Resolution line when an image carries no real
+//! resolution metadata. The user prefers a shown default over a blank; for images DPI is informational anyway (Audiveris
+//! recognizes at native pixel resolution). The QML dialog uses this same value for the "(~N dpi, default)" suffix.
+static constexpr int DEFAULT_IMAGE_DPI = 300;
+
 namespace {
 //! Read cap for the in-house TIFF inspector. Large enough to cover a multi-frame scan whose image file directories may
 //! sit near the end of the file; a TIFF larger than this can't be walked safely, so the inspector reports failure and
@@ -84,12 +89,15 @@ static uint32_t rdU32(const QByteArray& d, int64_t pos, bool le)
 }
 
 //! In-house TIFF inspector: count frames (image file directories) by walking the IFD chain, and read the LARGEST
-//! frame's pixel width/height (tags 256/257, max by pixel count across all frames). This Qt kit ships NO TIFF image
+//! frame's pixel width/height (tags 256/257, max by pixel count across all frames) plus its native resolution (DPI,
+//! from tags 282 XResolution / 296 ResolutionUnit, with 283 YResolution as a fallback). This Qt kit ships NO TIFF image
 //! plugin, so QImageReader cannot read a TIFF at all -- hence this plugin-independent fallback, used both for the page
 //! count/resolution info line and for the oversized-image pre-flight (whose Audiveris cap is per-SHEET, i.e. per frame,
 //! so the biggest frame is what must be judged). Classic TIFF only (BigTIFF magic 43 -> false). Returns false on any
 //! parse failure (not a classic TIFF, truncated, offset out of range) so the caller treats the frame count as unknown.
-static bool readTiffInfo(const QByteArray& d, int& outFrames, int& outWidth, int& outHeight)
+//! outDpi is the resolved DPI of the reported (largest) frame, or 0 when it cannot be determined (ResolutionUnit none,
+//! resolution tags absent, or denominator 0) -- never invented here; the caller then shows a labelled default.
+static bool readTiffInfo(const QByteArray& d, int& outFrames, int& outWidth, int& outHeight, int& outDpi)
 {
     if (d.size() < 8)
     {
@@ -121,6 +129,31 @@ static bool readTiffInfo(const QByteArray& d, int& outFrames, int& outWidth, int
     int width = 0;
     int height = 0;
 
+    //! Resolution of the LARGEST frame (the one whose dimensions we report), captured whenever a bigger frame is found.
+    //! XResolution / YResolution are TIFF RATIONAL (two uint32: numerator/denominator). ResolutionUnit: 1=none, 2=inch,
+    //! 3=cm. 0 == tag not present.
+    uint32_t bestXNum = 0;
+    uint32_t bestXDen = 0;
+    uint32_t bestYNum = 0;
+    uint32_t bestYDen = 0;
+    uint32_t bestUnit = 0;
+
+    //! Reads a RATIONAL value: its 4-byte value field at eo+8 is an OFFSET to two uint32 (num, den) elsewhere in the
+    //! file (a RATIONAL is 8 bytes, which never fits inline). Honors the IFD's byte order. Zeros num/den on any bound miss.
+    auto readRational = [&d, le](int64_t eo, uint32_t& num, uint32_t& den)
+    {
+        const int64_t ro = static_cast<int64_t>(rdU32(d, eo + 8, le));
+        if (ro < 0 || ro + 8 > d.size())
+        {
+            num = 0;
+            den = 0;
+            return;
+        }
+
+        num = rdU32(d, ro, le);
+        den = rdU32(d, ro + 4, le);
+    };
+
     //! Guard caps the walk so a malformed / looping IFD chain can never spin forever.
     for (int guard = 0; guard < 100000 && off != 0; ++guard)
     {
@@ -131,11 +164,16 @@ static bool readTiffInfo(const QByteArray& d, int& outFrames, int& outWidth, int
 
         const uint32_t entries = rdU16(d, off, le);
 
-        //! Read ImageWidth (256) / ImageLength (257) for THIS frame, then keep the dimensions of the LARGEST frame
-        //! (by pixel count). Audiveris caps resolution per SHEET (per frame), so the biggest frame is what the oversized
-        //! pre-flight must judge -- not merely the first.
+        //! Read ImageWidth (256) / ImageLength (257) + the resolution tags (282/283/296) for THIS frame, then keep the
+        //! dimensions AND resolution of the LARGEST frame (by pixel count). Audiveris caps resolution per SHEET (per
+        //! frame), so the biggest frame is what the oversized pre-flight must judge -- not merely the first.
         int fw = 0;
         int fh = 0;
+        uint32_t fXNum = 0;
+        uint32_t fXDen = 0;
+        uint32_t fYNum = 0;
+        uint32_t fYDen = 0;
+        uint32_t fUnit = 0;
         for (uint32_t i = 0; i < entries; ++i)
         {
             const int64_t eo = off + 2 + static_cast<int64_t>(i) * 12;
@@ -167,12 +205,29 @@ static bool readTiffInfo(const QByteArray& d, int& outFrames, int& outWidth, int
                     fh = static_cast<int>(val);
                 }
             }
+            else if (tag == 282 && typ == 5)           // XResolution (RATIONAL)
+            {
+                readRational(eo, fXNum, fXDen);
+            }
+            else if (tag == 283 && typ == 5)           // YResolution (RATIONAL)
+            {
+                readRational(eo, fYNum, fYDen);
+            }
+            else if (tag == 296 && typ == 3)           // ResolutionUnit (SHORT)
+            {
+                fUnit = rdU16(d, eo + 8, le);
+            }
         }
 
         if (static_cast<int64_t>(fw) * static_cast<int64_t>(fh) > static_cast<int64_t>(width) * static_cast<int64_t>(height))
         {
             width = fw;
             height = fh;
+            bestXNum = fXNum;
+            bestXDen = fXDen;
+            bestYNum = fYNum;
+            bestYDen = fYDen;
+            bestUnit = fUnit;
         }
 
         const int64_t nextPos = off + 2 + static_cast<int64_t>(entries) * 12;
@@ -190,9 +245,32 @@ static bool readTiffInfo(const QByteArray& d, int& outFrames, int& outWidth, int
         return false;
     }
 
+    //! Resolve DPI from the largest frame's XResolution (YResolution as a fallback if X is absent). Only inch (unit 2)
+    //! and cm (unit 3) yield a value; unit 1 (none) or a missing unit or a zero denominator leaves DPI unknown (0), and
+    //! the caller then shows a clearly-labelled default -- a value is never invented here.
+    int dpi = 0;
+    if (bestUnit == 2 || bestUnit == 3)
+    {
+        uint32_t num = bestXNum;
+        uint32_t den = bestXDen;
+        if (den == 0 || num == 0)
+        {
+            num = bestYNum;
+            den = bestYDen;
+        }
+
+        if (den != 0 && num != 0)
+        {
+            const double perUnit = static_cast<double>(num) / static_cast<double>(den);
+            const double perInch = (bestUnit == 3) ? (perUnit * 2.54) : perUnit;
+            dpi = static_cast<int>(perInch + 0.5);
+        }
+    }
+
     outFrames = frames;
     outWidth = width;
     outHeight = height;
+    outDpi = dpi;
 
     return true;
 }
@@ -434,7 +512,8 @@ muse::Ret ImportPdfController::preflightImageSize(const muse::io::path_t& path) 
         int tiffFrames = 0;
         int tiffWidth = 0;
         int tiffHeight = 0;
-        const bool tiffOk = readTiffInfo(tiffData, tiffFrames, tiffWidth, tiffHeight);
+        int tiffDpi = 0;   // unused here (pre-flight judges pixels, not DPI)
+        const bool tiffOk = readTiffInfo(tiffData, tiffFrames, tiffWidth, tiffHeight, tiffDpi);
         if (tiffOk)
         {
             maxPixels = static_cast<qint64>(tiffWidth) * static_cast<qint64>(tiffHeight);
@@ -549,6 +628,7 @@ ImportPdfController::ImageInfo ImportPdfController::inspectImage(const muse::io:
     int tiffFrames = 0;
     int tiffWidth = 0;
     int tiffHeight = 0;
+    int tiffDpi = 0;
     bool tiffOk = false;
     if (isTiff)
     {
@@ -560,7 +640,7 @@ ImportPdfController::ImageInfo ImportPdfController::inspectImage(const muse::io:
             file.close();
         }
 
-        tiffOk = readTiffInfo(tiffData, tiffFrames, tiffWidth, tiffHeight);
+        tiffOk = readTiffInfo(tiffData, tiffFrames, tiffWidth, tiffHeight, tiffDpi);
     }
 
     //! Did EITHER method actually read this image? A TIFF with no plugin AND a failed byte-scan is genuinely unknown.
@@ -579,11 +659,12 @@ ImportPdfController::ImageInfo ImportPdfController::inspectImage(const muse::io:
     info.width = qtWidth > 0 ? qtWidth : (tiffOk ? tiffWidth : 0);
     info.height = qtHeight > 0 ? qtHeight : (tiffOk ? tiffHeight : 0);
 
-    //! Embedded DPI for the header's resolution line (non-TIFF images only). QImage::dotsPerMeterX() is 0 when the file
+    //! Embedded DPI for the header's resolution line. For non-TIFF images, QImage::dotsPerMeterX() is 0 when the file
     //! carries NO resolution metadata (the Qt default), and non-zero only when the format actually stored one (a PNG
-    //! pHYs chunk, a JPEG JFIF/EXIF density) -- so a value > 0 is treated as real metadata and converted to dpi, while 0
-    //! omits the dpi suffix (never invented). TIFF is skipped: this kit has no Qt TIFF plugin and the in-house IFD walk
-    //! deliberately does not parse the RATIONAL resolution tags, so a TIFF simply shows pixel dimensions with no dpi.
+    //! pHYs chunk, a JPEG JFIF/EXIF density) -- so a value > 0 is real, measured metadata converted to dpi. For TIFF (no
+    //! Qt plugin), the in-house IFD walk reads the RATIONAL resolution tags (282/283/296). In BOTH cases embeddedDpi stays
+    //! 0 when no real metadata is present; the dialog then shows a clearly-labelled default (never a silently-invented
+    //! measurement). embeddedDpi > 0 therefore always means a genuinely measured value.
     if (!isTiff)
     {
         const QImage probe(path.toQString());
@@ -592,6 +673,10 @@ ImportPdfController::ImageInfo ImportPdfController::inspectImage(const muse::io:
         {
             info.embeddedDpi = qRound(dpmX * 0.0254);
         }
+    }
+    else if (tiffOk && tiffDpi > 0)
+    {
+        info.embeddedDpi = tiffDpi;
     }
 
     if (isTiff && !frameCountKnown)
@@ -607,13 +692,20 @@ ImportPdfController::ImageInfo ImportPdfController::inspectImage(const muse::io:
         info.showPageRange = reliable > 1;
     }
 
+    //! Resolved DPI the dialog's Resolution line will show: the measured embeddedDpi when present, else the labelled
+    //! default. dpiSource proves (headlessly, from the log) which path fired -- measured via metadata/IFD tags vs default.
+    const bool dpiMeasured = info.embeddedDpi > 0;
+    const int resolvedDpi = dpiMeasured ? info.embeddedDpi : DEFAULT_IMAGE_DPI;
+
     LOGI() << "Reprise intake inspect: input=image rawImageCount=" << rawImageCount
            << " nextCount=" << nextCount << " tiffOk=" << (tiffOk ? "true" : "false")
            << " tiffFrames=" << tiffFrames
            << " pageCount=" << info.pageCount << " isMultiPage=" << (info.pageCount > 1 ? "true" : "false")
            << " willShowPageRange=" << (info.showPageRange ? "true" : "false")
            << " resolution=" << info.width << "x" << info.height
-           << " embeddedDpi=" << info.embeddedDpi;
+           << " embeddedDpi=" << info.embeddedDpi
+           << " resolvedDpi=" << resolvedDpi
+           << " dpiSource=" << (dpiMeasured ? "measured" : "default");
 
     return info;
 }

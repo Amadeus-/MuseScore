@@ -59,11 +59,16 @@ StyledDialogView {
     property bool pdfConfident: false
 
     //! Native pixel dimensions of an image input (0 for a PDF or when the dimensions could not be read), plus the
-    //! embedded DPI if the image file actually carries resolution metadata (0 == none, so the dpi suffix is omitted;
-    //! never invented). The resolution line is shown for ANY image (single or multi-frame), never for a PDF.
+    //! embedded DPI when the image file actually carries resolution metadata (0 == none measured). embeddedDpi > 0 is a
+    //! genuine measurement; when it is 0 the resolution line still shows a value using the labelled default (never a
+    //! silently-invented measurement). The resolution line is shown for ANY image (single or multi-frame), never a PDF.
     property int imageWidth: 0
     property int imageHeight: 0
     property int embeddedDpi: 0
+
+    //! DPI shown (labelled "default") when an image carries no real resolution metadata. Mirrors the C++ DEFAULT_IMAGE_DPI;
+    //! the user prefers a shown default over a blank, and for images DPI is informational (Audiveris uses native pixels).
+    readonly property int defaultDpi: 300
 
     //! The PDF's detected native resolution (raw, un-snapped) that drove the tier match; shown in the "why" caption
     //! when matched. 0/absent for an image or when nothing was detected.
@@ -98,11 +103,15 @@ StyledDialogView {
         return (root.pdfConfident && root.pageCount >= 1) ? root.pageCount.toString() : qsTrc("reprise", "multiple")
     }
 
-    //! The resolution line text: native pixel dimensions, plus the embedded dpi only when the file actually carries it.
+    //! The resolution line text: native pixel dimensions, always followed by a dpi value for consistency across every
+    //! file type. A measured dpi (embeddedDpi > 0) shows plainly; when none was measured, the labelled default makes clear
+    //! it is a default, not a measurement. Identical treatment for PNG/JPG/TIFF/BMP/GIF.
     readonly property string resolutionText: {
         var base = qsTrc("reprise", "%1 x %2 px (native)").arg(root.imageWidth).arg(root.imageHeight)
         if (root.embeddedDpi > 0) {
             base += " " + qsTrc("reprise", "(~%1 dpi)").arg(root.embeddedDpi)
+        } else {
+            base += " " + qsTrc("reprise", "(~%1 dpi, default)").arg(root.defaultDpi)
         }
         return base
     }
@@ -236,6 +245,16 @@ StyledDialogView {
 
                 onTextChanged: function(newTextValue) {
                     pagesField.currentText = newTextValue
+                }
+
+                //! Escape while the Pages field has focus must cancel the whole dialog, exactly like clicking Cancel.
+                //! TextInputField consumes Escape itself (defocuses + emits escaped()) and never lets it reach the
+                //! dialog's NavigationSection, so the StyledDialogView closeOnEscape path alone would be swallowed here --
+                //! hence this explicit hook. For any OTHER focus (tier radios, buttons, nothing) Escape still reaches the
+                //! section and closeOnEscape (default true) cancels it; this covers the field-focused case. Same idiom as
+                //! SelectMeasuresCountDialog's onEscaped.
+                onEscaped: {
+                    root.dismiss()
                 }
             }
 
